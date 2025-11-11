@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <package format="1">
-  <name>OpenSCAD</name>
+  <name>OpenSCAD_Ext</name>
   <version>2.0.0</version>
   <description>External OpenSCAD Workbench — replacement for legacy OpenSCAD tools.</description>
   <maintainer email="you@example.com">Keith Sloan</maintainer>
@@ -11,6 +11,6 @@
     <mod path="freecad/OpenSCAD"/>
   </content>
 
-  <workbench>OpenSCADWorkbench</workbench>
+  <workbench>OpenSCADWorkbench_Ext</workbench>
 </package>
 
