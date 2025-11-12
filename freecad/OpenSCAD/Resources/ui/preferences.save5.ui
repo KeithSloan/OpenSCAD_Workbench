@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog_DlgSettingsOpenSCAD</class>
+ <widget class="QWidget" name="Dialog_DlgSettingsOpenSCAD">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>OpenSCAD Settings</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayoutMain">
+   
+   <!-- OpenSCAD Executable Group -->
+   <item>
+    <widget class="QGroupBox" name="groupBoxExecutable">
+     <property name="title"><string>OpenSCAD Executable</string></property>
+     <layout class="QHBoxLayout" name="horizontalLayoutExecutable">
+      <item>
+       <widget class="QLabel" name="labelExecutable">
+        <property name="text"><string>Path to OpenSCAD</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="FileChooser" name="fileChooserExecutable"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnBrowseExecutable">
+        <property name="text"><string>Browse...</string></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+
+   <!-- General Preferences Group -->
+   <item>
+    <widget class="QGroupBox" name="groupBoxPreferences">
+     <property name="title"><string>General Preferences</string></property>
+     <layout class="QVBoxLayout" name="verticalLayoutPreferences">
+
+      <!-- Threads -->
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayoutThreads">
+        <item>
+         <widget class="QLabel" name="labelThreads">
+          <property name="text"><string>Number of Threads</string></property>
+         </widget>
+        </item>
+        <item>
+         <widge
+

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog_DlgSettingsOpenSCAD</class>
+ <widget class="QWidget" name="Dialog_DlgSettingsOpenSCAD">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>650</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>General OpenSCAD Settings</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <item>
+    <widget class="QGroupBox" name="groupBoxExecutable">
+     <property name="title">
+      <string>OpenSCAD Executable</string>
+     </property>
+     <layout class="QHBoxLayout" name="layoutExecutable">
+      <item>
+       <widget class="QLabel" name="labelExecutable">
+        <property name="text">
+         <string>Path to OpenSCAD</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineEditExecutable"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnBrowseExecutable">
+        <property name="text">
+         <string>Browse...</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QGroupBox" name="groupBoxPreferences">
+     <property name="title">
+      <string>General Preferences</string>
+     </property>
+     <layout class="QVBoxLayout" name="layoutPreferences">
+      <item>
+       <layout class="QHBoxLayout" name="layoutSpinBox">
+        <item>
+         <widget class="QLabel" name="labelThreads">
+          <property name="text">
+           <string>Number of Threads</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="spinBoxThreads">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>64</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+
+      <item>
+       <widget class="QCheckBox" name="checkBoxShowPreview">
+        <property name="text">
+         <string>Show Preview</string>
+        </property>
+       </widget>
+      </item>
+
+      <item>
+       <layout class="QHBoxLayout" name="layoutDoubleSpinBox">
+        <item>
+         <widget class="QLabel" name="labelRenderScale">
+          <property name="text">
+           <string>Render Scale</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="doubleSpinBoxRenderScale">
+          <property name="minimum">
+           <double>0.1</double>
+          </property>
+          <property name="maximum">
+           <double>10.0</double>
+          </property>
+          <property name="singleStep">
+           <double>0.1</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+
+      <item>
+       <layout class="QHBoxLayout" name="layoutComboBox">
+        <item>
+         <widget class="QLabel" name="labelDefaultStyle">
+          <property name="text">
+           <string>Default Style</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="comboBoxStyle">
+          <item>
+           <property name="text"><string>Solid</string></property>
+          </item>
+          <item>
+           <property name="text"><string>Wireframe</string></property>
+          </item>
+          <item>
+           <property name="text"><string>Points</string></property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+
+     </layout>
+    </widget>
+   </item>
+
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>
+
