@@ -1,0 +1,54 @@
+import FreeCAD
+import FreeCADGui
+from PySide2 import QtCore, QtUiTools
+
+
+class OpenSCAD_Ext_Preferences(FreeCADGui.PreferencePage):
+    """Preferences page for OpenSCAD_Ext workbench."""
+
+    def __init__(self):
+        super().__init__()
+
+        # Load UI from embedded resource system
+        ui_path = ":/ui/OpenSCAD_Ext_Preferences.ui"
+        loader = QtUiTools.QUiLoader()
+        ui_file = QtCore.QFile(ui_path)
+
+        if not ui_file.open(QtCore.QFile.ReadOnly):
+            FreeCAD.Console.PrintError(f"❌ Failed to open UI file: {ui_path}\n")
+            self.form = None
+            return
+
+        self.form = loader.load(ui_file)
+        ui_file.close()
+
+    def apply(self):
+        """Save preferences when the user clicks Apply/OK."""
+        prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD_Ext")
+
+        # Example boolean checkbox:
+        try:
+            checkbox = self.form.findChild(type(self.form), "chkVerboseLogging")
+            if checkbox:
+                prefs.SetBool("VerboseLogging", checkbox.isChecked())
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"❌ Failed saving preferences: {e}\n")
+
+
+class OpenSCAD_Ext_PreferenceProvider:
+    """Registers preference pages with FreeCAD (FreeCAD 1.0 style)."""
+
+    def getPages(self):
+        return [
+            {
+                "name": "OpenSCAD_Ext",
+                "group": "OpenSCAD_Ext",
+                "page": OpenSCAD_Ext_Preferences,
+            }
+        ]
+
+
+def Load():
+    """Called automatically by FreeCAD when loading the workbench."""
+    FreeCADGui.addPreferencePageProvider(OpenSCAD_Ext_PreferenceProvider())
+
