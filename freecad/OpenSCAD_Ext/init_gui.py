@@ -151,7 +151,7 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
         # Directory where the module (__init__.py) lives
         module_dir = os.path.dirname(OpenSCAD_Ext.__file__)
 
-        # Your workbench’s Resources directory
+        # Workbench’s Resources directory
         resource_dir = os.path.join(module_dir, "Resources")
         print(resource_dir)
         prefs_ui = os.path.join(resource_dir, "ui", "OpenSCAD_Ext_Preferences.ui")
