@@ -6,9 +6,22 @@
   <maintainer email="you@example.com">Keith Sloan</maintainer>
   <license>LGPL-2.1-or-later</license>
   <url type="repository">https://github.com/KeithSloan/OpenSCAD_Workbench</url>
-
+  '''
+  <!-- Python packages required by the workbench -->
+    <dependencies>
+        <!-- Only list PyPI packages that are actually required -->
+        <python>pyparsing</python>
+        <python>shapely</python>
+        <python>lark</python>
+    </dependencies>
+  '''
+  <!-- Declare the module directory containing __init__.py -->
+    <python-module>OpenSCAD_Ext</python-module>
   <content>
     <mod path="freecad/OpenSCAD"/>
+    <import>*.csg</import>
+    <import>*.scad</import>
+    <import>*.dxf</import>
   </content>
 
   <workbench>OpenSCADWorkbench_Ext</workbench>

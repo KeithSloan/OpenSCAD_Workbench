@@ -47,10 +47,13 @@ import ply.yacc as yacc
 import Part
 import random
 
-import OpenSCADFeatures
-import OpenSCADUtils
-import OpenSCADHull
-import OpenSCADMinkowski
+#from freecad.OpenSCAD_Ext.core.OpenSCADFeatures import *
+from freecad.OpenSCAD_Ext.core.OpenSCADUtils import *
+from freecad.OpenSCAD_Ext.core.OpenSCADHull import *
+from freecad.OpenSCAD_Ext.core.OpenSCADMinkowski import *
+
+# In theory FC 1.1+ should use ths for display import prompt
+DisplayName = "OpenSCAD Ext – CSG Importer"
 
 params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
 printverbose = params.GetBool('printverbose',False)
