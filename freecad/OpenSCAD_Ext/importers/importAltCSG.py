@@ -29,7 +29,9 @@
 __title__="FreeCAD OpenSCAD Workbench - CSG importer"
 __author__ = "Keith Sloan <keith@sloan-home.co.uk>"
 __url__ = ["http://www.sloan-home.co.uk/ImportCSG"]
-
+#
+# For SCAD files first process via OpenSCAD to creae CSG file then import
+#
 import FreeCAD, Part, Draft, io, os, sys, xml.sax
 if FreeCAD.GuiUp:
     import FreeCADGui
@@ -93,7 +95,8 @@ def open(filename):
     docname = os.path.splitext(os.path.basename(filename))[0]
     doc = FreeCAD.newDocument(docname)
     if filename.lower().endswith('.scad'):
-        from OpenSCADUtils import callopenscad, workaroundforissue128needed
+        from freecad.OpenSCAD_Ext.core.OpenSCADUtils import callopenscad, workaroundforissue128needed
+
         print('Calling OpenSCAD')
         tmpfile=callopenscad(filename)
         if workaroundforissue128needed():
@@ -1043,7 +1046,7 @@ def processDXF(fname,layer):
     global doc
     global pathName
     #from OpenSCAD2Dgeom import importDXFshape
-    from OpenSCADdxf import importEZDXFshape
+    from freecad.OpenSCAD_Ext.core.OpenSCADdxf import importEZDXFshape
     if printverbose: print("Process DXF file")
     if printverbose: print("File Name : "+fname)
     if printverbose: print("Layer : "+layer)
