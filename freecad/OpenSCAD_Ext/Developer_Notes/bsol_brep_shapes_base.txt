@@ -1,0 +1,184 @@
+// bsol_brep_shapes_base.scad
+// BSOL/BSOL2 BREP-friendly replacements for shapes3d.scad, base.scad, etc.
+// Purpose: drop-in compatible module names (most common) that avoid hull() and
+// minkowski() where practicable and instead produce BREP-friendly constructions
+// using offset(), linear_extrude(), cylinder+sphere assemblies, scaled extrudes
+// and loft-like operations.
+//
+// How to use:
+//  use <bsol_brep_shapes_base.scad>;
+//  // then call BSOL-style names: shape_box_round(), shape_capsule(), body(), etc.
+//
+// NOTE: This file targets the most common BSOL/BSOL2 patterns that cause FreeCAD
+// to fall back to mesh. It emphasizes semantic equivalence (design intent) and
+// BREP importability rather than identical triangle meshes.
+
+// ------------------------------
+// Configuration / compatibility
+// ------------------------------
+// Provide minimal compatibility shims for globals BSOL usually expects.
+// If you already define these in your environment, these are no-ops.
+if (!exists("crnrRad")) crnrRad = 2;
+if (!exists("wallThck")) wallThck = 1;
+if (!exists("colors")) colors = [[1,0,0],[0,1,0],[0,0,1],[1,1,0],[1,0,1]];
+
+// ------------------------------
+// Internal helpers
+// ------------------------------
+eps = 1e-6;
+
+module _rounded_rect_2d(xsize, ysize, r) {
+    if (xsize <= 0) xsize = 0.001;
+    if (ysize <= 0) ysize = 0.001;
+    translate([-xsize/2, -ysize/2])
+        offset(r = r)
+            polygon(points = [[0+eps,0+eps],[xsize-eps,0+eps],[xsize-eps,ysize-eps],[0+eps,ysize-eps]]);
+}
+
+module _rounded_rect_centered(xsize, ysize, r) { _rounded_rect_2d(xsize, ysize, r); }
+
+module _rounded_loft(ax, ay, az, bx, by, bz, r) {
+    h = bz - az;
+    if (abs(h) < 1e-6) h = 0.001;
+    sx = bx / ax;
+    sy = by / ay;
+    translate([0,0,min(az,bz)])
+        linear_extrude(height = abs(h), scale = [sx, sy])
+            _rounded_rect_centered(ax, ay, r);
+}
+
+// simple check for existence of a global symbol (best-effort)
+function exists(name) = (false); // keep false to avoid eval issues - define your globals externally
+
+// ------------------------------
+// Replacements for shapes3d.scad
+// ------------------------------
+
+// shape_cube(size, center)
+module shape_cube(size=[10,10,10], center=false) { cube(size, center = center); }
+
+// shape_box_round(size, r)
+// Drop-in for BSOL's rounded box (minkowski(square, circle))
+module shape_box_round(size=[40,30,10], r=2) {
+    rounded_box(size, r);
+}
+
+module rounded_box(size=[40,30,10], r=2) {
+    x = size[0]; y = size[1]; z = size[2];
+    translate([0,0,-z/2])
+        linear_extrude(height = z)
+            _rounded_rect_centered(x, y, r);
+}
+
+// shape_capsule(p1, p2, r)
+module shape_capsule(p1=[0,0,0], p2=[30,0,0], r=5) { capsule(p1, p2, r); }
+
+module capsule(p1=[0,0,0], p2=[30,0,0], r=5) {
+    dx = p2[0]-p1[0]; dy = p2[1]-p1[1]; dz = p2[2]-p1[2];
+    L = sqrt(dx*dx + dy*dy + dz*dz);
+    if (L < 1e-6) L = 0.001;
+
+    module _capsule_x(L, r) {
+        union() {
+            translate([0,0,0]) sphere(r = r);
+            translate([L,0,0]) sphere(r = r);
+            translate([0,0,0]) rotate([0,90,0]) cylinder(r = r, h = L, center = false);
+        }
+    }
+
+    // build orthonormal basis and multmatrix to align
+    ux = dx / L; uy = dy / L; uz = dz / L;
+    ax = (abs(ux) < 0.9 ? [1,0,0] : [0,1,0]);
+    vx = uy*ax[2] - uz*ax[1]; vy = uz*ax[0] - ux*ax[2]; vz = ux*ax[1] - uy*ax[0];
+    vlen = sqrt(vx*vx + vy*vy + vz*vz);
+    if (vlen < 1e-6) { vx = 0; vy = 0; vz = 1; vlen = 1; }
+    vx/=vlen; vy/=vlen; vz/=vlen;
+    wx = uy*vz - uz*vy; wy = uz*vx - ux*vz; wz = ux*vy - uy*vx;
+    M = [ ux, vx, wx, 0,
+          uy, vy, wy, 0,
+          uz, vz, wz, 0,
+          p1[0], p1[1], p1[2], 1 ];
+    multmatrix(M) _capsule_x(L, r);
+}
+
+// shape_cylinder_loft: loft between two circles (BREP-friendly)
+module shape_cylinder_loft(p1=[0,0,0], p2=[0,0,30], r1=5, r2=5) {
+    h = p2[2] - p1[2]; if (abs(h) < 1e-6) h = 0.001;
+    sx = r2 / r1;
+    translate([p1[0], p1[1], p1[2]])
+        linear_extrude(height = h, scale=[sx,sx]) circle(r = r1);
+}
+
+// shape_prism_round: rounded prism between two rectangle profiles
+module shape_prism_round(rectA=[40,30], zA=10, rectB=[40,30], zB=0, r=2) {
+    _rounded_loft(rectA[0], rectA[1], zA, rectB[0], rectB[1], zB, r);
+}
+
+// ------------------------------
+// Replacements for base.scad utilities (fillets, offsets, etc.)
+// ------------------------------
+
+// bs_fillet_2d: Replace minkowski(profile, circle) usage in 2D + extrude pipelines
+// Use offset() on the profile, then extrude to height
+module bs_fillet_2d(profile_func = [], r = 2, height = 1) {
+    // Expect caller to provide a 2D profile as a polygon via children()
+    // Example usage:
+    // bs_fillet_2d(r=2, height=10) { square([20,10], center=true); }
+    translate([0,0,0])
+        linear_extrude(height = height)
+            offset(r = r) children();
+}
+
+// bs_fillet_box: direct box fillet helper matching BSOL usage
+module bs_fillet_box(size=[40,30,10], r=2) { rounded_box(size, r); }
+
+// bs_connect_rects: make a loft between two rectangles (no hull)
+module bs_connect_rects(a=[40,30], za=10, b=[40,30], zb=0, r=2) {
+    shape_prism_round(a, za, b, zb, r);
+}
+
+// ------------------------------
+// BSOL body replacement (drop-in)
+// ------------------------------
+module body(cut=false) {
+    crnrOffset = cut ? wallThck : crnrRad;
+    rad = cut ? 0.01 : crnrRad;
+
+    difference() {
+        union() {
+            // if topCorners isn't defined in the environment, provide a default
+            if (!exists("topCorners")) {
+                topCorners = [ {x:40,y:30,z:10}, {x:40,y:30,z:0}, {x:40,y:30,z:-10}, {x:40,y:30,z:-20}, {x:40,y:30,z:-30} ];
+            }
+            for (i=[0:2:4]) {
+                ax = topCorners[i].x  - 2*crnrOffset;
+                ay = topCorners[i].y  - 2*crnrOffset;
+                bx = topCorners[i+1].x - 2*crnrOffset;
+                by = topCorners[i+1].y - 2*crnrOffset;
+                ztop = topCorners[i].z + (i == 0 ? 0 : -crnrOffset);
+                zbot = topCorners[i+1].z - crnrOffset;
+                if (ax <= 0) ax = 0.001; if (ay <= 0) ay = 0.001;
+                if (bx <= 0) bx = 0.001; if (by <= 0) by = 0.001;
+                zlow = min(ztop, zbot);
+                zhigh = max(ztop, zbot);
+                _rounded_loft(ax, ay, zlow, bx, by, zhigh, rad);
+            }
+        }
+        if (!cut) translate([0,0,-rad]) cube([topCorners[0].x, topCorners[0].y, rad*2], true);
+    }
+}
+
+// ------------------------------
+// Export common BSOL names
+// ------------------------------
+module bsol_shapes_include() {
+    // no-op container for compatibility
+}
+
+module bsol_box(size=[40,30,10]) { shape_box_round(size, crnrRad); }
+module bsol_capsule(p1,p2,r) { shape_capsule(p1,p2,r); }
+module bsol_loft_rects(a, za, b, zb, r) { bs_connect_rects(a, za, b, zb, r); }
+
+// ------------------------------
+// End of bsol_brep_shapes_base.scad
+// ------------------------------
