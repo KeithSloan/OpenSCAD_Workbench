@@ -49,6 +49,7 @@ import ply.yacc as yacc
 import Part
 import random
 
+from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 #from freecad.OpenSCAD_Ext.core.OpenSCADFeatures import *
 from freecad.OpenSCAD_Ext.core.OpenSCADUtils import *
 from freecad.OpenSCAD_Ext.core.OpenSCADHull import *
@@ -61,7 +62,7 @@ params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
 printverbose = params.GetBool('printverbose',False)
 print(f'Verbose = {printverbose}')
 #print(params.GetContents())
-#printverbose = True
+printverbose = True
 
 # Get the token map from the lexer.  This is required.
 import tokrules
@@ -162,21 +163,21 @@ def processCSG(docSrc, filename, fnmax_param = None):
 
     if printverbose: print ('ImportCSG Version 0.6a')
     # Build the lexer
-    if printverbose: print('Start Lex')
+    if printverbose: write_log("INFO","Start Lex")
     lex.lex(module=tokrules)
-    if printverbose: print('End Lex')
+    if printverbose: write_log("INFO","End Lex")
 
     # Build the parser   
-    if printverbose: print('Load Parser')
+    if printverbose: write_log("INFO","Load Parser")
     # No debug out otherwise Linux has protection exception
     parser = yacc.yacc(debug=False, write_tables=False)
-    if printverbose: print('Parser Loaded')
+    if printverbose: write_log("INFO","Parser Loaded")
     # Give the lexer some input
     #f=open('test.scad', 'r')
     f = io.open(filename, 'r', encoding="utf8")
     #lexer.input(f.read())
 
-    if printverbose: print('Start Parser')
+    if printverbose: write_log("INFO","Start Parser")
     # Swap statements to enable Parser debugging
     #result = parser.parse(f.read(),debug=1)
     result = parser.parse(f.read())
@@ -194,40 +195,40 @@ def p_block_list_(p):
                | statementwithmod
                | block_list statementwithmod
     '''
-    #if printverbose: print("Block List")
-    #if printverbose: print(p[1])
+    #if printverbose: write_log("INFO","Block List")
+    #if printverbose: write_log("INFO",p[1])
     if(len(p) > 2) :
-        if printverbose: print(p[2])
+        if printverbose: write_log("INFO",p[2])
         p[0] = p[1] + p[2]
     else :
         p[0] = p[1]
-    #if printverbose: print("End Block List")
+    #if printverbose: write_log("INFO","End Block List")
 
 def p_render_action(p):
     'render_action : render LPAREN keywordargument_list RPAREN OBRACE block_list EBRACE'
-    if printverbose: print("Render (ignored)")
+    if printverbose: write_log("INFO","Render (ignored)")
     p[0] = p[6]
 
 def p_group_action1(p):
     'group_action1 : group LPAREN RPAREN OBRACE block_list EBRACE'
-    if printverbose: print(f"Group : {p[5]}")
+    if printverbose: write_log("INFO",f"Group : {p[5]}")
 # Test if need for implicit fuse
     if p[5] is None:
        p[0] = []
        return
     if (len(p[5]) > 1) :
-       if printverbose: print('Fuse Group')
+       if printverbose: write_log("INFO",'Fuse Group')
        for obj in p[5]:
            checkObjShape(obj)
        p[0] = [fuse(p[5],"Group")]
     else :
-       if printverbose: print(f"Group {p[5]} type {type(p[5])}")
+       if printverbose: write_log("INFO",f"Group {p[5]} type {type(p[5])}")
        checkObjShape(p[5])
        p[0] = p[5]
 
 def p_group_action2(p) :
     'group_action2 : group LPAREN RPAREN SEMICOL'
-    if printverbose: print("Group2 Empty")
+    if printverbose: write_log("INFO","Group2 Empty")
     p[0] = []
    
 def p_boolean(p) :
@@ -294,7 +295,7 @@ def p_part(p):
 def p_2d_point(p):
     '2d_point : OSQUARE NUMBER COMMA NUMBER ESQUARE'
     global points_list
-    if printverbose: print("2d Point")
+    if printverbose: write_log("INFO","2d Point")
     p[0] = [float(p[2]),float(p[4])]
 
 def p_points_list_2d(p):
@@ -314,12 +315,12 @@ def p_points_list_2d(p):
             print(p[2])
         p[1].append(p[2])
         p[0] = p[1]
-    #if printverbose: print(p[0])
+    #if printverbose: write_log("INFO",p[0])
 
 def p_3d_point(p):
     '3d_point : OSQUARE NUMBER COMMA NUMBER COMMA NUMBER ESQUARE'
     global points_list
-    if printverbose: print("3d point")
+    if printverbose: write_log("INFO","3d point")
     p[0] = [p[2],p[4],p[6]]
    
 def p_points_list_3d(p):
@@ -329,15 +330,15 @@ def p_points_list_3d(p):
                | points_list_3d 3d_point
                '''
     if p[2] == ',' :
-        if printverbose: print("Start List")
-        if printverbose: print(p[1])
+        if printverbose: write_log("INFO","Start List")
+        if printverbose: write_log("INFO", p[1])
         p[0] = [p[1]]
     else :
-        if printverbose: print(p[1])
-        if printverbose: print(p[2])
+        if printverbose: write_log("INFO", p[1])
+        if printverbose: write_log("INFO", p[2])
         p[1].append(p[2])
         p[0] = p[1]
-    if printverbose: print(p[0])
+    if printverbose: write_log("INFO",p[0])
 
 def p_path_points(p):
     '''
@@ -345,24 +346,24 @@ def p_path_points(p):
                 | path_points NUMBER COMMA
                 | path_points NUMBER
                 '''
-    #if printverbose: print("Path point")
+    #if printverbose: write_log("INFO","Path point")
     if p[2] == ',' :
-        #if printverbose: print('Start list')
-        #if printverbose: print(p[1])
+        #if printverbose: write_log("INFO",'Start list')
+        #if printverbose: write_log("INFO",p[1])
         p[0] = [int(p[1])]
     else :
-        #if printverbose: print(p[1])
-        #if printverbose: print(len(p[1]))
-        #if printverbose: print(p[2])
+        #if printverbose: write_log("INFO",p[1])
+        #if printverbose: write_log("INFO"len(p[1]))
+        #if printverbose: write_log("INFO",p[2])
         p[1].append(int(p[2]))
         p[0] = p[1]
-    #if printverbose: print(p[0])
+    #if printverbose: write_log("INFO",p[0])
 
 
 def p_path_list(p):
     'path_list : OSQUARE path_points ESQUARE'
-    #if printverbose: print('Path List ')
-    #if printverbose: print(p[2])
+    #if printverbose: write_log("INFO",'Path List ')
+    #if printverbose: write_log("INFO",p[2])
     p[0] = p[2]
 
 def p_path_set(p) :
@@ -370,14 +371,14 @@ def p_path_set(p) :
     path_set : path_list
              | path_set COMMA path_list
              '''
-    #if printverbose: print('Path Set')
-    #if printverbose: print(len(p))
+    #if printverbose: write_log("INFO",'Path Set')
+    #if printverbose: write_log("INFO"len(p))
     if len(p) == 2 :
         p[0] = [p[1]]
     else :
         p[1].append(p[3])
         p[0] = p[1]
-    #if printverbose: print(p[0])
+    #if printverbose: write_log("INFO",p[0])
 
 def p_operation(p):
     '''
@@ -468,10 +469,10 @@ def p_offset_action(p):
     p[0] = [newobj]
 
 def checkObjShape(obj) :
-    if printverbose: print('Check Object Shape')
+    if printverbose: write_log("INFO",'Check Object Shape')
     if hasattr(obj, 'Shape'):    
         if obj.Shape.isNull() == True :
-            if printverbose: print('Shape is Null - recompute')
+            if printverbose: write_log("INFO",'Shape is Null - recompute')
             obj.recompute()
         if (obj.Shape.isNull() == True):
             print(f'Recompute failed : {obj.Name}')
@@ -490,7 +491,7 @@ def checkObjShape(obj) :
 
 def checkObjType2D(obj) :
     if obj.TypeId == 'Part::Part2DObject' :
-       if printverbose: print('2D')
+       if printverbose: write_log("INFO",'2D')
        return True
     if obj.TypeId == 'Part::Cut' or obj.TypeId == 'Part::Fuse' or \
        obj.TypeId == 'Part::Common' or obj.TypeId == 'Part::MultiFuse' :
@@ -526,7 +527,7 @@ def setObjectColour(obj, col) :
 def p_hull_action(p):
     'hull_action : hull LPAREN RPAREN OBRACE block_list EBRACE'
     #printverbose=True
-    if printverbose: print('hull function')
+    if printverbose: write_log("INFO",'hull function')
     from OpenSCADHull import makeHull
     myHull = makeHull(p[5],True)
     p[0] = [myHull]
@@ -609,7 +610,7 @@ def p_not_supported(p):
 
 def p_size_vector(p):
     'size_vector : OSQUARE NUMBER COMMA NUMBER COMMA NUMBER ESQUARE'
-    if printverbose: print("size vector")
+    if printverbose: write_log("INFO","size vector")
     p[0] = [p[2],p[4],p[6]]
 
 def p_keywordargument(p):
@@ -622,7 +623,7 @@ def p_keywordargument(p):
     | ID EQ stripped_string
      '''
     p[0] = (p[1],p[3])
-    if printverbose: print(p[0])
+    if printverbose: write_log("INFO",p[0])
 
 def p_keywordargument_list(p):
     '''
@@ -638,7 +639,7 @@ def p_keywordargument_list(p):
 def p_color_action(p):
     'color_action : color LPAREN vector RPAREN OBRACE block_list EBRACE'
     import math
-    if printverbose: print("Color")
+    if printverbose: write_log("INFO","Color")
     color = tuple([float(f) for f in p[3][:3]]) #RGB
     transp = 100 - int(math.floor(100*float(p[3][3]))) #Alpha
     if gui:
@@ -649,8 +650,8 @@ def p_color_action(p):
 
 # Error rule for syntax errors
 def p_error(p):
-    if printverbose: print("Syntax error in input!")
-    if printverbose: print(p)
+    if printverbose: write_log("INFO","Syntax error in input!")
+    if printverbose: write_log("INFO",p)
 
 def fuse(lst,name):
     global doc
@@ -666,7 +667,7 @@ def fuse(lst,name):
        return lst[0]
     # Is this Multi Fuse
     elif len(lst) > 2:
-       if printverbose: print("Multi Fuse")
+       if printverbose: write_log("INFO","Multi Fuse")
        myfuse = doc.addObject('Part::MultiFuse',name)
        myfuse.Shapes = lst
        for s in myfuse.Shapes:
@@ -675,7 +676,7 @@ def fuse(lst,name):
            for subobj in myfuse.Shapes:
                subobj.ViewObject.hide()
     else:
-       if printverbose: print("Single Fuse")
+       if printverbose: write_log("INFO","Single Fuse")
        myfuse = doc.addObject('Part::Fuse',name)
        myfuse.Base = lst[0]
        myfuse.Tool = lst[1]
@@ -690,19 +691,19 @@ def fuse(lst,name):
 
 def p_union_action(p):
     'union_action : union LPAREN RPAREN OBRACE block_list EBRACE'
-    if printverbose: print("union")
+    if printverbose: write_log("INFO","union")
     print("union")
     newpart = fuse(p[5],p[1])
-    if printverbose: print("Push Union Result")
+    if printverbose: write_log("INFO","Push Union Result")
     p[0] = [newpart]
-    if printverbose: print("End Union")
+    if printverbose: write_log("INFO","End Union")
     
 def p_difference_action(p):  
     'difference_action : difference LPAREN RPAREN OBRACE block_list EBRACE'
 
-    if printverbose: print("difference")
-    if printverbose: print(len(p[5]))
-    if printverbose: print(p[5])
+    if printverbose: write_log("INFO","difference")
+    if printverbose: write_log("INFO", len(p[5]))
+    if printverbose: write_log("INFO",p[5])
     if (len(p[5]) == 0 ): #nochild
         mycut = placeholder('group',[],'{}')
     elif (len(p[5]) == 1 ): #single object
@@ -721,20 +722,20 @@ def p_difference_action(p):
         if gui:
             mycut.Base.ViewObject.hide()
             mycut.Tool.ViewObject.hide()
-        if printverbose: print("Push Resulting Cut")
+        if printverbose: write_log("INFO","Push Resulting Cut")
         #print(dir(mycut))
         #print(mycut)
         #print(mycut.Name)
         p[0] = [mycut]
-    if printverbose: print("End Cut")
+    if printverbose: write_log("INFO","End Cut")
 
 def p_intersection_action(p):
     'intersection_action : intersection LPAREN RPAREN OBRACE block_list EBRACE'
 
-    if printverbose: print("intersection")
+    if printverbose: write_log("INFO","intersection")
     # Is this Multi Common
     if (len(p[5]) > 2):
-       if printverbose: print("Multi Common")
+       if printverbose: write_log("INFO","Multi Common")
        mycommon = doc.addObject('Part::MultiCommon',p[1])
        mycommon.Shapes = p[5]
        for s in mycommon.Shapes:
@@ -743,7 +744,7 @@ def p_intersection_action(p):
            for subobj in mycommon.Shapes:
                subobj.ViewObject.hide()
     elif (len(p[5]) == 2):
-       if printverbose: print("Single Common")
+       if printverbose: write_log("INFO","Single Common")
        mycommon = doc.addObject('Part::Common',p[1])
        mycommon.Base = p[5][0]
        mycommon.Tool = p[5][1]
@@ -758,7 +759,7 @@ def p_intersection_action(p):
     else : # 1 child
         mycommon = placeholder('group',[],'{}')
     p[0] = [mycommon]
-    if printverbose: print("End Intersection")
+    if printverbose: write_log("INFO","End Intersection")
 
 def process_rotate_extrude(obj,angle):
     
@@ -802,7 +803,7 @@ def process_rotate_extrude_prism(obj, angle, n):
 
 def p_rotate_extrude_action(p): 
     'rotate_extrude_action : rotate_extrude LPAREN keywordargument_list RPAREN OBRACE block_list EBRACE'
-    if printverbose: print("Rotate Extrude")
+    if printverbose: write_log("INFO","Rotate Extrude")
     angle = 360.0
     if 'angle' in p[3]:
         angle = float(p[3]['angle'])
@@ -820,11 +821,11 @@ def p_rotate_extrude_action(p):
         p[0] = [process_rotate_extrude(part,angle)]
     else:
         p[0] = [process_rotate_extrude_prism(part,angle,n)]
-    if printverbose: print("End Rotate Extrude")
+    if printverbose: write_log("INFO","End Rotate Extrude")
 
 def p_rotate_extrude_file(p):
     'rotate_extrude_file : rotate_extrude LPAREN keywordargument_list RPAREN SEMICOL'
-    if printverbose: print("Rotate Extrude File")
+    if printverbose: write_log("INFO","Rotate Extrude File")
     angle = 360.0
     if 'angle' in p[3]:
         angle = float(p[3]['angle'])
@@ -839,7 +840,7 @@ def p_rotate_extrude_file(p):
         p[0] = [process_rotate_extrude(obj,angle)]
     else:
         p[0] = [process_rotate_extrude_prism(obj,angle,n)]
-    if printverbose: print("End Rotate Extrude File")
+    if printverbose: write_log("INFO","End Rotate Extrude File")
 
 def process_linear_extrude(obj,h) :
     #if gui:
@@ -888,11 +889,11 @@ def process_linear_extrude_with_transform(base,height,twist,scale) :
 
 def p_linear_extrude_with_transform(p):
     'linear_extrude_with_transform : linear_extrude LPAREN keywordargument_list RPAREN OBRACE block_list EBRACE'
-    if printverbose: print("Linear Extrude With Transform")
+    if printverbose: write_log("INFO","Linear Extrude With Transform")
     h = float(p[3]['height'])
     s = 1.0
     t = 0.0
-    if printverbose: print("Twist : ",p[3])
+    if printverbose: write_log("INFO","Twist : ",p[3])
     if 'scale' in p[3]:
         if isinstance(p[3]['scale'], str):
             s = [float(p[3]['scale']), float(p[3]['scale'])]
@@ -920,11 +921,11 @@ def p_linear_extrude_with_transform(p):
     p[0] = [newobj]
     if gui:
        obj.ViewObject.hide()
-    if printverbose: print("End Linear Extrude with twist")
+    if printverbose: write_log("INFO","End Linear Extrude with twist")
 
 def p_import_file1(p):
     'import_file1 : import LPAREN keywordargument_list RPAREN SEMICOL'
-    if printverbose: print("Import File")
+    if printverbose: write_log("INFO","Import File")
     filen,ext =p[3]['file'].rsplit('.',1)
     if 'layer' in p[3]:
         layerName = p[3]['layer']    
@@ -935,22 +936,22 @@ def p_import_file1(p):
         layerName = None    
     #p[0] = [process_import_file(filen,ext,p[3]['layer'])]
     p[0] = [process_import_file(filen, ext, layerName)]
-    if printverbose: print("End Import File")
+    if printverbose: write_log("INFO","End Import File")
 
 def p_surface_action(p):
     'surface_action : surface LPAREN keywordargument_list RPAREN SEMICOL'
-    if printverbose: print("Surface")
+    if printverbose: write_log("INFO","Surface")
     obj = doc.addObject("Part::Feature",'surface')
     obj.Shape,xoff,yoff=makeSurfaceVolume(p[3]['file'])
     if p[3]['center']=='true' :
         center(obj,xoff,yoff,0.0)
     p[0] = [obj]
-    if printverbose: print("End surface")
+    if printverbose: write_log("INFO","End surface")
 
 
 def process_import_file(fname, ext, layer):
     from OpenSCADUtils import reverseimporttypes
-    if printverbose: print("Importing : "+fname+"."+ext+" Layer : "+layer)
+    if printverbose: write_log("INFO","Importing : "+fname+"."+ext+" Layer : "+layer)
     if ext.lower() in reverseimporttypes()['Mesh']:
         obj=process_mesh_file(fname, ext)
     elif ext.lower() == 'dxf':
@@ -1047,26 +1048,26 @@ def processDXF(fname,layer):
     global pathName
     #from OpenSCAD2Dgeom import importDXFshape
     from freecad.OpenSCAD_Ext.core.OpenSCADdxf import importEZDXFshape
-    if printverbose: print("Process DXF file")
-    if printverbose: print("File Name : "+fname)
-    if printverbose: print("Layer : "+layer)
-    if printverbose: print("PathName : "+pathName)
+    if printverbose: write_log("INFO","Process DXF file")
+    if printverbose: write_log("INFO","File Name : "+fname)
+    if printverbose: write_log("INFO","Layer : "+layer)
+    if printverbose: write_log("INFO","PathName : "+pathName)
     dxfname = fname+'.dxf'
     filename = os.path.join(pathName,dxfname)
     shortname = os.path.split(fname)[1]
-    if printverbose: print("DXF Full path : "+filename)
+    if printverbose: write_log("INFO","DXF Full path : "+filename)
     face = importEZDXFshape(filename,layer,doc)
     obj=doc.addObject('Part::Feature','dxf_%s_%s' % (shortname,layer or "all"))
     obj.Shape=face
-    if printverbose: print("DXF Diagnostics")
-    if printverbose: print(obj.Shape.ShapeType)
-    if printverbose: print("Closed : "+str(obj.Shape.isClosed()))
-    if printverbose: print(obj.Shape.check())
-    if printverbose: print([w.isClosed() for w in obj.Shape.Wires])
+    if printverbose: write_log("INFO","DXF Diagnostics")
+    if printverbose: write_log("INFO", obj.Shape.ShapeType)
+    if printverbose: write_log("INFO", "Closed : "+str(obj.Shape.isClosed()))
+    if printverbose: write_log("INFO", obj.Shape.check())
+    if printverbose: write_log("INFO", [w.isClosed() for w in obj.Shape.Wires])
     return(obj)
 
 def processSTL(fname):
-    if printverbose: print("Process STL file")
+    if printverbose: write_log("INFO","Process STL file")
 
 def p_multmatrix_action(p):
     'multmatrix_action : multmatrix LPAREN matrix RPAREN OBRACE block_list EBRACE'
@@ -1074,7 +1075,7 @@ def p_multmatrix_action(p):
     #     fcsubmatrix, roundrotation, isrotoinversionpython, \
     #     decomposerotoinversion
     from OpenSCADFeatures import RefineShape     
-    if printverbose: print(f"MultMatrix matrix {p[3]} objects {p[6]}")
+    if printverbose: write_log("INFO",f"MultMatrix matrix {p[3]} objects {p[6]}")
     transform_matrix = FreeCAD.Matrix()
     m1l=sum(p[3],[])
     if any('x' in me for me in m1l): #hexfloats
@@ -1088,8 +1089,8 @@ def p_multmatrix_action(p):
         m1l=[round(float(me),12) for me in m1l] #round
         matrixisrounded=True
     transform_matrix = FreeCAD.Matrix(*tuple(m1l))
-    if printverbose: print(transform_matrix)
-    if printverbose: print(f"Apply Multmatrix : {p[6]}")
+    if printverbose: write_log("INFO", transform_matrix)
+    if printverbose: write_log("INFO", f"Apply Multmatrix : {p[6]}")
 #   If more than one object on the stack for multmatrix fuse first
     #for o in p[6]:    
     #    print(f"{o.Label} {o}")
@@ -1113,9 +1114,9 @@ def performMultMatrix(part, matrixisrounded, transform_matrix) :
          decomposerotoinversion
     print(f"performMultMatrix {part.Name}")     
     if (isspecialorthogonalpython(fcsubmatrix(transform_matrix))) :
-       if printverbose: print("special orthogonal")
+       if printverbose: write_log("INFO","special orthogonal")
        if matrixisrounded:
-           if printverbose: print("rotation rounded")
+           if printverbose: write_log("INFO","rotation rounded")
            plm=FreeCAD.Placement(transform_matrix)
            plm=FreeCAD.Placement(plm.Base,roundrotation(plm.Rotation))
            part.Placement=plm.multiply(part.Placement)
@@ -1124,13 +1125,13 @@ def performMultMatrix(part, matrixisrounded, transform_matrix) :
                    part.Placement)
        new_part = part
     elif isrotoinversionpython(fcsubmatrix(transform_matrix)):
-        if printverbose: print("orthogonal and inversion")
+        if printverbose: write_log("INFO","orthogonal and inversion")
         cmat,axisvec = decomposerotoinversion(transform_matrix)
         new_part=doc.addObject("Part::Mirroring",'mirr_%s'%part.Name)
         new_part.Source=part
         new_part.Normal=axisvec
         if matrixisrounded:
-            if printverbose: print("rotation rounded")
+            if printverbose: write_log("INFO","rotation rounded")
             plm=FreeCAD.Placement(cmat)
             new_part.Placement=FreeCAD.Placement(plm.Base,roundrotation(plm.Rotation))
         else:
@@ -1152,7 +1153,7 @@ def performMultMatrix(part, matrixisrounded, transform_matrix) :
                 new_part.ViewObject.Proxy = 0
             part.ViewObject.hide()
     else :
-        if printverbose: print("Transform Geometry")
+        if printverbose: write_log("INFO","Transform Geometry")
 #       Need to recompute to stop transformGeometry causing a crash        
         doc.recompute()
         print(f"Matrix Deformation {part.Label}")
@@ -1176,17 +1177,18 @@ def performMultMatrix(part, matrixisrounded, transform_matrix) :
 #               p[0] = [newobj]
 #           else :
 #               p[0] = [new_part]
-#           if printverbose: print("Multmatrix applied")
+#           if printverbose: write_log("INFO","Multmatrix applied")
     return new_part
 
 def p_matrix(p):
     'matrix : OSQUARE vector COMMA vector COMMA vector COMMA vector ESQUARE'
-    if printverbose: print("Matrix")
+    if printverbose: write_log("INFO","Matrix")
+    write_log("INFO","Matrix")
     p[0] = [p[2],p[4],p[6],p[8]]
 
 def p_vector(p):
     'vector : OSQUARE NUMBER COMMA NUMBER COMMA NUMBER COMMA NUMBER ESQUARE'
-    if printverbose: print("Vector")
+    if printverbose: write_log("INFO","Vector")
     p[0] = [p[2],p[4],p[6],p[8]]
 
 def center(obj,x,y,z):
@@ -1196,18 +1198,18 @@ def center(obj,x,y,z):
     
 def p_sphere_action(p):
     'sphere_action : sphere LPAREN keywordargument_list RPAREN SEMICOL'
-    if printverbose: print("Sphere : ",p[3])
+    if printverbose: write_log("INFO",f"Sphere : {p[3]}")
     r = float(p[3]['r'])
     mysphere = doc.addObject("Part::Sphere",p[1])
     mysphere.Radius = r
-    if printverbose: print("Push Sphere")
+    if printverbose: write_log("INFO","Push Sphere")
     p[0] = [mysphere]
-    if printverbose: print("End Sphere")
+    if printverbose: write_log("INFO","End Sphere")
 
 def myPolygon(n,r1):
     # Adapted from Draft::_Polygon
     import math
-    if printverbose: print("My Polygon")
+    if printverbose: write_log("INFO","My Polygon")
     angle = math.pi*2/n
     nodes = [FreeCAD.Vector(r1,0,0)]
     for i in range(n-1) :
@@ -1225,7 +1227,7 @@ def p_cylinder_action(p):
     global fnmax
 
     #print(f"fnmax {fnmax}")
-    if printverbose: print("Cylinder")
+    if printverbose: write_log("INFO","Cylinder")
     tocenter = p[3]['center']
     h = float(p[3]['h'])
     r1 = float(p[3]['r1'])
@@ -1237,16 +1239,16 @@ def p_cylinder_action(p):
     #    "User parameter:BaseApp/Preferences/Mod/OpenSCAD").\
     #    GetInt('useMaxFN')
     if fnmax == 0 : fnmax = 16
-    if printverbose: print(p[3])
+    if printverbose: write_log("INFO",p[3])
     if h > 0:
         if ( r1 == r2 and r1 > 0):
-            if printverbose: print("Make Cylinder")
+            if printverbose: write_log("INFO","Make Cylinder")
             if n < 3 or fnmax != 0 and n > fnmax:
                 mycyl=doc.addObject("Part::Cylinder",p[1])
                 mycyl.Height = h
                 mycyl.Radius = r1
             else :
-                if printverbose: print("Make Prism")
+                if printverbose: write_log("INFO","Make Prism")
                 if False: #user Draft Polygon
                     mycyl=doc.addObject("Part::Extrusion","prism")
                     mycyl.Dir = (0,0,h)
@@ -1257,7 +1259,7 @@ def p_cylinder_action(p):
                         # If Draft can't import (probably due to lack of Pivy on Mac and
                         # Linux builds of FreeCAD), this is a fallback.
                         # or old level of FreeCAD
-                        if printverbose: print("Draft makePolygon Failed, falling back on manual polygon")
+                        if printverbose: write_log("INFO","Draft makePolygon Failed, falling back on manual polygon")
                         mycyl.Base = myPolygon(n,r1)
                         # mycyl.Solid = True
 
@@ -1273,13 +1275,13 @@ def p_cylinder_action(p):
 
         elif (r1 != r2):
             if n < 3 or fnmax != 0 and n > fnmax:
-                if printverbose: print("Make Cone")
+                if printverbose: write_log("INFO","Make Cone")
                 mycyl=doc.addObject("Part::Cone",p[1])
                 mycyl.Height = h
                 mycyl.Radius1 = r1
                 mycyl.Radius2 = r2
             else:
-                if printverbose: print("Make Frustum")
+                if printverbose: write_log("INFO","Make Frustum")
                 mycyl=doc.addObject("Part::FeaturePython",'frustum')
                 from OpenSCADFeatures import Frustum
                 Frustum(mycyl,r1,r2,n,h)
@@ -1298,7 +1300,7 @@ def p_cylinder_action(p):
         FreeCAD.Console.PrintWarning('cylinder with height <= zero\n')
         mycyl=doc.addObject("Part::Feature","emptycyl")
         mycyl.Shape = Part.Compound([])
-    if printverbose: print("Center = ",tocenter)
+    if printverbose: write_log("INFO","Center = ",tocenter)
     if tocenter=='true' :
        center(mycyl,0,0,h)
     if False :  
@@ -1316,14 +1318,14 @@ def p_cylinder_action(p):
         p[0] = [newobj]
     else :
         p[0] = [mycyl]
-    if printverbose: print("End Cylinder")
+    if printverbose: write_log("INFO","End Cylinder")
 
 def p_cube_action(p):
     'cube_action : cube LPAREN keywordargument_list RPAREN SEMICOL'
     global doc
     l,w,h = [float(str1) for str1 in p[3]['size']]
     if (l > 0 and w > 0 and h >0):
-        if printverbose: print("cube : ",p[3])
+        if printverbose: write_log("INFO","cube : ",p[3])
         mycube=doc.addObject('Part::Box',p[1])
         mycube.Length=l
         mycube.Width=w
@@ -1335,11 +1337,11 @@ def p_cube_action(p):
     if p[3]['center']=='true' :
        center(mycube,l,w,h)
     p[0] = [mycube]
-    if printverbose: print("End Cube")
+    if printverbose: write_log("INFO","End Cube")
 
 def p_circle_action(p) :
     'circle_action : circle LPAREN keywordargument_list RPAREN SEMICOL'
-    if printverbose: print("Circle : "+str(p[3]))
+    if printverbose: write_log("INFO","Circle : "+str(p[3]))
     r = float(p[3]['r'])
     # Avoid zero radius
     if r == 0 : r = 0.00001
@@ -1371,12 +1373,12 @@ def p_circle_action(p) :
         mycircle.MakeFace = True
     if gui:
         Draft._ViewProviderDraft(mycircle.ViewObject)
-    if printverbose: print("Push Circle")
+    if printverbose: write_log("INFO","Push Circle")
     p[0] = [mycircle]
 
 def p_square_action(p) :
     'square_action : square LPAREN keywordargument_list RPAREN SEMICOL'
-    if printverbose: print("Square")
+    if printverbose: write_log("INFO","Square")
     size = p[3]['size']
     x = float(size[0])
     y = float(size[1])
@@ -1405,7 +1407,7 @@ def addValue(t,v,p):
 def p_text_action(p) :
     'text_action : text LPAREN keywordargument_list RPAREN SEMICOL'
     # If text string is null ignore
-    if p[3]['text'] == "" or p[3]['text'] == " " :
+    if p[3]['text'] == "," or p[3]['text'] == " " :
         p[0] = []
         return
     print(f"keywordargs {p[3]}")
@@ -1429,44 +1431,44 @@ def p_text_action(p) :
 def convert_points_list_to_vector(l):
     v = []
     for i in l :
-        if printverbose: print(i)
+        if printverbose: write_log("INFO", i)
         v.append(FreeCAD.Vector(i[0],i[1]))
-    if printverbose: print(v)
+    if printverbose: write_log("INFO", v)
     return(v)
 
 
 def p_polygon_action_nopath(p) :
     'polygon_action_nopath : polygon LPAREN points EQ OSQUARE points_list_2d ESQUARE COMMA paths EQ undef COMMA keywordargument_list RPAREN SEMICOL'
-    if printverbose: print("Polygon")
-    if printverbose: print(p[6])
+    if printverbose: write_log("INFO","Polygon")
+    if printverbose: write_log("INFO",p[6])
     v = convert_points_list_to_vector(p[6])
     mypolygon = doc.addObject('Part::Feature',p[1])
-    if printverbose: print("Make Parts")
+    if printverbose: write_log("INFO","Make Parts")
     # Close Polygon
     v.append(v[0])
     parts = Part.makePolygon(v)
-    if printverbose: print("update object")
+    if printverbose: write_log("INFO","update object")
     mypolygon.Shape = Part.Face(parts)
     p[0] = [mypolygon]
 
 def p_polygon_action_plus_path(p) :
     'polygon_action_plus_path : polygon LPAREN points EQ OSQUARE points_list_2d ESQUARE COMMA paths EQ OSQUARE path_set ESQUARE COMMA keywordargument_list RPAREN SEMICOL'
-    if printverbose: print(f"Polygon with Path : len {len(p[6])} {p[6]}")
+    if printverbose: write_log("INFO",f"Polygon with Path : len {len(p[6])} {p[6]}")
     v = convert_points_list_to_vector(p[6])
     # Make sure a closed list
     v.append(v[0])
-    if printverbose: print(f"Path Set List {p[12]}")
+    if printverbose: write_log("INFO",f"Path Set List {p[12]}")
     for i in p[12] :
-         if printverbose: print(f"Set entry {i}")
+         if printverbose: write_log("INFO",f"Set entry {i}")
          mypolygon = doc.addObject('Part::Feature','wire')
          path_list = []
          for j in i :
              j = int(j)
-             if printverbose: print(f"index {j}")
+             if printverbose: write_log("INFO",f"index {j}")
              path_list.append(v[j])
 #        Close path
          path_list.append(v[int(i[0])])
-         if printverbose: print(f"Path List {path_list}")
+         if printverbose: write_log("INFO",f"Path List {path_list}")
          wire = Part.makePolygon(path_list)
          mypolygon.Shape = Part.Face(wire)
          p[0] = [mypolygon]
@@ -1480,10 +1482,10 @@ def make_face(v1,v2,v3):
 def p_polyhedron_action(p) :
     '''polyhedron_action : polyhedron LPAREN points EQ OSQUARE points_list_3d ESQUARE COMMA faces EQ OSQUARE path_set ESQUARE COMMA keywordargument_list RPAREN SEMICOL
                       | polyhedron LPAREN points EQ OSQUARE points_list_3d ESQUARE COMMA triangles EQ OSQUARE points_list_3d ESQUARE COMMA keywordargument_list RPAREN SEMICOL'''
-    if printverbose: print("Polyhedron Points")
+    if printverbose: write_log("INFO","Polyhedron Points")
     v = []
     for i in p[6] :
-        if printverbose: print(i)
+        if printverbose: write_log("INFO", i)
         v.append(FreeCAD.Vector(float(i[0]),float(i[1]),float(i[2])))
     if printverbose:
         print(v)
@@ -1492,7 +1494,7 @@ def p_polyhedron_action(p) :
     faces_list = []    
     mypolyhed = doc.addObject('Part::Feature',p[1])
     for i in p[12] :
-        if printverbose: print(i)
+        if printverbose: write_log("INFO", i)
         v2 = FreeCAD.Vector
         pp =[v2(v[k]) for k in i]
         # Add first point to end of list to close polygon
@@ -1518,7 +1520,7 @@ def p_polyhedron_action(p) :
 
 def p_projection_action(p) :
     'projection_action : projection LPAREN keywordargument_list RPAREN OBRACE block_list EBRACE'
-    if printverbose: print('Projection')
+    if printverbose: write_log("INFO",'Projection')
     if p[3]['cut']=='true' :
         planedim=1e9 # large but finite
         #infinite planes look bad in the GUI

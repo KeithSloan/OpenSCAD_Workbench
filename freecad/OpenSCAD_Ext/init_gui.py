@@ -1,6 +1,12 @@
 import FreeCAD as App
 import FreeCADGui as Gui
 
+# Register logger - Must be in Gui and outside of Workbench
+from .logger.Workbench_logger import init as init_logging
+#from freecad.OpenSCAD_Ext.logger.Workbench_logger import init as init_logging
+
+init_logging()
+
 class OpenSCADWorkbench_Ext(Gui.Workbench):
     """External OpenSCAD Workbench"""
     MenuText = "OpenSCAD_Ext"
@@ -18,10 +24,16 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
         Gui.addIconPath(":/icons")
         Gui.addLanguagePath(":/translations")
 
-
     	# Register preferences (new FreeCAD 1.0 API)
         # from . import preferences
         # preferences.Load()
+
+        # Register logger - Must be in Gui and outside of Workbench
+        from .logger.Workbench_logger import init as init_logging
+        #from freecad.OpenSCAD_Ext.logger.Workbench_logger import init as init_logging
+
+        init_logging()
+
 
         # TODO: add commands when ready
         # self.appendToolbar("OpenSCAD Tools", [...])

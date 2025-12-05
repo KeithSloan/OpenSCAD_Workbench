@@ -1,0 +1,14 @@
+def logging_enabled():
+    params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/YourWorkbench")
+    return params.GetBool("EnableLogging", False)
+
+def init():
+    if not logging_enabled():
+        return  # logging disabled by preference
+
+    # enable logger
+    sys.stdout = PrintLogger()
+    sys.stderr = ErrorLogger()
+    FreeCAD.Console.AddLogHandler(FCHandler())
+    write_log("INIT", "Logging started")
+

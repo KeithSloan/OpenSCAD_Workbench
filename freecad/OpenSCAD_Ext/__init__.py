@@ -1,29 +1,32 @@
-# freecad/OpenSCAD_ext/__init__.py
+# freecad/OpenSCAD_Workbench/__init__.py
 import FreeCAD
 
-# Called by FreeCAD when workbench is loaded
-# FreeCAD.Console.PrintMessage("Loading OpenSCAD_Ext backend…\n")
+# setup_importers()
 
-# --------- Register Files ----------
-#import importlib
+# --- Logging ---
+from .logger.Workbench_logger import init as init_logging, write_log
 
-# -------- Preferences Page (GUI only) -------
-#if FreeCAD.GuiUp:
-#    import FreeCADGui
-#    FreeCADGui.addPreferencePage("freecad/MyWB/resources/ui/Preferences.ui",
-#                                 "My Workbench")
+# Initialize logger immediately when the module is imported
+init_logging()
+write_log("INIT", "OpenSCAD_Ext module loaded — logging active")
 
-import FreeCAD
+# Optional test print
 
+# Setup importers
 def setup_importers():
     IMPORTER_BASE = __name__ + ".importers"
-
-    FreeCAD.addImportType("CSG geometry (*.csg)", f"{IMPORTER_BASE}.importAltCSG")
-    FreeCAD.addImportType("SCAD geometry (*.scad)", f"{IMPORTER_BASE}.importAltCSG")
-    #FreeCAD.addImportType("OpenSCAD (*.scad)",     f"{IMPORTER_BASE}.importSCAD")
-    FreeCAD.addImportType("DXF drawing (*.dxf)",   f"{IMPORTER_BASE}.importDXF")
+    FreeCAD.addImportType(
+        "External OpenSCAD Workbench : CSG importer (*.csg)",
+        f"{IMPORTER_BASE}.importAltCSG"
+    )
+    FreeCAD.addImportType(
+        "SCAD geometry (*.scad)",
+        f"{IMPORTER_BASE}.importAltCSG"
+    )
+    FreeCAD.addImportType(
+        "DXF drawing (*.dxf)",
+        f"{IMPORTER_BASE}.importDXF"
+    )
     FreeCAD.Console.PrintMessage("All importers registered.\n")
 
 setup_importers()
-# Worbench diffinition __init__py or init_gui
-# init_gui more logical

@@ -1,0 +1,19 @@
+import FreeCADGui
+from .preferences import WBPreferences
+
+class YourWorkbench(FreeCADGui.Workbench):
+    MenuText = "Your Workbench"
+    ToolTip = "Description..."
+
+    def Initialize(self):
+        # Register preferences page
+        FreeCADGui.addPreferencePage(WBPreferences(), "Your Workbench")
+
+    def Activated(self):
+        pass
+
+    def Deactivated(self):
+        pass
+
+FreeCADGui.addWorkbench(YourWorkbench())
+
