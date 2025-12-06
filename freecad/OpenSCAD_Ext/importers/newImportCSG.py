@@ -1,4 +1,5 @@
 import FreeCAD
 
-FreeCAD.Console,PrintError("New Importer/n")
+def open(fileName):
+	FreeCAD.Console.PrintError("New Importer\n")
 
