@@ -1,5 +1,6 @@
 import FreeCAD as App
 import FreeCADGui as Gui
+import sys
 
 # Register logger - Must be in Gui and outside of Workbench
 from .logger.Workbench_logger import init as init_logging
@@ -42,8 +43,21 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
         # NOTE:
         # DO NOT call addPreferencePage here — new-style workbenches
         # must use addPreferencePageProvider in preferences.py
-        # (If missing, FreeCAD shows the “not a preference page” errors)    
+        # (If missing, FreeCAD shows the “not a preference page” errors)
+
+        from .commands import newSCAD
+        from .commands import editSCAD
+        from .commands import execSCAD
+ 
+        commands = [
+            "NewSCADFileObject_CMD",
+            "EditSCADFileObject_CMD",
+            "ExecSCADFileObject_CMD",
+        ]
+        toolbarcommands = commands
+
         '''
+        Old Commands
         import OpenSCAD_rc, OpenSCADCommands
 
         commands = [
@@ -79,18 +93,19 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
         ]
         import FreeCAD
         translate = FreeCAD.Qt.translate
-        ###
-        param = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
+        '''
+        param = App.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
         openscadfilename = param.GetString("openscadexecutable")
         if not openscadfilename:
             import OpenSCADUtils
 
             openscadfilename = OpenSCADUtils.searchforopenscadexe()
             if openscadfilename:  # automatic search was successful
-                FreeCAD.addImportType("OpenSCAD Format (*.scad *.SCAD)", "importCSG")
+                App.addImportType("OpenSCAD Format (*.scad *.SCAD)", "importCSG")
                 param.SetString(
                     "openscadexecutable", openscadfilename
                 )  # save the result
+        ''' 
         if openscadfilename:
             commands.extend(
                 [
@@ -110,13 +125,13 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
                 ]
             )
         else:
-            FreeCAD.Console.PrintWarning("OpenSCAD executable not found\n")
-
+            App.Console.PrintWarning("OpenSCAD executable not found\n")
+        '''
         transferMechanism = param.GetInt("transfermechanism", 0)
         if openscadfilename and transferMechanism == 0:
             # We are using the Python temp-directory creation function
             if "snap" in openscadfilename:
-                FreeCAD.Console.PrintMessage(
+                App.Console.PrintMessage(
                     translate(
                         "OpenSCAD",
                         "It looks like you may be using a Snap version of OpenSCAD.",
@@ -129,7 +144,7 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
                     + "\n"
                 )
             elif sys.executable.startswith("/tmp/"):  # Heuristic for AppImages
-                FreeCAD.Console.PrintMessage(
+                App.Console.PrintMessage(
                     translate(
                         "OpenSCAD",
                         "It looks like you may be using a sandboxed version of FreeCAD.",
@@ -145,13 +160,12 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
         self.appendToolbar(
             QT_TRANSLATE_NOOP("Workbench", "OpenSCAD Tools"), toolbarcommands
         )
-        self.appendMenu("OpenSCAD", commands)
-        self.appendToolbar(
-            QT_TRANSLATE_NOOP("Workbench", "Frequently-used Part WB tools"), parttoolbarcommands
-        )
+        #self.appendMenu("OpenSCAD", commands)
+        #self.appendToolbar(
+        #    QT_TRANSLATE_NOOP("Workbench", "Frequently-used Part WB tools"), parttoolbarcommands
+        #)
         # self.appendMenu('OpenSCAD',["AddOpenSCADElement"])
         ###self.appendCommandbar("&Generic Tools",["ColorCodeShape"])
-        '''
         Gui.addIconPath(":/icons")
         Gui.addLanguagePath(":/translations")
 
@@ -180,4 +194,4 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
 
 # Register the workbench
 Gui.addWorkbench(OpenSCADWorkbench_Ext())
-App.Console.PrintMessage("✅ OpenSCADWorkbench_Ext registered\n")
+App.Console.PrintMessage("✅ OpenSCAD_Ext registered\n")
