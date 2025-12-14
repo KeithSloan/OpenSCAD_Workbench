@@ -25,8 +25,7 @@
 
 import FreeCAD
 #from OpenSCADFeatures import CGALFeature
-from freecad.OpenSCAD_Ext.core.OpenSCADHull import *
-
+from freecad.OpenSCAD_Ext.core.checkObjectShapes import *
 #printverbose = False
 printverbose = True
 

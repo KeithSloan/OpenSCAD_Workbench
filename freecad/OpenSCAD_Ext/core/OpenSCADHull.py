@@ -1,5 +1,5 @@
 import FreeCAD, FreeCADGui, Part
-
+from freecad.OpenSCAD_Ext.core.checkObjectShapes import *
 
 from FreeCAD import Units
 from pivy import coin
@@ -129,11 +129,11 @@ class ViewProviderMyGroupEx(ViewProviderMyGroup):
         if prop == 'DisplayMode':
             self.setupShapeGroup()
 
-def checkObjShape(obj) :
-    #print('Check Object Shape')
-    if obj.Shape.isNull() == True :
-       if printverbose: print(f'{obj.Name} Shape is Null - recompute')
-       obj.recompute()
+#def checkObjShape(obj) :
+#    #print('Check Object Shape')
+#    if obj.Shape.isNull() == True :
+#       if printverbose: print(f'{obj.Name} Shape is Null - recompute')
+#       obj.recompute()
 
 def chk2D(obj) :
     return  obj.Shape.Volume == 0
@@ -550,10 +550,11 @@ def createHull(group) :
     #CGALFeature(myObj,'hull',obj.Group)
     # import OpenSCADFeatures
     #return myObj.Shape
-    import OpenSCADUtils
+    from freecad.OpenSCAD_Ext.core.OpenSCADUtils import process_ObjectsViaOpenSCADShape
     print('Process OpenSCAD Shapes via OpenSCAD')
-    return OpenSCADUtils.process_ObjectsViaOpenSCADShape(FreeCAD.ActiveDocument,\
-    group,'hull',maxmeshpoints=None)
+    retShape = process_ObjectsViaOpenSCADShape(FreeCAD.ActiveDocument, group,'hull',maxmeshpoints=None)
+    print(f"Return Shape {retShape}")
+    return retShape
 
 def makeHull(hullList, ex=False):
     print('makeHull')

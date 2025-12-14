@@ -29,6 +29,8 @@ This Script includes various python helper functions that are shared across
 the module
 '''
 
+from freecad.OpenSCAD_Ext.core.checkObjectShapes import *
+
 try:
     from PySide import QtGui
     _encoding = QtGui.QApplication.UnicodeUTF8
@@ -561,6 +563,7 @@ def process2D_ObjectsViaOpenSCAD(ObjList,Operation,doc=None):
     return(obj)
 
 def process3D_ObjectsViaOpenSCADShape(ObjList,Operation,maxmeshpoints=None):
+    write_log("Info",f"Process 3D Objects via OpenSCAD objs {ObjList} operation {Operation}")
     import FreeCAD,Mesh,Part
     params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
     if False: # disabled due to issue 1292
@@ -584,6 +587,7 @@ def process3D_ObjectsViaOpenSCADShape(ObjList,Operation,maxmeshpoints=None):
         return solid
 
 def process3D_ObjectsViaOpenSCAD(doc,ObjList,Operation):
+    write_log("Info",f"Process 3D Objects via OpenSCAD objs {ObjList} operation {Operation}")
     solid = process3D_ObjectsViaOpenSCADShape(ObjList,Operation)
     if solid is not None:
         obj=doc.addObject('Part::Feature',Operation) #non-parametric object
@@ -594,6 +598,8 @@ def process3D_ObjectsViaOpenSCAD(doc,ObjList,Operation):
         return(obj)
 
 def process_ObjectsViaOpenSCADShape(doc,children,name,maxmeshpoints=None):
+    write_log("Info",f"Process Objects Via OpenSCADShape {name}")
+    checkAllChildShapes(children)
     if all((not obj.Shape.isNull() and obj.Shape.Volume == 0) \
             for obj in children):
         return process2D_ObjectsViaOpenSCADShape(children,name,doc)
@@ -606,6 +612,8 @@ def process_ObjectsViaOpenSCADShape(doc,children,name,maxmeshpoints=None):
             "Error all shapes must be either 2D or both must be 3D")+u'\n')
 
 def process_ObjectsViaOpenSCAD(doc,children,name):
+    write_log("Info",f"Process Objects Via OpenSCAD {name}")
+    checkAllChildShapes(children)
     if all((not obj.Shape.isNull() and obj.Shape.Volume == 0) \
             for obj in children):
         return process2D_ObjectsViaOpenSCAD(children,name,doc)
