@@ -5,12 +5,16 @@ from PySide import QtCore
 from PySide import QtGui
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+from freecad.OpenSCAD_Ext.core.OpenSCADObjects import SCADBase
 
-class SCADFileNameValue(QtGui.QWidget):
+
+###  Change for SCAD file location
+
+class FileNameValue(QtGui.QWidget):
     def __init__(self, label="SCADFileName", default="", parent=None, fileFilter="*.scad"):
-        super(SCADFileNameValue, self).__init__(parent)
+        super(FileNameValue, self).__init__(parent)
 
-        self.fileFilter = fileFilter
+        #self.fileFilter = fileFilter
 
         layout = QtGui.QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -18,9 +22,14 @@ class SCADFileNameValue(QtGui.QWidget):
         self.label = QtGui.QLabel(label)
         layout.addWidget(self.label)
 
-        self.lineEdit = QtGui.QLineEdit(default)
-        self.lineEdit.setPlaceholderText("Enter filename")
-        layout.addWidget(self.lineEdit, 1)
+        self.fileName = QtGui.QLineEdit(default)
+        self.fileName.setPlaceholderText("Enter filename")
+        layout.addWidget(self.fileName, 1)
+        self.fileName.editingFinished.connect(self.getVal)
+        self.show()
+
+    def getVal(self):
+        return self.fileName.text()
 
 class GeometryType(QtGui.QWidget):
         def __init__(self):
@@ -86,7 +95,7 @@ class OpenSCADeditOptions(QtGui.QDialog):
         self.setMouseTracking(True)
 
         # ---------- Options ----------
-        self.scadFileName = SCADFileNameValue()
+        self.scadFileName = FileNameValue()
         self.layout.addWidget(self.scadFileName)
         self.geometryType = GeometryType()
         self.layout.addWidget(self.geometryType)
@@ -114,7 +123,7 @@ class OpenSCADeditOptions(QtGui.QDialog):
     def getValues(self):
         return(
               self.scadFileName.getVal(), \
-              self.geometry.getVal(), \
+              self.geometryType.getVal(), \
               self.fnMax.getVal(), \
               self.timeOut.getVal(), \
               self.keepOption.getVal()
@@ -146,13 +155,13 @@ class NewSCADFile_Class:
         result = dialog.exec_()
         QtGui.QGuiApplication.restoreOverrideCursor()
         if result == QtGui.QDialog.Accepted:
-                write_log(f"Result {dialog.result}")
-                write_log(f"Action")
+                write_log("Info",f"Result {dialog.result}")
+                write_log("Info",f"Action")
                 options = dialog.getValues()
-                write_log(f"Options {options}")
+                write_log("Info",f"Options {options}")
 
                 # Create SCAD Object
-                obj = doc.addObject("Part::FeaturePython", objectName)
+                obj = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", options[0])
                 #
                 #scadObj = SCADBase(obj, filename, mode='Mesh', fnmax=16, timeout=30)
                 # change SCADBase to accept single options call ?
