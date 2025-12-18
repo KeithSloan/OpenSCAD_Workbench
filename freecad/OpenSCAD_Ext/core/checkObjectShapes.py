@@ -31,7 +31,7 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import *
 printverbose = True
 
 def checkObjShape(obj) :
-    if printverbose: write_log("INFO",'Check Object Shape')
+    if printverbose: write_log("INFO",f"Check Object Shape {obj.Label}")
     if hasattr(obj, 'Shape'):    
         if obj.Shape.isNull() == True :
             if printverbose: write_log("INFO",'Shape is Null - recompute')

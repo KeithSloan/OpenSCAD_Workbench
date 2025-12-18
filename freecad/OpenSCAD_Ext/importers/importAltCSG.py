@@ -50,6 +50,7 @@ import Part
 import random
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+from freecad.OpenSCAD_Ext.core.checkObjectShapes import *
 #from freecad.OpenSCAD_Ext.core.OpenSCADFeatures import *
 from freecad.OpenSCAD_Ext.core.OpenSCADUtils import *
 from freecad.OpenSCAD_Ext.core.OpenSCADHull import *
@@ -468,36 +469,36 @@ def p_offset_action(p):
 #            newobj.ViewObject.Proxy = 0
     p[0] = [newobj]
 
-def checkObjShape(obj) :
-    if printverbose: write_log("INFO",'Check Object Shape')
-    if hasattr(obj, 'Shape'):    
-        if obj.Shape.isNull() == True :
-            if printverbose: write_log("INFO",'Shape is Null - recompute')
-            obj.recompute()
-        if (obj.Shape.isNull() == True):
-            print(f'Recompute failed : {obj.Name}')
-    else:
-        if len(obj) > 0:
-           print(f"check of obj list")
-           for i in obj:
-               checkObjShape(i)
-        elif hasattr(obj, 'Proxy'):
-           print(f"Proxy {obj.Proxy}")
-        elif hasattr(obj, 'Name'):
-            print(f"obj {obj.Name} has no Shape")
-        else:
-            print(f"obj {obj} has no Name & Shape")
-            print(dir(obj[0]))
+#def checkObjShape(obj) :
+#    if printverbose: write_log("INFO",'Check Object Shape')
+#    if hasattr(obj, 'Shape'):    
+#        if obj.Shape.isNull() == True :
+#            if printverbose: write_log("INFO",'Shape is Null - recompute')
+#            obj.recompute()
+#        if (obj.Shape.isNull() == True):
+#            print(f'Recompute failed : {obj.Name}')
+#    else:
+#        if len(obj) > 0:
+#           print(f"check of obj list")
+#           for i in obj:
+#               checkObjShape(i)
+#        elif hasattr(obj, 'Proxy'):
+#           print(f"Proxy {obj.Proxy}")
+#        elif hasattr(obj, 'Name'):
+#            print(f"obj {obj.Name} has no Shape")
+#        else:
+#            print(f"obj {obj} has no Name & Shape")
+#            print(dir(obj[0]))
 
-def checkObjType2D(obj) :
-    if obj.TypeId == 'Part::Part2DObject' :
-       if printverbose: write_log("INFO",'2D')
-       return True
-    if obj.TypeId == 'Part::Cut' or obj.TypeId == 'Part::Fuse' or \
-       obj.TypeId == 'Part::Common' or obj.TypeId == 'Part::MultiFuse' :
-       if checkObjType2D(obj.Base) and checkObjType2D(obj.Tool) :
-          return True
-    return  False
+#def checkObjType2D(obj) :
+#    if obj.TypeId == 'Part::Part2DObject' :
+#       if printverbose: write_log("INFO",'2D')
+#       return True
+#    if obj.TypeId == 'Part::Cut' or obj.TypeId == 'Part::Fuse' or \
+#       obj.TypeId == 'Part::Common' or obj.TypeId == 'Part::MultiFuse' :
+#       if checkObjType2D(obj.Base) and checkObjType2D(obj.Tool) :
+#          return True
+#    return  False
 
 def planeFromNormalPoints(a,b) :
     #dir = FreeCAD.Vector(a[0]-b[0], a[1]-b[1], a[2]-b[2])
@@ -528,8 +529,19 @@ def p_hull_action(p):
     'hull_action : hull LPAREN RPAREN OBRACE block_list EBRACE'
     #printverbose=True
     if printverbose: write_log("INFO",'hull function')
-    from OpenSCADHull import makeHull
-    myHull = makeHull(p[5],True)
+    ##########################################################
+    # Original 
+    # p[0] = [ CGALFeatureObj(p[1],p[5]) ]
+    # Feature Class, execute CGALFeature(obj, operation, children, arguments
+    # shape = OpenSCAD.OpenSCADUtils.process_ObjectsViaOpenSCADShape
+    # (fp.Document,fp.Children,\
+    #            fp.Operation, maxmeshpoints=maxmeshpoints)
+    ##########################################################
+    # Hull p[5] list of Objects on the stack
+    # list could be single Type Part::MultiFuse
+    from freecad.OpenSCAD_Ext.core.OpenSCADHull import makeHullObject
+
+    myHull = makeHullObject(p[5],True)
     p[0] = [myHull]
     return
 
@@ -660,7 +672,7 @@ def fuse(lst,name):
        print(lst)
        for obj in lst :
            print(obj.Label)
-           checkObjShapes(obj)
+           checkObjShape(obj)
     if len(lst) == 0:
         myfuse = placeholder('group',[],'{}')
     elif len(lst) == 1:

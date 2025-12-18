@@ -6,52 +6,32 @@ from pivy import coin
 
 printverbose = False
 
-class Hull(object):
-    def __init__(self, obj=None):
-        self.Object = obj
-        if obj:
-            self.attach(obj)
-
-    def __getstate__(self):
-        return
-
-    def __setstate__(self,_state):
-        return
-
-    def attach(self,obj):
-        print('attach')
-        obj.addExtension('App::GeoFeatureGroupExtensionPython')
+class HullClassFeature:
+    def __init__(self, obj, objList):
+        obj.addExtension("App::GeoFeatureGroupExtensionPython")
+        obj.addExtension("App::PartExtensionPython")
         obj.Proxy = self
 
-    def onDocumentRestored(self, obj):
-        self.Object = obj
+        if objList:
+            obj.Group = objList
 
     def execute(self, obj):
-        print('Hull execute : '+obj.Label)
-        # Group jas been set to items on stack at time of hull request
-        if hasattr(obj,'Group') :
-           print('Has Group')
-           if len(obj.Group) > 1 :
-              obj.Shape = createHull(obj.Group)
-              print(f"return from execute")
-              return
-        else :
-           print('Error Invalid hull request')
+        if not obj.Group or len(obj.Group) < 2:
+            return
+        obj.Shape = createHullShape(obj.Group)
 
-class ViewProviderMyGroup(object):
-    def __init__(self,vobj=None):
+class ViewProviderHull:
+    def __init__(self, vobj=None):
+        self.ViewObject = None
         if vobj:
             vobj.Proxy = self
-        else:
-            self.ViewObject = None
 
-    def attach(self,vobj):
-        vobj.addExtension('Gui::ViewProviderGeoFeatureGroupExtensionPython')
+    def attach(self, vobj):
+        vobj.addExtension("Gui::ViewProviderGeoFeatureGroupExtensionPython")
         self.ViewObject = vobj
-        try:
-            vobj.SwitchNode.defaultChild = 1
-        except Exception:
-            pass
+
+    def claimChildren(self):
+        return self.ViewObject.Object.Group
 
     def getDefaultDisplayMode(self):
         return "Flat Lines"
@@ -62,13 +42,13 @@ class ViewProviderMyGroup(object):
     def __setstate__(self, _state):
         return None
 
-class ViewProviderMyGroupEx(ViewProviderMyGroup):
-    def __init__(self,vobj=None):
+class ViewProviderMyGroupEx(ViewProviderHull):
+    def __init__(self, vobj=None):
         self.group_node = None
-        super(ViewProviderMyGroupEx, self).__init__(vobj)
+        super().__init__(vobj)
 
-    def attach(self,vobj):
-        super(ViewProviderMyGroupEx, self).attach(vobj)
+    def attach(self, vobj):
+        super().attach(vobj)
         self.setupShapeGroup()
 
     def setupShapeGroup(self):
@@ -465,7 +445,10 @@ def checkGroupShapes(group):
 	for i in group:
 		checkObjShape(i)
 
-def createHull(group) :
+def createHullShape(group) :
+    ######################################################
+    # group is either a list of Parts or a single MultFuse
+    ##########################################################
     hShape = None
     obj0 = group[0]
     if len(group) == 2 :
@@ -542,8 +525,17 @@ def createHull(group) :
 
 
     print('Not directly handled')
-    print(group)
-    for obj in group :
+    print(f"Group List {group}")
+    ##########################################################
+    # List could be a list of Parts or a single MultiFuse Part
+    ##########################################################
+    if len(group) == 1:
+       if group[0].TypeId == "Part::MultiFuse":
+          print("MultiFuse")
+          grp = group[0].Shapes
+    else:
+       grp= group
+    for obj in grp :
        print(obj.Name)
     #from OpenSCADFeatures import CGALFeature
     #myObj = FreeCAD.ActiveDocument.addObject('Part::FeaturePython','Fred')
@@ -552,25 +544,33 @@ def createHull(group) :
     #return myObj.Shape
     from freecad.OpenSCAD_Ext.core.OpenSCADUtils import process_ObjectsViaOpenSCADShape
     print('Process OpenSCAD Shapes via OpenSCAD')
-    retShape = process_ObjectsViaOpenSCADShape(FreeCAD.ActiveDocument, group,'hull',maxmeshpoints=None)
+    retShape = process_ObjectsViaOpenSCADShape(FreeCAD.ActiveDocument, grp,'hull',maxmeshpoints=None)
     print(f"Return Shape {retShape}")
     return retShape
 
-def makeHull(hullList, ex=False):
-    print('makeHull')
-    print(list)
+#def makeHullObject(List, ex=False):
+#    print(f"makeHullObject {List} length {len(List)}")
+#    if len(List) == 1:
+#       print(f"List of Single Parts TypeId {List[0].TypeId}")
+#       if List[0].TypeId == "MultFuse":
+#          if hasattr(List[0], "Shapes"):
+#             print(f"Expand MultiFuse to List of Shapes length {len(List)}")
+#             return makeHullObject(List[0].Shapes)
+             
+
+def makeHullObject(List, ex=False):
     doc = FreeCAD.ActiveDocument
     if not doc:
         doc = FreeCAD.newDocument()
-    hullObj = doc.addObject('Part::FeaturePython', 'hull')
-    hullObj.Shape = createHull(hullList)
-    #Hull(hullObj)
+
+    hullObj = doc.addObject("App::DocumentObjectGroupPython", "Hull")
+    HullClassFeature(hullObj, List)
+
     if ex:
         ViewProviderMyGroupEx(hullObj.ViewObject)
     else:
-        ViewProviderMyGroup(hullObj.ViewObject)
-    # Make Group the objects to be Hulled
-    #hullObj.Group = list
-    hullObj.recompute(True)
-    # Just return Hull Object let importCSG put on Stack
+        ViewProviderHull(hullObj.ViewObject)
+
+    doc.recompute()
     return hullObj
+

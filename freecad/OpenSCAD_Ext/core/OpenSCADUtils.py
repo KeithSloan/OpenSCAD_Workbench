@@ -564,6 +564,8 @@ def process2D_ObjectsViaOpenSCAD(ObjList,Operation,doc=None):
 
 def process3D_ObjectsViaOpenSCADShape(ObjList,Operation,maxmeshpoints=None):
     write_log("Info",f"Process 3D Objects via OpenSCAD objs {ObjList} operation {Operation}")
+    return
+
     import FreeCAD,Mesh,Part
     params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
     if False: # disabled due to issue 1292
