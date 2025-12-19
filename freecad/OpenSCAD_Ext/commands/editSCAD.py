@@ -17,6 +17,36 @@ class EditSCADFileObject_Class:
         FreeCAD.Console.PrintMessage("Edit SCAD File Object executed\n")
         FreeCAD.Console.PrintError("Edit SCAD File Object executed\n")
         write_log("Info", "Edit SCAD File Object executed")
+        doc = FreeCAD.ActiveDocument
+        if not doc:
+            return
+
+        sel = FreeCADGui.Selection.getSelection()
+        if not sel:
+            FreeCAD.Console.PrintErrorMessage("No objects selected\n")
+        return
+
+        for obj in sel:
+            if obj.TypeId != "Part::FeaturePython":
+               continue
+
+            proxy = getattr(obj, "Proxy", None)
+            if proxy is None:
+                continue
+
+            write_log("INFO","Has Proxy")
+            if not isinstance(proxy, SCADBase):
+                continue
+            write_log("INFO","isinstance SCADBase")
+
+            try:
+               write_log("EDIT", sourceFile)
+               editFile(obj.sourceFile)
+
+            except Exception as e:
+               FreeCAD.Console.PrintError(
+                f"Failed to edit SCAD file for {obj.Label}: {e}\n"
+               )
 
     def IsActive(self):
         return True
