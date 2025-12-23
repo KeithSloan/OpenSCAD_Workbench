@@ -2,7 +2,7 @@ import FreeCAD
 import FreeCADGui
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
-from freecad.OpenSCAD_Ext.core.OpenSCADObjects import SCADBase
+from freecad.OpenSCAD_Ext.core.OpenSCADObjects import SCADfileBase
 
 class RenderSCADFileObject_Class:
     """Execute SCAD file Object """
@@ -37,20 +37,36 @@ class RenderSCADFileObject_Class:
 
             if not hasattr(obj, "Proxy"):
                 continue
-            # print(dir(obj.Proxy))
-            write_log("INFO",f"Has Proxy {obj.Proxy.renderFunction}")
-            if not hasattr(obj.Proxy, "renderFunction"):
-                continue
-            write_log("INFO","Has renderFunction")
+            print(obj.Proxy)
+            print(type(obj.Proxy))
+            print(type(obj.Proxy).__module__)
+            import inspect
+            print(inspect.getfile(type(obj.Proxy)))
+            print(dir(obj.Proxy))
+            write_log("INFO",f"Has Proxy")
+            if hasattr(obj.Proxy, "renderFunction"):
+               write_log("INFO","Has renderFunction")
 
-            try:
-               write_log("Render",f"obj.sourceFile {obj.sourceFile}")
-               obj.Proxy.renderFunction(obj)
+               try:
+                  write_log("Render",f"obj.sourceFile {obj.sourceFile}")
+                  obj.Proxy.renderFunction(obj)
 
-            except Exception as e:
-               FreeCAD.Console.PrintError(
-                f"Failed to Render SCAD file for {obj.Label}: {e}\n"
-               )
+               except Exception as e:
+                  FreeCAD.Console.PrintError(
+                  f"Failed to Render SCAD file for {obj.Label}: {e}\n"
+                  )
+            # Test for old SCADfileObjects - AlternateImporter
+            if hasattr(obj.Proxy, "executeFunction"):
+               write_log("WARN","Alternate Importer SCAD Object")
+
+               try:
+                  write_log("Execute Function",f"obj.sourceFile {obj.sourceFile}")
+                  obj.Proxy.executeFunction(obj)
+
+               except Exception as e:
+                  FreeCAD.Console.PrintError(
+                     f"Failed to ExecuteFunction  SCAD file for {obj.Label}: {e}\n"
+                  )
 
     def IsActive(self):
         return True

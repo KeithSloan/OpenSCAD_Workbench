@@ -5,7 +5,7 @@ from PySide import QtCore
 from PySide import QtGui
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
-from freecad.OpenSCAD_Ext.core.OpenSCADObjects import SCADBase, ViewSCADProvider
+from freecad.OpenSCAD_Ext.core.OpenSCADObjects import SCADfileBase, ViewSCADProvider
 
 
 class EditTextValue(QtGui.QWidget):
@@ -162,12 +162,12 @@ class NewSCADFile_Class(BaseParams):
                 # Create SCAD Object
                 obj = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", options[0])
                 #
-                #scadObj = SCADBase(obj, scadName, sourcefile, mode='Mesh', fnmax=16, timeout=30)
-                # change SCADBase to accept single options call ?
+                #scadObj = SCADfileBase(obj, scadName, sourcefile, mode='Mesh', fnmax=16, timeout=30)
+                # change SCADfileBase to accept single options call ?
                 #
                 scadName = options[0]
                 sourceFile = os.path.join(self.getSourceDirectory(), scadName)
-                scadObj = SCADBase(obj, scadName, sourceFile, \
+                scadObj = SCADfileBase(obj, scadName, sourceFile, \
                           options[1], \
                           options[2], \
                           options[3], \
@@ -179,10 +179,10 @@ class NewSCADFile_Class(BaseParams):
                    #filename = "New_File"
                    #obj = doc.addObject("Part::FeaturePython", filename)
                    #
-                   #scadObj = SCADBase(obj, filename, mode='Mesh', fnmax=16, timeout=30)
-                   # change SCADBase to accept single options call ?
+                   #scadObj = SCADfileBase(obj, filename, mode='Mesh', fnmax=16, timeout=30)
+                   # change SCADfileBase to accept single options call ?
                    #
-                   #scadObj = SCADBase(obj, filename, options[1], \
+                   #scadObj = SCADfileBase(obj, filename, options[1], \
                    #                options[2], options[3], options[4])
                    #        ViewSCADProvider(obj.ViewObject)
 

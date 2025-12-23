@@ -2,7 +2,7 @@ import FreeCAD
 import FreeCADGui
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
-from freecad.OpenSCAD_Ext.core.OpenSCADObjects import SCADBase
+from freecad.OpenSCAD_Ext.core.OpenSCADObjects import SCADfileBase
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
 
 class EditSCADFile_Class(BaseParams):
@@ -38,9 +38,9 @@ class EditSCADFile_Class(BaseParams):
                 continue
 
             write_log("INFO","Has Proxy")
-            if not isinstance(proxy, SCADBase):
+            if not isinstance(proxy, SCADfileBase):
                 continue
-            write_log("INFO","isinstance SCADBase")
+            write_log("INFO","isinstance SCADfileBase")
 
             try:
                write_log("EDIT",f"obj.sourceFile {obj.sourceFile}")
