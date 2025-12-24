@@ -31,25 +31,25 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import *
 printverbose = True
 
 def checkObjShape(obj) :
-    if printverbose: write_log("INFO",f"Check Object Shape {obj.Label}")
     if hasattr(obj, 'Shape'):    
+        if printverbose: write_log("INFO",f"Check Object Shape {obj.Label}")
         if obj.Shape.isNull() == True :
             if printverbose: write_log("INFO",'Shape is Null - recompute')
             obj.recompute()
         if (obj.Shape.isNull() == True):
-            print(f'Recompute failed : {obj.Name}')
+           print(f'Recompute failed : {obj.Name}')
     else:
         if len(obj) > 0:
            print(f"check of obj list")
            for i in obj:
                checkObjShape(i)
         elif hasattr(obj, 'Proxy'):
-           print(f"Proxy {obj.Proxy}")
+            print(f"Proxy {obj.Proxy}")
         elif hasattr(obj, 'Name'):
             print(f"obj {obj.Name} has no Shape")
         else:
             print(f"obj {obj} has no Name & Shape")
-            print(dir(obj[0]))
+            #print(dir(obj[0]))
 
 def checkAllChildShapes(children):
     write_log("INFO", "CheckAllChildShapes")

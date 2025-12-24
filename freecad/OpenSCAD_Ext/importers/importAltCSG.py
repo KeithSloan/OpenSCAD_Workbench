@@ -1337,7 +1337,7 @@ def p_cube_action(p):
     global doc
     l,w,h = [float(str1) for str1 in p[3]['size']]
     if (l > 0 and w > 0 and h >0):
-        if printverbose: write_log("INFO","cube : ",p[3])
+        if printverbose: write_log("INFO",f"cube : {p[3]}")
         mycube=doc.addObject('Part::Box',p[1])
         mycube.Length=l
         mycube.Width=w

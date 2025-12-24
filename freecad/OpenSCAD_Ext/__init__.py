@@ -40,9 +40,16 @@ def setup_importers():
     )
 
     FreeCAD.addImportType(
-        "SCAD geometry (*.scad)",
+        "External OpenSCAD Workbench : import SCAD file (*.scad)",
         f"{IMPORTER_BASE}.importAltCSG"
     )
+
+
+    FreeCAD.addImportType(
+        "External OpenSCAD Workbench : import SCAD File Object (*.scad)",
+        f"{IMPORTER_BASE}.importFileSCAD"
+    )
+
 
     FreeCAD.addImportType(
         "DXF drawing (*.dxf)",

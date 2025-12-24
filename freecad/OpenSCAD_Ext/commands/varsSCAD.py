@@ -46,9 +46,12 @@ class VarsSCADFile_Class:
                 write_log("EDIT", f"Parsing SCAD file: {scad_file}")
 
                 # Parse variables from SCAD meta
-                scad_vars = parse_scadmeta(scad_file)
+                meta = parse_scadmeta(obj.sourceFile)
+
+                scad_vars = meta.variables
+
                 add_scad_vars_to_varset(obj, scad_vars)
-                mirror_varset_to_spreadsheet(obj)
+                mirror_varset_to_spreadsheet(doc, scad_vars)
 
                 FreeCAD.Console.PrintMessage(f"SCAD variables extracted for {obj.Label}\n")
                 write_log("Info", f"SCAD variables extracted for {obj.Label}")

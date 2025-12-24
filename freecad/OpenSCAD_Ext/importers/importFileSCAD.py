@@ -159,9 +159,9 @@ def open(filename):
 
 
 def insert(filename, docName):
-        from freecad.OpenSCAD_Ext.core.OpenSCADObjects import \
-             SCADfileBase, \
-             ViewSCADProvider
+	from freecad.OpenSCAD_Ext.core.OpenSCADObjects import \
+		SCADfileBase, \
+		ViewSCADProvider
 	"called when freecad inserts a file."
 	pathText = os.path.splitext(os.path.basename(filename))
 	objectName  = pathText[0]
@@ -182,9 +182,11 @@ def insert(filename, docName):
 		#scadObj = SCADfileBase(obj, filename, mode='Mesh', fnmax=16, timeout=30)
 		# change SCADBase to accept single options call ?
 		#
-		scadObj = SCADfileBase(obj, filename, options[1], \
-			options[2], options[3], options[4])
-                print(dir(scadObj))
+                # Note dialog has extra option whish is to create
+                #
+		scadObj = SCADfileBase(obj, filename, options[2], \
+			options[3], options[4])
+		print(dir(scadObj))
 		ViewSCADProvider(obj.ViewObject)
 		
 		if hasattr(obj, 'Proxy'):
