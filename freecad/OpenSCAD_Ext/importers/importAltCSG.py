@@ -1312,7 +1312,7 @@ def p_cylinder_action(p):
         FreeCAD.Console.PrintWarning('cylinder with height <= zero\n')
         mycyl=doc.addObject("Part::Feature","emptycyl")
         mycyl.Shape = Part.Compound([])
-    if printverbose: write_log("INFO","Center = ",tocenter)
+    if printverbose: write_log("INFO",f"Center = {tocenter}")
     if tocenter=='true' :
        center(mycyl,0,0,h)
     if False :  

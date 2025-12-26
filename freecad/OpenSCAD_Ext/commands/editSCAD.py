@@ -2,7 +2,7 @@ import FreeCAD
 import FreeCADGui
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
-from freecad.OpenSCAD_Ext.core.OpenSCADObjects import SCADfileBase
+from freecad.OpenSCAD_Ext.core.SCADObject import SCADfileBase
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
 
 class EditSCADFile_Class(BaseParams):

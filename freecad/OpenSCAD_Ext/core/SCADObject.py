@@ -149,33 +149,33 @@ def createBrep(srcObj, tmpDir, wrkSrc):
 		srcObj.execute = False
 
 
-def scanForModules(appendFp, sourceFp, module):
-    print(f"Scan for Modules")
-    print(FreeCAD.ActiveDocument.Objects)
-    for obj in FreeCAD.ActiveDocument.Objects:
-        print(f"get Source {obj.Label}")
-        # Proxy has functions but need to pass Object with properties
-        if hasattr(obj, "Proxy"):
-            if hasattr(obj.Proxy, "getSource"):
-                src = obj.Proxy.getSource(obj)
-                if src is not None:
-                    print(f"Module Source : {src}")
-                    #source += src
-                    appendFp.write(src)
-
-    # Is this a SCADModule
-    if module == True:
-        print("add mod call")
-        src = srcObj.name + '('
-        if len(srcObj.variables) > 0:
-            for v in srcObj.variables[:-1]:
-                src = src + v + ','
-                src = src + srcObj.variables[-1]
-        src = src +');'
-        print(f"mod call {src}")
-        appendFp.write(src)
-    source = sourceFp.read()
-    appendFp.write(source)
+# def scanForModules(appendFp, sourceFp, module):
+#    print(f"Scan for Modules")
+#    print(FreeCAD.ActiveDocument.Objects)
+#    for obj in FreeCAD.ActiveDocument.Objects:
+#        print(f"get Source {obj.Label}")
+#        # Proxy has functions but need to pass Object with properties
+#        if hasattr(obj, "Proxy"):
+#            if hasattr(obj.Proxy, "getSource"):
+#                src = obj.Proxy.getSource(obj)
+#                if src is not None:
+#                    print(f"Module Source : {src}")
+#                    #source += src
+#                    appendFp.write(src)
+#
+#    # Is this a SCADModule
+#    if module == True:
+#        print("add mod call")
+#        src = srcObj.name + '('
+#        if len(srcObj.variables) > 0:
+#            for v in srcObj.variables[:-1]:
+#                src = src + v + ','
+#                src = src + srcObj.variables[-1]
+#        src = src +');'
+#        print(f"mod call {src}")
+#        appendFp.write(src)
+#    source = sourceFp.read()
+#    appendFp.write(source)
 
 
 def shapeFromSourceFile(srcObj, module=False, modules=False):
@@ -226,8 +226,6 @@ class SCADfileBase:
         obj.setEditorMode("scadName",1)
         obj.addProperty("App::PropertyFile","sourceFile","OpenSCAD","OpenSCAD source")
         obj.sourceFile = sourceFile
-        # Set in SCADObject
-        #obj.setEditorMode("sourceFile",2)
         obj.addProperty("App::PropertyString","message","OpenSCAD","OpenSCAD message")
         obj.addProperty("App::PropertyBool","modules","OpenSCAD","OpenSCAD Uses Modules")
         obj.addProperty("App::PropertyBool","edit","OpenSCAD","Edit SCAD source")
@@ -244,11 +242,8 @@ class SCADfileBase:
         obj.addProperty("App::PropertyBool","mesh_recombine","OpenSCAD","Mesh Recombine")
         obj.mesh_recombine = False
         obj.addProperty("App::PropertyBool","keep_work_doc","OpenSCAD","Keep FC Work Document")
-        #obj.keep_work_doc = True
-        #obj.keep_work_doc = False
         obj.keep_work_doc = keep
         obj.addProperty("App::PropertyInteger","timeout","OpenSCAD","OpenSCAD process timeout (secs)")
-        #obj.timeout = 30
         obj.timeout = timeout
         #self.obj = obj
         obj.Proxy = self
@@ -345,14 +340,14 @@ class SCADfileBase:
         #FreeCADGui.Selection.addSelection(obj)
 
 
-    def copyFile(self, src, trg):
-        print(f"Copy File {src} {trg}")
-        fps = open(src,'r')
-        fpt = open(trg,'w')
-        buffer = fps.read()
-        fpt.write(buffer)
-        fpt.close()
-        fps.close()
+    #def copyFile(self, src, trg):
+    #    print(f"Copy File {src} {trg}")
+    #    fps = open(src,'r')
+    #    fpt = open(trg,'w')
+    #    buffer = fps.read()
+    #    fpt.write(buffer)
+    #    fpt.close()
+    #    fps.close()
 
 
     # def editFile(self, fname):
@@ -394,59 +389,37 @@ class SCADfileBase:
     #    else:
     #        print(f"Shape is None")
 
-class SCADObject(SCADfileBase):
-    def __init__(self, obj, filename):
-        import FreeCAD, os, tempfile, Part
-        super().__init__(obj, filename)
-        #tmpDir = obj.Document.TransientDir
-        #print(f"Doc temp dir {tmpDir}")
-        tmpDir = tempfile.gettempdir()
-        #tmpDir = obj.Document.getPropertyByName("TransientDir")
-        print(f"Doc temp dir {tmpDir}")
-        tmpPath = os.path.join(tmpDir, obj.scadName)
-        print(f"Path {tmpPath}")
-        self.copyFile(filename, tmpPath)
-        # After creating 
-        #dir_list = os.listdir(tmpDir)
-        #print("List of directories and files after creation:")
-        #print(dir_list)
-        obj.sourceFile = tmpPath
-        obj.setEditorMode("sourceFile",2)
+def createSCADObject(title, createOption, objectName, filename):
+	from PySide import QtGui, QtCore
+	from freecad.OpenSCAD_Ext.core.QtSCAD_Base import SCADObject_Options
+	#pathText = os.path.splitext(os.path.basename(filename))
+	#objectName  = pathText[0]
+	doc = FreeCAD.ActiveDocument
+	if doc is None:
+		doc = FreeCADGui.newDocument(objectName)
 
-    def __getstate__(self):
-        """When saving the document this object gets stored using Python's json
-        module.
-        Since we have some un-serializable parts here -- the Coin stuff --
-        we must define this method\
-        to return a tuple of all serializable objects or None."""
-    #
-    # Storing SCAD source with FreeCAD files does not work with includes
-    #
-    #    if hasattr(self, "obj"):
-    #        if hasattr(self.obj, "sourceFile"):
-    #            print(f"Save Source File {self.obj.sourceFile}")
-    #            sf = open(self.obj.sourceFile, 'r')
-    #            buffer = sf.read()
-    #            return {"sourceFile": [self.obj.sourceFile, buffer]}
-    #    else:
-    #        pass
+	QtGui.QGuiApplication.setOverrideCursor(QtGui.Qt.ArrowCursor)
+	dialog = SCADObject_Options(title, objectName, createOption, parent=None)
+	result = dialog.exec_()
+	QtGui.QGuiApplication.restoreOverrideCursor()
+	if result == QtGui.QDialog.Accepted:
+		print(f"Result {dialog.result}")
+		print(f"Action")
+		options = dialog.getValues()
+		print(f"Options {options}")
 
-    def __setstate__(self, arg):
-        # import os, tempfile
-        """When restoring the serialized object from document we have the
-        chance to set some internals here. Since no data were serialized
-        nothing needs to be done here."""
-        print(f"Restore {type(arg)} {arg}")
-        # tmpDir = tempfile.gettempdir()
-        # sourceName = arg.keys()[0]
-        # print(f"{arg[sourceName]}")
-        # sourcePath = os.path.join(tmpDir, soureName)
-        # print(f"Source Path {sourcePath}")
-        # fp = open(sourcePath,"w")
-        # if fp is not None:
-        #    fp.write(arg[sourceName])
-        # else:
-        #    print(f"Failed to open {sourcePath}")
+		# Create SCAD Object
+		obj = doc.addObject("Part::FeaturePython", objectName)
+		#
+		# SCADfileBase(obj, name, filename, mode='Mesh', fnmax=16, timeout=30)
+		scadObj = SCADfileBase(obj, \
+			os.path.splitext(os.path.basename(filename))[0],
+ 			filename, \
+			options[0], \
+			options[1], \
+			options[2])
+		#print(dir(scadObj))
+		ViewSCADProvider(obj.ViewObject)
 
 
 class ViewSCADProvider:

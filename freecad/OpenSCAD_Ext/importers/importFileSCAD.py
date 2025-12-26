@@ -40,112 +40,17 @@ if open.__module__ in ['__builtin__', 'io']:
 from PySide import QtGui, QtCore
 
 #import importCSG
-from freecad.OpenSCAD_Ext.core.OpenSCADObjects import \
-       SCADfileBase, \
-       ViewSCADProvider
+#from freecad.OpenSCAD_Ext.core.OpenSCADObjects import \
+#       SCADfileBase, \
+#       ViewSCADProvider
 
 from freecad.OpenSCAD_Ext.importers.importAltCSG import processCSG
+from freecad.OpenSCAD_Ext.core.SCADObject import createSCADObject
 
 params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
 printverbose = params.GetBool('printverbose',False)
 print(f'Verbose = {printverbose}')
 
-class ImportType(QtGui.QWidget):
-	def __init__(self):
-		super().__init__()
-		self.layout = QtGui.QHBoxLayout()
-		self.label = QtGui.QLabel('Import Type')
-		self.layout.addWidget(self.label)
-		self.importType = QtGui.QComboBox()
-		self.importType.addItem('Mesh')
-		self.importType.addItem('Brep')
-		self.importType.addItem('Opt')
-		self.layout.addWidget(self.importType)
-		self.setLayout(self.layout)
-
-	def getVal(self):
-		return self.importType.currentText()
-
-class IntegerValue(QtGui.QWidget):
-	def __init__(self, label, value):
-		super().__init__()
-		self.layout = QtGui.QHBoxLayout()
-		self.label = QtGui.QLabel(label)
-		self.value = QtGui.QLineEdit()
-		self.value.setText(str(value))
-		self.layout.addWidget(self.label)
-		self.layout.addWidget(self.value)
-		self.setLayout(self.layout)
-
-	def getVal(self):
-		return int(self.value.text())
-
-class BooleanValue(QtGui.QWidget):
-	def __init__(self, label, value):
-		super().__init__()
-		self.layout = QtGui.QHBoxLayout()
-		self.label = QtGui.QLabel(label)
-		self.value = QtGui.QRadioButton()
-		self.value.setChecked(value)
-		self.layout.addWidget(self.label)
-		self.layout.addWidget(self.value)
-		self.setLayout(self.layout)
-
-	def getVal(self):
-		if self.value.isChecked():
-			return True
-		else:
-			return False
-
-
-class OpenSCADimportOptions(QtGui.QDialog):
-	def __init__(self,parent=None):
-		super(OpenSCADimportOptions, self).__init__(parent)
-		self.initUI()
-
-	def initUI(self):
-		self.result = None
-		# create our window
-		# define window           xLoc,yLoc,xDim,yDim
-		self.setGeometry(150, 250, 300, 300)
-		self.setWindowTitle("FC OpenSCAD import Options")
-		self.layout = QtGui.QVBoxLayout()
-		self.setMouseTracking(True)
-		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel, self)
-        
-	        # Connect the dialog buttons to standard slots
-		self.buttonBox.accepted.connect(self.accept)
-		self.buttonBox.rejected.connect(self.reject)
-		self.createOnly = BooleanValue('Create Only (Edit)',True)
-		self.layout.addWidget(self.createOnly)
-		self.importType = ImportType()
-		self.layout.addWidget(self.importType)
-		self.fnMax = IntegerValue('FnMax', 16)
-		self.layout.addWidget(self.fnMax)
-		self.timeOut = IntegerValue('TimeOut', 30)
-		self.layout.addWidget(self.timeOut)
-		self.keepOption = BooleanValue("Keep File",False)
-		self.layout.addWidget(self.keepOption)
-		self.layout.addWidget(self.buttonBox)
-		self.setLayout(self.layout)
-		self.show()
-
-	def getValues(self):
-		return(
-			self.createOnly.getVal(), \
-			self.importType.getVal(), \
-			self.fnMax.getVal(), \
-			self.timeOut.getVal(), \
-			self.keepOption.getVal()
-			)
-
-	def onCancel(self):
-		self.result = 'cancel'
-		#QtGui.QGuiApplication.restoreOverrideCursor()
-
-	def onOk(self):
-		self.result = 'ok'
-		#QtGui.QGuiApplication.restoreOverrideCursor()	
 
 def open(filename):
 	import os
@@ -159,43 +64,21 @@ def open(filename):
 
 
 def insert(filename, docName):
-	from freecad.OpenSCAD_Ext.core.OpenSCADObjects import \
-		SCADfileBase, \
-		ViewSCADProvider
 	"called when freecad inserts a file."
-	pathText = os.path.splitext(os.path.basename(filename))
-	objectName  = pathText[0]
 	doc = FreeCAD.getDocument(docName)
-	QtGui.QGuiApplication.setOverrideCursor(QtGui.Qt.ArrowCursor)
-	dialog = OpenSCADimportOptions()
-	result = dialog.exec_()
-	QtGui.QGuiApplication.restoreOverrideCursor()
-	if result == QtGui.QDialog.Accepted:
-		print(f"Result {dialog.result}")
-		print(f"Action")
-		options = dialog.getValues()
-		print(f"Options {options}")
-
-		# Create SCAD Object
-		obj = doc.addObject("Part::FeaturePython", objectName)
-		#
-		#scadObj = SCADfileBase(obj, filename, mode='Mesh', fnmax=16, timeout=30)
-		# change SCADBase to accept single options call ?
-		#
-                # Note dialog has extra option whish is to create
-                #
-		scadObj = SCADfileBase(obj, filename, options[2], \
-			options[3], options[4])
-		print(dir(scadObj))
-		ViewSCADProvider(obj.ViewObject)
-		
-		if hasattr(obj, 'Proxy'):
-			if options[0] == False:
-				obj.Proxy.executeFunction(obj)
-			elif options[0] == True:
-				obj.Proxy.editFile(filename)
-		#FreeCAD.ActiveDocument.recompute()
-		#obj.recompute()
-		doc.recompute()
-		FreeCADGui.SendMsgToActiveView("ViewFit")
-		#view.sendMessage("ViewFit")
+	objectName  = os.path.splitext(os.path.basename(filename))[0]
+	obj = createSCADObject("FC OpenSCAD import Options",
+		False,
+		objectName,
+		filename,
+		)
+	if hasattr(obj, 'Proxy'):
+		if options[0] == False:
+			obj.Proxy.executeFunction(obj)
+		elif options[0] == True:
+			obj.Proxy.editFile(filename)
+	#FreeCAD.ActiveDocument.recompute()
+	#obj.recompute()
+	doc.recompute()
+	FreeCADGui.SendMsgToActiveView("ViewFit")
+	#view.sendMessage("ViewFit")

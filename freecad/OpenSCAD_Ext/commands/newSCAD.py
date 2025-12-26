@@ -5,7 +5,7 @@ from PySide import QtCore
 from PySide import QtGui
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
-from freecad.OpenSCAD_Ext.core.OpenSCADObjects import SCADfileBase, ViewSCADProvider
+from freecad.OpenSCAD_Ext.core.SCADObject import SCADfileBase, ViewSCADProvider
 
 
 class EditTextValue(QtGui.QWidget):

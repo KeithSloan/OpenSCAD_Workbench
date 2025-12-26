@@ -2,7 +2,7 @@ import FreeCAD
 import FreeCADGui
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
-from freecad.OpenSCAD_Ext.core.OpenSCADObjects import SCADfileBase
+from freecad.OpenSCAD_Ext.core.SCADObject import SCADfileBase
 
 class RenderSCADFileObject_Class:
     """Execute SCAD file Object """
@@ -55,7 +55,7 @@ class RenderSCADFileObject_Class:
                   FreeCAD.Console.PrintError(
                   f"Failed to Render SCAD file for {obj.Label}: {e}\n"
                   )
-            # Test for old SCADfileObjects - AlternateImporter
+            # Test for old SCADfileObject - AlternateImporter
             if hasattr(obj.Proxy, "executeFunction"):
                write_log("WARN","Alternate Importer SCAD Object")
 
