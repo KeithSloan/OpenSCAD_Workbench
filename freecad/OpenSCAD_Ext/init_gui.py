@@ -49,12 +49,14 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
         from .commands import editSCAD
         from .commands import renderSCAD
         from .commands import varsSCAD
+        from .commands import librarySCAD
  
         commands = [
             "NewSCADFileObject_CMD",
             "EditSCADFileObject_CMD",
             "RenderSCADFileObject_CMD",
             "VarsSCADFileObject_CMD",
+            "LibrarySCAD_CMD",
 
         ]
         toolbarcommands = commands
