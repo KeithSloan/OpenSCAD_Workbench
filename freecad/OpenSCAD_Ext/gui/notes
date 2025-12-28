@@ -1,0 +1,16 @@
++--------------------------------------------------+
+| SCAD Library: nema_steppers.scad                 |
+| Summary / Description                            |
+| Includes: <list>                                 |
++----------------------+---------------------------+
+| Module List          | Module Details            |
+| (QListWidget)        | (QScrollArea)             |
+|                      | Name                      |
+|                      | Synopsis                  |
+|                      | Usage                     |
+|                      | Arguments (form view)     |
+|                      | Examples                  |
++----------------------+---------------------------+
+| [Create SCAD Object] [Cancel]                    |
++--------------------------------------------------+
+

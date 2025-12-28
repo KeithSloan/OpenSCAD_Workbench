@@ -29,10 +29,11 @@ def ensure_openSCADPATH():
 class BaseOpenSCADBrowser(QtWidgets.QDialog):
     """
     Base OpenSCAD library browser.
+
     Provides:
       - Tree navigation
-      - SCAD selection
-      - Create / Edit hooks
+      - SCAD file selection
+      - Create / Edit / Scan Modules actions
     """
 
     def __init__(self, parent=None):
@@ -57,10 +58,56 @@ class BaseOpenSCADBrowser(QtWidgets.QDialog):
         self.load_top_level()
 
     # -------------------------------------------------
-    # To be implemented by subclass
+    # UI
     # -------------------------------------------------
     def setupUI(self):
-        raise NotImplementedError
+        """
+        Shared UI for all OpenSCAD library browsers.
+        Subclasses may extend but should not replace.
+        """
+        layout = QtWidgets.QVBoxLayout(self)
+
+        # -------------------------------
+        # Tree
+        # -------------------------------
+        self.tree = QtWidgets.QTreeWidget()
+        self.tree.setHeaderLabels(["Name", "Type"])
+        self.tree.setColumnWidth(0, 500)
+        layout.addWidget(self.tree)
+
+        # -------------------------------
+        # Buttons
+        # -------------------------------
+        self.btn_layout = QtWidgets.QHBoxLayout()
+
+        self.create_btn = QtWidgets.QPushButton("Create SCAD Object")
+        self.create_btn.setEnabled(False)
+        self.create_btn.clicked.connect(self.create_scad_object)
+
+        self.scan_btn = QtWidgets.QPushButton("Scan Modules")
+        self.scan_btn.setEnabled(False)
+        self.scan_btn.clicked.connect(self.scan_modules)
+
+        self.edit_btn = QtWidgets.QPushButton("Edit Copy")
+        self.edit_btn.setEnabled(False)
+        self.edit_btn.clicked.connect(self.edit_copy)
+
+        close_btn = QtWidgets.QPushButton("Close")
+        close_btn.clicked.connect(self.close)
+
+        self.btn_layout.addWidget(self.create_btn)
+        self.btn_layout.addWidget(self.scan_btn)
+        self.btn_layout.addWidget(self.edit_btn)
+        self.btn_layout.addStretch()
+        self.btn_layout.addWidget(close_btn)
+
+        layout.addLayout(self.btn_layout)
+
+        # -------------------------------
+        # Status
+        # -------------------------------
+        self.status = QtWidgets.QLabel("")
+        layout.addWidget(self.status)
 
     # -------------------------------------------------
     # Tree population
@@ -141,6 +188,7 @@ class BaseOpenSCADBrowser(QtWidgets.QDialog):
     def update_buttons(self, enabled):
         self.create_btn.setEnabled(enabled)
         self.edit_btn.setEnabled(enabled)
+        self.scan_btn.setEnabled(enabled)
 
     # -------------------------------------------------
     # Actions
@@ -159,11 +207,43 @@ class BaseOpenSCADBrowser(QtWidgets.QDialog):
 
         if not hasattr(obj, "SourceFile"):
             obj.addProperty(
-                "App::PropertyFile", "SourceFile", "SCAD", "SCAD source file"
+                "App::PropertyFile",
+                "SourceFile",
+                "SCAD",
+                "SCAD source file",
             )
 
         obj.SourceFile = self.selected_scad
         doc.recompute()
 
         self.status.setText(f"Created SCAD Object: {name}")
+
+    def edit_copy(self):
+        """
+        Intended to be implemented by subclass.
+        """
+        FreeCAD.Console.PrintWarning(
+            "Edit Copy not implemented in base class\n"
+        )
+
+    def scan_modules(self):
+        """
+        Invoke SCAD module scanning via FreeCAD command,
+        passing the currently selected SCAD file.
+        """
+        if not self.selected_scad:
+            QtWidgets.QMessageBox.warning(
+                self, "Scan Modules", "No SCAD file selected!"
+            )
+            return
+
+        try:
+            import FreeCADGui
+            FreeCADGui.runCommand(
+                "ModuleSCAD_CMD",
+                {"scad_library": self.selected_scad}  # <-- MUST pass here
+            )
+            self.status.setText(f"Scanning SCAD modules: {os.path.basename(self.selected_scad)}")
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"Module scan failed: {e}\n")
 
