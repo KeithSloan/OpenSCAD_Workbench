@@ -4,7 +4,7 @@ import FreeCADGui
 # Fully-qualified imports
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.parsers.scadmeta.scadmeta_parser import varsSCAD
-from freecad.OpenSCAD_Ext.core.SCADObject import SCADfileBase
+from freecad.OpenSCAD_Ext.objects.SCADObject import SCADfileBase
 #from freecad.OpenSCAD_Ext.parsers.varset_utils import add_scad_vars_to_varset, mirror_varset_to_spreadsheet
 
 class VarsSCADFile_Class:

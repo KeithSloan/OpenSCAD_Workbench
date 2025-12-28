@@ -26,6 +26,15 @@ def ensure_openSCADPATH():
     return default_path
 
 
+def _diag(msg):
+    try:
+        from freecad.OpenSCAD_Ext.utils.logs import write_log
+        write_log("Diag", msg)
+    except Exception:
+        pass
+    FreeCAD.Console.PrintMessage(f"[OpenSCAD][Diag] {msg}\n")
+
+
 class BaseOpenSCADBrowser(QtWidgets.QDialog):
     """
     Base OpenSCAD library browser.
@@ -173,6 +182,27 @@ class BaseOpenSCADBrowser(QtWidgets.QDialog):
 
         items = self.tree.selectedItems()
         if not items:
+            _diag("Selection cleared")
+            self.update_buttons(False)
+            return
+
+        item = items[0]
+        path = item.data(0, QtCore.Qt.UserRole)
+        text = item.text(0)
+        kind = item.text(1)
+
+        _diag(f"Selected item: text='{text}', type='{kind}', path='{path}'")
+
+        if path and os.path.isfile(path) and path.lower().endswith(".scad"):
+            self.selected_scad = path
+            _diag(f"Valid SCAD selected: {path}")
+            self.update_buttons(True)
+        else:
+            _diag("Selection is not a SCAD file")
+            self.update_buttons(False)
+
+        items = self.tree.selectedItems()
+        if not items:
             self.update_buttons(False)
             return
 
@@ -186,6 +216,8 @@ class BaseOpenSCADBrowser(QtWidgets.QDialog):
             self.update_buttons(False)
 
     def update_buttons(self, enabled):
+        _diag(f"update_buttons(enabled={enabled})")
+
         self.create_btn.setEnabled(enabled)
         self.edit_btn.setEnabled(enabled)
         self.scan_btn.setEnabled(enabled)
@@ -194,6 +226,7 @@ class BaseOpenSCADBrowser(QtWidgets.QDialog):
     # Actions
     # -------------------------------------------------
     def create_scad_object(self):
+        _diag(f"Create SCAD Object invoked, selected_scad={self.selected_scad}")
         if not self.selected_scad:
             return
 
@@ -219,9 +252,7 @@ class BaseOpenSCADBrowser(QtWidgets.QDialog):
         self.status.setText(f"Created SCAD Object: {name}")
 
     def edit_copy(self):
-        """
-        Intended to be implemented by subclass.
-        """
+        _diag(f"Edit Copy invoked, selected_scad={self.selected_scad}")
         FreeCAD.Console.PrintWarning(
             "Edit Copy not implemented in base class\n"
         )
@@ -231,19 +262,31 @@ class BaseOpenSCADBrowser(QtWidgets.QDialog):
         Invoke SCAD module scanning via FreeCAD command,
         passing the currently selected SCAD file.
         """
-        if not self.selected_scad:
-            QtWidgets.QMessageBox.warning(
-                self, "Scan Modules", "No SCAD file selected!"
-            )
-            return
+        # if not self.selected_scad:
+        # QtWidgets.QMessageBox.warning(
+        #    self, "Scan Modules", "No SCAD file selected!"
+        #)
+        _diag(f"Scan Modules invoked, selected_scad={self.selected_scad}")
 
         try:
-            import FreeCADGui
-            FreeCADGui.runCommand(
-                "ModuleSCAD_CMD",
-                {"scad_library": self.selected_scad}  # <-- MUST pass here
-            )
-            self.status.setText(f"Scanning SCAD modules: {os.path.basename(self.selected_scad)}")
+           meta = parse_scad_for_modules(self.selected_scad)
+
+           if not meta["modules"]:
+               QtWidgets.QMessageBox.information(
+                   self, "Scan Modules", "No documented modules found."
+               )
+               return
+
+           dialog = SCAD_Module_Dialog(meta, parent=self)
+           dialog.exec_()
+
+           self.status.setText(
+               f"Scanned {len(meta['modules'])} modules from "
+               f"{os.path.basename(self.selected_scad)}"
+           )   
+
         except Exception as e:
-            FreeCAD.Console.PrintError(f"Module scan failed: {e}\n")
+           FreeCAD.Console.PrintError(
+               f"Module scan failed: {e}\n"
+           )
 

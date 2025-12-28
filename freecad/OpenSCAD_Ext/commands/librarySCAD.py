@@ -5,7 +5,7 @@ import FreeCADGui
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.libraries.libView import OpenSCADLibraryBrowser
-from freecad.OpenSCAD_Ext.core.SCADObject import SCADfileBase
+from freecad.OpenSCAD_Ext.objects.SCADObject import SCADfileBase
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
 
 class LibrarySCAD_Class(BaseParams):

@@ -3,18 +3,18 @@ from PySide2 import QtWidgets, QtCore
 
 class SCAD_Module_Dialog(QtWidgets.QDialog):
     """
-    Dialog to browse a SCAD library and select a module + parameters.
-    Returns data only. No FreeCAD object creation here.
+    Display modules found in a SCAD file using meta from parse_scad_for_modules.
     """
 
-    def __init__(self, scad_library, parent=None):
+    def __init__(self, meta, parent=None):
         super().__init__(parent)
+        self.meta = meta
 
-        self.scad_library = scad_library
         self.selected_module = None
         self.arg_widgets = {}
 
-        self.setWindowTitle(f"SCAD Library – {scad_library.filename}")
+        filename = self.meta.get("filename", "Unknown SCAD")
+        self.setWindowTitle(f"SCAD File Scan Modules – {filename}")
         self.resize(900, 600)
 
         self._build_ui()
@@ -45,9 +45,7 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
 
         # ---------- Module list ----------
         self.module_list = QtWidgets.QListWidget()
-        self.module_list.currentItemChanged.connect(
-            self._on_module_selected
-        )
+        self.module_list.currentItemChanged.connect(self._on_module_selected)
         splitter.addWidget(self.module_list)
 
         # ---------- Right panel ----------
@@ -89,7 +87,6 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
         btn_layout.addWidget(cancel_btn)
 
         main_layout.addLayout(btn_layout)
-
         splitter.setStretchFactor(1, 1)
 
     # ------------------------------------------------------------------
@@ -97,22 +94,21 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
     # ------------------------------------------------------------------
 
     def _populate_library_info(self):
-        self.lib_info.setText(
-            f"{self.scad_library.filename}\n"
-            f"{self.scad_library.summary}"
-        )
+        filename = self.meta.get("filename", "Unknown SCAD")
+        summary = self.meta.get("summary", "")
+        self.lib_info.setText(f"{filename}\n{summary}")
 
-        if self.scad_library.includes:
-            self.includes_box.setPlainText(
-                "Includes:\n" + "\n".join(self.scad_library.includes)
-            )
+        includes = self.meta.get("includes", [])
+        if includes:
+            self.includes_box.setPlainText("Includes:\n" + "\n".join(includes))
         else:
             self.includes_box.setPlainText("Includes: none")
 
     def _populate_modules(self):
         self.module_list.clear()
-        for mod in self.scad_library.modules:
-            item = QtWidgets.QListWidgetItem(mod.name)
+        modules = self.meta.get("modules", [])
+        for mod in modules:
+            item = QtWidgets.QListWidgetItem(mod["name"])
             item.setData(QtCore.Qt.UserRole, mod)
             self.module_list.addItem(item)
 
@@ -135,19 +131,18 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
     def _update_module_doc(self, module):
         parts = []
 
-        if module.synopsis:
-            parts.append(f"<b>Synopsis</b><br>{module.synopsis}<br><br>")
+        synopsis = module.get("synopsis")
+        usage = module.get("usage")
+        description = module.get("description")
 
-        if module.usage:
-            parts.append(
-                "<b>Usage</b><br>"
-                f"<pre>{module.usage}</pre>"
-            )
+        if synopsis:
+            parts.append(f"<b>Synopsis</b><br>{synopsis}<br><br>")
 
-        if module.description:
-            parts.append(
-                f"<b>Description</b><br>{module.description}<br><br>"
-            )
+        if usage:
+            parts.append(f"<b>Usage</b><br><pre>{usage}</pre>")
+
+        if description:
+            parts.append(f"<b>Description</b><br>{description}<br><br>")
 
         self.module_doc.setHtml("".join(parts))
 
@@ -163,17 +158,17 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
     def _build_argument_widgets(self, module):
         self._clear_arguments()
 
-        for arg in module.arguments:
-            label = QtWidgets.QLabel(arg.name)
-            label.setToolTip(arg.description or "")
+        for arg in module.get("arguments", []):
+            label = QtWidgets.QLabel(arg.get("name", ""))
+            label.setToolTip(arg.get("description", ""))
 
             widget = self._create_arg_widget(arg)
             self.args_form.addRow(label, widget)
 
-            self.arg_widgets[arg.name] = widget
+            self.arg_widgets[arg.get("name")] = widget
 
     def _create_arg_widget(self, arg):
-        default = arg.default
+        default = arg.get("default")
 
         # Boolean
         if default in ("true", "false"):
