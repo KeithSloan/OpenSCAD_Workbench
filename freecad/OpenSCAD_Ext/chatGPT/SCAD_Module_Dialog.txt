@@ -1,0 +1,366 @@
+FreeCAD Qt Dialog for {fileName.scad} passed as parameter
+   SCAD_Module_Dialog.py name SCAD_Module_Dialog((QtWidgets.QDialog)
+   Should check if already layout in init_ui
+
+Dialog is invoked by a parent dialog for processing a library
+OpenSCADLibraryBrowser.py and BaseOpenSCADBrowser.py
+which calls a function parse_scad_for_module to create the data
+for SCAD_Module_Dialog
+
+Parser to process file and create required meta data for processing
+
+Dialog - parse_scad_for_modules.py
+
+solutions need to pass meta data rather than python dicts
+
+title "SCAD Modules -{fileName}"
+
+Two Columns - width 3/4, 1/4
+
+First Column 3 Panels
+   Includes
+   Modules
+   Module Detail
+
+Second Column 2 panels
+   Includes
+   Arguments
+
+Where First Column
+
+   Includes is a vertical scrollabe list of includes found in the file.
+   Modules is a vertical scrollabe list of modules found in the file.
+
+Second Column 
+
+   Includes is a vertical scrollabe list of includes found in the
+   comments in the heading of the file {fileName.scad} 
+
+Initially just the contents of the two Includes and Modules is displayed.
+When a module is selected then Arguments and Module Details are added.
+Create SCAD Module Object Button is enabled.
+
+For arguments name and description should be read only
+
+If the Create SCAD Object button is clicked then a suitable FreeCAD Object
+is created and dialog closed.
+
+Dialog should also offer Cancel option
+
+The Object created should be a Part::FeaturePython with a class
+
+from freecad.OpenSCAD_Ext.objects.SCADObject import SCADfileBase 
+as SCADModuleObject inherits from SCADfileBase
+it should pass scadName and sourceFile
+
+Render function in SCADfileBase should be called.
+
+class SCADModuleObject(SCADfileBase):
+    def __init__(self, obj, meta, module):
+        self.Object = obj
+        obj.Proxy = self
+
+        self._init_properties(obj, meta, module)
+        self._set_defaults(obj, module)
+
+    def _init_properties(self, obj, meta, module):
+        # --- Parameters group ---
+        obj.addProperty(
+            "App::PropertyString",
+            "ModuleName",
+            "Parameters",
+            "OpenSCAD module name"
+        ).ModuleName = module["name"]
+
+        obj.addProperty(
+            "App::PropertyString",
+            "Description",
+            "Parameters",
+            "Module description"
+        ).Description = module.get("description", "")
+
+        obj.setEditorMode("Description", 1)
+
+        obj.addProperty(
+            "App::PropertyString",
+            "Usage",
+            "Parameters",
+            "Usage examples"
+        ).Usage = "\n".join(module.get("usage", []))
+
+        obj.setEditorMode("Usage", 1)
+
+        # Collect argument documentation
+        arg_info = []
+        for arg in module.get("arguments", []):
+            line = arg["name"]
+            if arg.get("description"):
+                line += " – " + arg["description"]
+            arg_info.append(line)
+
+        obj.addProperty(
+            "App::PropertyString",
+            "ArgumentsInfo",
+            "Parameters",
+            "Argument documentation"
+        ).ArgumentsInfo = "\n".join(arg_info)
+
+        obj.setEditorMode("ArgumentsInfo", 1)
+
+        # --- SCAD group ---
+        obj.addProperty(
+            "App::PropertyStringList",
+            "Includes",
+            "SCAD",
+            "Required include files"
+        ).Includes = meta.get("includes", [])
+
+        obj.addProperty(
+            "App::PropertyString",
+            "Source",
+            "SCAD",
+            "Generated OpenSCAD source"
+        )
+
+        obj.setEditorMode("Source", 1)
+
+        # --- Add module parameters dynamically ---
+        for arg in module.get("arguments", []):
+            name = arg["name"]
+            default = arg.get("default")
+
+            prop = obj.addProperty(
+                "App::PropertyString",
+                name,
+                "Parameters",
+                "Module parameter"
+            )
+
+            if default is not None:
+                setattr(obj, name, str(default))
+
+    def _set_defaults(self, obj, module):
+        obj.ModuleName = module["name"]
+
+    def execute(self, obj):
+        src = self._build_scad_source(obj)
+        obj.Source = src
+
+        # Hook to existing OpenSCAD execution
+        # run_openscad(obj, src)
+
+    def _build_scad_source(self, obj):
+        lines = []
+
+        for inc in obj.Includes:
+            lines.append(f'include <{inc}>;')
+
+        lines.append("")
+        lines.append(f"{obj.ModuleName}(")
+
+        args = []
+        for prop in obj.PropertiesList:
+            if obj.getGroupOfProperty(prop) != "Parameters":
+                continue
+            if prop in (
+                "ModuleName",
+                "Description",
+                "ArgumentsInfo",
+                "Usage",
+            ):
+                continue
+
+            val = getattr(obj, prop)
+            if val != "":
+                args.append(f"    {prop} = {val}")
+
+        lines.append(",\n".join(args))
+        lines.append(");")
+
+        return "\n".join(lines)
+def _add_argument_property(self, obj, arg):
+    name = arg["name"]
+    default = arg.get("default")
+    desc = arg.get("description", "")
+
+    # Boolean
+    if default in ("true", "false"):
+        prop = obj.addProperty(
+            "App::PropertyBool",
+            name,
+            "Parameters",
+            desc
+        )
+        setattr(obj, name, default == "true")
+        return
+
+    # Integer
+    try:
+        if default is not None and "." not in str(default):
+            ival = int(default)
+            prop = obj.addProperty(
+                "App::PropertyInteger",
+                name,
+                "Parameters",
+                desc
+            )
+            setattr(obj, name, ival)
+            return
+    except Exception:
+        pass
+
+    # Float
+    try:
+        fval = float(default)
+        prop = obj.addProperty(
+            "App::PropertyFloat",
+            name,
+            "Parameters",
+            desc
+        )
+        setattr(obj, name, fval)
+        return
+    except Exception:
+        pass
+
+    # String fallback
+    prop = obj.addProperty(
+        "App::PropertyString",
+        name,
+        "Parameters",
+        desc
+    )
+    if default:
+        setattr(obj, name, str(default).strip('"'))
+
+
+Typical section of the SCAD file
+
+//////////////////////////////////////////////////////////////////////
+// LibFile: linear_bearings.scad
+//   Mounts and models for LMxUU style linear bearings.
+// Includes:
+//   include <BOSL2/std.scad>
+//   include <BOSL2/linear_bearings.scad>
+// FileGroup: Parts
+// FileSummary: Mounts for LMxUU style linear bearings.
+//////////////////////////////////////////////////////////////////////
+
+_BOSL2_LINEAR_BEARINGS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: linear_bearings.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
+include <screws.scad>
+
+
+// Section: Generic Linear Bearings
+
+// Module: linear_bearing_housing()
+// Synopsis: Creates a generic linear bearing mount clamp.
+// SynTags: Geom
+// Topics: Parts, Bearings
+// See Also: linear_bearing(), lmXuu_info(), ball_bearing()
+// Usage:
+//   linear_bearing_housing(d, l, tab, gap, wall, tabwall, screwsize) [ATTACHMENTS];
+// Description:
+//   Creates a model of a clamp to hold a generic linear bearing cartridge.
+// Arguments:
+//   d = Diameter of linear bearing. (Default: 15)
+//   l = Length of linear bearing. (Default: 24)
+//   tab = Clamp tab height. (Default: 8)
+//   tabwall = Clamp Tab thickness. (Default: 5)
+//   wall = Wall thickness of clamp housing. (Default: 3)
+//   gap = Gap in clamp. (Default: 5)
+//   screwsize = Size of screw to use to tighten clamp. (Default: 3)
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example:
+//   linear_bearing_housing(d=19, l=29, wall=2, tab=8, screwsize=2.5);
+module linear_bearing_housing(d=15, l=24, tab=8, gap=5, wall=3, tabwall=5, screwsize=3, anchor=BOTTOM, spin=0, orient=UP)
+{
+    od = d+2*wall;
+    ogap = gap+2*tabwall;
+    tabh = tab/2+od/2*sqrt(2)-ogap/2-1;
+    h = od+tab/2;
+    anchors = [
+        named_anchor("axis", [0,0,-tab/2/2]),
+        named_anchor("screw", [0,2-ogap/2,tabh-tab/2/2],FWD),
+        named_anchor("nut", [0,ogap/2-2,tabh-tab/2/2],FWD)
+    ];
+    attachable(anchor,spin,orient, size=[l, od, h], anchors=anchors) {
+        down(tab/2/2)
+        difference() {
+            union() {
+                // Housing
+                zrot(90) teardrop(r=od/2,h=l);
+
+                // Base
+                cube([l,od,od/2], anchor=TOP);
+
+                // Tabs
+                cube([l,ogap,od/2+tab/2], anchor=BOTTOM);
+            }
+
+            // Clear bearing space
+            zrot(90) teardrop(r=d/2,h=l+0.05);
+
+            // Clear gap
+            cube([l+0.05,gap,od], anchor=BOTTOM);
+
+            up(tabh) {
+                screwsize = is_string(screwsize)? screwsize : str("M",screwsize);
+
+                // Screwhole
+                fwd(ogap/2-2+0.01)
+                    screw_hole(str(screwsize,",",ogap), head="socket", counterbore=3, anchor="head_bot", orient=FWD, $fn=12);
+
+                // Nut holder
+                back(ogap/2-2+0.01)
+                    nut_trap_inline(tabwall, screwsize, orient=BACK);
+            }
+        }
+        children();
+    }
+}
+
+
+// Module: linear_bearing()
+// Synopsis: Creates a generic linear bearing cartridge.
+// SynTags: Geom
+// Topics: Parts, Bearings
+// See Also: linear_bearing_housing(), lmXuu_info(), ball_bearing()
+// Usage:
+//   linear_bearing(l, od, id, length) [ATTACHMENTS];
+// Description:
+//   Creates a rough model of a generic linear ball bearing cartridge.
+// Arguments:
+//   l/length = The length of the linear bearing cartridge.
+//   od = The outer diameter of the linear bearing cartridge.
+//   id = The inner diameter of the linear bearing cartridge.
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example:
+//   linear_bearing(l=24, od=15, id=8);
+module linear_bearing(l, od=15, id=8, length, anchor=CTR, spin=0, orient=UP) {
+    l = first_defined([l, length, 24]);
+    attachable(anchor,spin,orient, d=od, l=l) {
+        color("silver") {
+            tube(id=id, od=od, l=l-1);
+            tube(id=od-1, od=od, l=l);
+            tube(id=id, od=id+1, l=l);
+            tube(id=id+2, od=od-2, l=l);
+        }
+        children();
+    }
+}
+
+
+
+Please instrument function with "write_log("Info", msg)
+and make sure any file uses
+
+from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log

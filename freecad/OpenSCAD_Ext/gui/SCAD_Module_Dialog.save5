@@ -1,0 +1,183 @@
+from PySide2 import QtWidgets, QtCore
+
+class SCAD_Module_Dialog(QtWidgets.QDialog):
+    """
+    Display SCAD modules in two-column layout.
+    Left column: includes, module list, module details.
+    Right column: module arguments.
+    """
+
+    def __init__(self, meta, parent=None):
+        super().__init__(parent)
+        self.meta = meta
+        self.selected_module = None
+        self.arg_widgets = {}
+
+        filename = getattr(self.meta, "filename", "Unknown SCAD")
+        self.setWindowTitle(f"SCAD Modules – {filename}")
+        self.resize(1000, 700)
+
+        self._build_ui()
+        self._populate_library_info()
+        self._populate_modules()
+
+    # ------------------------------------------------------------------
+    # UI construction
+    # ------------------------------------------------------------------
+    def _build_ui(self):
+        main_layout = QtWidgets.QHBoxLayout(self)
+
+        # ---------------- Left column ----------------
+        left_col = QtWidgets.QVBoxLayout()
+
+        # Includes box
+        self.includes_box = QtWidgets.QTextEdit()
+        self.includes_box.setReadOnly(True)
+        self.includes_box.setMaximumHeight(80)
+        left_col.addWidget(QtWidgets.QLabel("<b>Includes</b>"))
+        left_col.addWidget(self.includes_box)
+
+        # Module list
+        self.module_list = QtWidgets.QListWidget()
+        self.module_list.currentItemChanged.connect(self._on_module_selected)
+        left_col.addWidget(QtWidgets.QLabel("<b>Modules</b>"))
+        left_col.addWidget(self.module_list, 1)
+
+        # Module details
+        self.module_doc = QtWidgets.QTextEdit()
+        self.module_doc.setReadOnly(True)
+        left_col.addWidget(QtWidgets.QLabel("<b>Module Details</b>"))
+        left_col.addWidget(self.module_doc, 1)
+
+        main_layout.addLayout(left_col, 3)  # wide column
+
+        # ---------------- Right column ----------------
+        right_col = QtWidgets.QVBoxLayout()
+
+        right_col.addWidget(QtWidgets.QLabel("<b>Arguments</b>"))
+
+        self.args_scroll = QtWidgets.QScrollArea()
+        self.args_scroll.setWidgetResizable(True)
+
+        self.args_widget = QtWidgets.QWidget()
+        self.args_form = QtWidgets.QFormLayout(self.args_widget)
+        self.args_scroll.setWidget(self.args_widget)
+
+        right_col.addWidget(self.args_scroll, 1)
+
+        self.create_btn = QtWidgets.QPushButton("Create SCAD Object")
+        self.create_btn.setEnabled(False)
+        self.create_btn.clicked.connect(self.accept)
+
+        cancel_btn = QtWidgets.QPushButton("Cancel")
+        cancel_btn.clicked.connect(self.reject)
+
+        btn_layout = QtWidgets.QHBoxLayout()
+        btn_layout.addStretch()
+        btn_layout.addWidget(self.create_btn)
+        btn_layout.addWidget(cancel_btn)
+        right_col.addLayout(btn_layout)
+
+        main_layout.addLayout(right_col, 2)  # narrower column
+
+    # ------------------------------------------------------------------
+    # Populate data
+    # ------------------------------------------------------------------
+    def _populate_library_info(self):
+        includes = getattr(self.meta, "includes", [])
+        if includes:
+            self.includes_box.setPlainText("\n".join(includes))
+        else:
+            self.includes_box.setPlainText("None")
+
+    def _populate_modules(self):
+        self.module_list.clear()
+        for mod in getattr(self.meta, "modules", []):
+            desc = getattr(mod, "description", "")
+            item_text = f"{mod.name} — {desc[:60]}"
+            item = QtWidgets.QListWidgetItem(item_text)
+            item.setData(QtCore.Qt.UserRole, mod)
+            self.module_list.addItem(item)
+
+    # ------------------------------------------------------------------
+    # Module selection
+    # ------------------------------------------------------------------
+    def _on_module_selected(self, item):
+        if not item:
+            self.create_btn.setEnabled(False)
+            return
+
+        module = item.data(QtCore.Qt.UserRole)
+        self.selected_module = module
+        self.create_btn.setEnabled(True)
+        self._update_module_doc(module)
+        self._build_argument_widgets(module)
+
+    def _update_module_doc(self, module):
+        parts = []
+        if getattr(module, "synopsis", None):
+            parts.append(f"<b>Synopsis:</b> {module.synopsis}<br>")
+        if getattr(module, "usage", None):
+            parts.append(f"<b>Usage:</b><br><pre>{module.usage}</pre>")
+        if getattr(module, "description", None):
+            parts.append(f"<b>Description:</b><br>{module.description}")
+        self.module_doc.setHtml("".join(parts))
+
+    # ------------------------------------------------------------------
+    # Arguments editor
+    # ------------------------------------------------------------------
+    def _clear_arguments(self):
+        while self.args_form.rowCount():
+            self.args_form.removeRow(0)
+        self.arg_widgets.clear()
+
+    def _build_argument_widgets(self, module):
+        self._clear_arguments()
+        for arg in getattr(module, "arguments", []):
+            name = getattr(arg, "name", "")
+            label = QtWidgets.QLabel(name)
+            label.setToolTip(getattr(arg, "description", ""))
+            widget = self._create_arg_widget(arg)
+            self.args_form.addRow(label, widget)
+            self.arg_widgets[name] = widget
+
+    def _create_arg_widget(self, arg):
+        default = getattr(arg, "default", None)
+        # Boolean
+        if default in ("true", "false"):
+            cb = QtWidgets.QCheckBox()
+            cb.setChecked(default == "true")
+            return cb
+        # Numeric
+        try:
+            val = float(default)
+            sb = QtWidgets.QDoubleSpinBox()
+            sb.setDecimals(4)
+            sb.setRange(-1e9, 1e9)
+            sb.setValue(val)
+            return sb
+        except Exception:
+            pass
+        # Fallback string
+        le = QtWidgets.QLineEdit()
+        if default:
+            le.setText(str(default).strip('"'))
+        return le
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+    def get_selected_module(self):
+        return self.selected_module
+
+    def get_argument_values(self):
+        values = {}
+        for name, widget in self.arg_widgets.items():
+            if isinstance(widget, QtWidgets.QCheckBox):
+                values[name] = widget.isChecked()
+            elif isinstance(widget, QtWidgets.QDoubleSpinBox):
+                values[name] = widget.value()
+            elif isinstance(widget, QtWidgets.QLineEdit):
+                values[name] = widget.text()
+        return values
+

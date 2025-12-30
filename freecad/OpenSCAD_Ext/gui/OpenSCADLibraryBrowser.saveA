@@ -1,7 +1,6 @@
+from PySide import QtCore, QtGui, QtWidgets
 import os
 import FreeCAD
-from PySide import QtWidgets, QtCore
-
 from freecad.OpenSCAD_Ext.libraries.ensure_openSCADPATH import ensure_openSCADPATH
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
@@ -65,6 +64,10 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         layout.addWidget(self.status)
 
     def populate_tree(self, path=None, parent_item=None):
+        """
+        Populate the tree with directories and SCAD files.
+        Ignores hidden files (starting with '.').
+        """
         if path is None:
             path = ensure_openSCADPATH()
             write_log("Info", f"Displaying SCAD library directory: {path}")
@@ -77,7 +80,7 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
 
         for name in sorted(entries):
             if name.startswith("."):
-                continue
+                continue  # skip hidden files
             full_path = os.path.join(path, name)
             if os.path.isdir(full_path):
                 dir_item = QtWidgets.QTreeWidgetItem([name, "Directory"])
@@ -95,6 +98,10 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
                     self.tree.addTopLevelItem(file_item)
 
     def on_item_clicked(self, item, column):
+        """
+        Handle clicks on tree items.
+        Directories drill down, SCAD files enable buttons.
+        """
         self.selected_item = item
         if hasattr(item, "full_path"):
             full_path = item.full_path
@@ -141,12 +148,19 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
             return
 
         write_log("Info", f"Editing copy of {self.selected_scad}")
+
         obj_name = os.path.splitext(os.path.basename(self.selected_scad))[0]
         bp = BaseParams()
         bp.editFile(obj_name, self.selected_scad)
+        #BaseParams.editFile(obj_name, self.selected_scad)
+
         self.status.setText(f"Opened SCAD file for editing: {self.selected_scad}")
 
     def scan_modules(self):
+        """
+        Parse selected SCAD file for modules/functions.
+        Opens SCAD_Module_Dialog if any modules are found.
+        """
         if not self.selected_scad or not os.path.isfile(self.selected_scad):
             QtWidgets.QMessageBox.warning(self, "Scan Modules", "No SCAD file selected.")
             return
@@ -156,7 +170,9 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         try:
             meta = parse_scad_for_modules(self.selected_scad)
             if not meta.modules:
-                QtWidgets.QMessageBox.information(self, "Scan Modules", "No documented modules found.")
+                QtWidgets.QMessageBox.information(
+                    self, "Scan Modules", "No documented modules found."
+                )
                 write_log("Info", "No modules found in SCAD file.")
                 return
 

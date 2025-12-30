@@ -1,4 +1,4 @@
-from freecad.OpenSCAD_Ext.objects.SCADObjects import SCADfileBase 
+from freecad.OpenSCAD_Ext.objects.SCADObject import SCADfileBase 
 
 class SCADModuleObject(SCADfileBase):
     def __init__(self, obj, meta, module):

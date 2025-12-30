@@ -1,0 +1,145 @@
+import os
+import re
+
+
+class ArgumentMeta:
+    def __init__(self, name, description=None, default=None):
+        self.name = name
+        self.description = description
+        self.default = default
+
+
+class ModuleMeta:
+    def __init__(self, name):
+        self.name = name
+        self.synopsis = None
+        self.usage = None
+        self.description = None
+        self.arguments = []
+
+
+class SCADFileMeta:
+    def __init__(self, filename):
+        self.filename = filename
+        self.summary = None
+        self.includes = []
+        self.modules = []
+
+
+# ------------------------------------------------------------
+# Main parser
+# ------------------------------------------------------------
+
+def parse_scad_for_modules(scad_path):
+    meta = SCADFileMeta(os.path.basename(scad_path))
+
+    pending_doc = None
+    current_section = None
+
+    def new_pending_doc():
+        return {
+            "module": None,
+            "synopsis": None,
+            "usage": [],
+            "description": [],
+            "arguments": []
+        }
+
+    with open(scad_path, "r", encoding="utf-8", errors="ignore") as fh:
+        for raw in fh:
+            line = raw.rstrip()
+
+            # --------------------------------------------------
+            # Includes
+            # --------------------------------------------------
+            m = re.match(r'\s*include\s*<([^>]+)>', line)
+            if m:
+                meta.includes.append(m.group(1))
+                continue
+
+            # --------------------------------------------------
+            # File summary (BOSL header)
+            # --------------------------------------------------
+            if line.startswith("// FileSummary:"):
+                meta.summary = line.split(":", 1)[1].strip()
+                continue
+
+            # --------------------------------------------------
+            # Start of module documentation
+            # --------------------------------------------------
+            if line.startswith("// Module:"):
+                pending_doc = new_pending_doc()
+                pending_doc["module"] = line.split(":", 1)[1].strip().replace("()", "")
+                current_section = None
+                continue
+
+            if pending_doc is not None and line.startswith("//"):
+                content = line[2:].strip()
+
+                if content.startswith("Synopsis:"):
+                    current_section = "synopsis"
+                    pending_doc["synopsis"] = content.split(":", 1)[1].strip()
+                    continue
+
+                if content.startswith("Usage:"):
+                    current_section = "usage"
+                    continue
+
+                if content.startswith("Description:"):
+                    current_section = "description"
+                    continue
+
+                if content.startswith("Arguments:"):
+                    current_section = "arguments"
+                    continue
+
+                if content.startswith("---"):
+                    current_section = None
+                    continue
+
+                # Collect section content
+                if current_section == "usage":
+                    pending_doc["usage"].append(content)
+
+                elif current_section == "description":
+                    pending_doc["description"].append(content)
+
+                elif current_section == "arguments":
+                    # d = Diameter of linear bearing. (Default: 15)
+                    m = re.match(r'(\w+)\s*=\s*(.*)', content)
+                    if m:
+                        name = m.group(1)
+                        desc = m.group(2)
+
+                        default = None
+                        dm = re.search(r'\(Default:\s*([^)]+)\)', desc)
+                        if dm:
+                            default = dm.group(1)
+                            desc = desc.replace(dm.group(0), "").strip()
+
+                        pending_doc["arguments"].append(
+                            ArgumentMeta(name, desc, default)
+                        )
+                continue
+
+            # --------------------------------------------------
+            # Bind doc to module
+            # --------------------------------------------------
+            m = re.match(r'\s*module\s+(\w+)\s*\(', line)
+            if m:
+                module_name = m.group(1)
+                mod = ModuleMeta(module_name)
+
+                if pending_doc and pending_doc["module"] == module_name:
+                    mod.synopsis = pending_doc["synopsis"]
+                    mod.usage = "\n".join(pending_doc["usage"]) or None
+                    mod.description = "\n".join(pending_doc["description"]) or None
+                    mod.arguments = pending_doc["arguments"]
+
+                meta.modules.append(mod)
+                pending_doc = None
+                current_section = None
+                continue
+
+    return meta
+
