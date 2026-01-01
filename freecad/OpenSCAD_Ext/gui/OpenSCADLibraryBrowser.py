@@ -116,12 +116,37 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
                 self.status.setText(f"Selected SCAD file: {full_path}")
 
     def create_scad_object(self):
+        write_log("Info",f"Create SCAD Object {self.selected_scad}")
         if not self.selected_scad:
             return
 
         doc = FreeCAD.ActiveDocument
         if doc is None:
             doc = FreeCAD.newDocument("SCAD_Import")
+
+        #obj = doc.addObject("Part::FeaturePython", obj_name)
+        #obj.Label = obj_name
+
+        # createSCADObject()
+
+        #newSCAD command ?
+
+        sourceDirectory = BaseParams.getScadSourcePath()
+
+        #sourceFilePath = os.path.join(sourceDirectory,obj.Label+".scad")
+        #print(f"SourceFilePath {sourceFilePath }")
+    
+        # View provider (THIS IS REQUIRED - Before calling SCADModuleObject)
+        write_log("Indo","Set ViewProvider")
+        #ViewSCADProvider(obj.ViewObject)
+        # Wrap in SCADModuleObject Data Proxy
+        #proxy = SCADObject(obj,
+        #        obj.Label,
+        #        sourceFilePath,
+        #        self.meta,
+        #        self.selected_module_meta,
+        #        args=args_values
+        #    )
 
         name = os.path.splitext(os.path.basename(self.selected_scad))[0]
         obj = doc.addObject("Part::FeaturePython", name)
