@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# Usage: ./scan_scad_hull.sh /path/to/scad/dir
+# If no path given, use current directory
+ROOT_DIR="${1:-.}"
+MINKOWSKI_DIR="$ROOT_DIR/minkowski"
+
+mkdir -p "$MINKOWSKIR"
+
+# Find .scad files and search for hull(
+find "$ROOT_DIR" -type f -name "*.scad" ! -path "$MINKOWSKI_DIR/*" | while read -r file; do
+    if grep -Eq '^[^/]*\bminkowski\s*\(' "$file"; then
+        echo "Minkowski found: $file"
+        cp -n "$file" "$MINKOWSKI_DIR/"
+    fi
+done
+
+echo "Done."
+

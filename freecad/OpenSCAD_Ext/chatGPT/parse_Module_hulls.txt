@@ -1,0 +1,7 @@
+Update parse_scad_for_modules.py
+
+For meta info on a module add info if contains following function calls
+hull
+sequential_hull
+minkowski
+polyhedron
