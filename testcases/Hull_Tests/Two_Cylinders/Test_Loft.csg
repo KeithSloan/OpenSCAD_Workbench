@@ -1,0 +1,9 @@
+// CSG file generated from FreeCAD 0.19.23578 (Git)
+group() {
+ group(){ hull(){
+multmatrix([[1.0, 0.0, 0.0,            0.0], [0.0, 1.0, 0.0, 26.0], [0.0, 0.0, 1.0, 15.0], [             0, 0, 0, 1]]){
+cylinder($fn = 0, $fa = 12.000000, $fs = 2.000000, h = 10.0, r1 = 6.0, r2 = 6.0, center = false);
+}
+cylinder($fn = 0, $fa = 12.000000, $fs = 2.000000, h = 40.0, r1 = 20.0, r2 = 20.0, center = false);
+}
+}}

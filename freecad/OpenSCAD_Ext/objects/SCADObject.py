@@ -230,7 +230,7 @@ class SCADfileBase:
         modeLst = ['Mesh', 'Brep']
         modeIdx = modeLst.index(mode)
         obj.mode = modeLst
-        #obj.mode = modeIdx0
+        obj.mode = modeIdx
         obj.addProperty("App::PropertyInteger","fnmax","OpenSCAD","Max Poylgon - If circle or cylinder has more than this number of sides, treat as circle or cyliner")
         #obj.fnmax = 16
         obj.fnmax = fnmax
@@ -407,7 +407,8 @@ def createSCADObject(title, createOption, objectName, filename):
 		#
 		# SCADfileBase(obj, name, filename, mode='Mesh', fnmax=16, timeout=30)
         SCADfileBase(obj, \
-			os.path.splitext(os.path.basename(filename))[0],
+			#os.path.splitext(os.path.basename(filename))[0],
+            objectName, \
  			filename, \
 			options[0], \
 			options[1], \
@@ -415,6 +416,12 @@ def createSCADObject(title, createOption, objectName, filename):
 		#print(dir(scadObj))
         write_log("Info","ViewSCADProvider")
         ViewSCADProvider(obj.ViewObject)
+        if hasattr(obj, 'Proxy'):
+            if hasattr(obj, "editFile"):
+                obj.Proxy.editFile(filename)
+            elif hasattr(obj, "executeFunc"):
+                obj.Proxy.executeFunction(obj)
+        return obj
 
 class ViewSCADProvider:
     def __init__(self, obj):

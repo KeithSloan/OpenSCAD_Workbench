@@ -1,0 +1,10 @@
+Speher// CSG file generated from FreeCAD 0.19.23578 (Git)
+group() {
+ group(){
+     hull(){
+sphere($fn = 0, $fa = 12.000000, $fs = 2.000000, r = 5.0 );
+multmatrix([[1.0, 0.0, 0.0,            20.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [             0, 0, 0, 1]]){
+cube (size = [10.0, 10.0, 10.0], center = false);
+}}
+}
+}

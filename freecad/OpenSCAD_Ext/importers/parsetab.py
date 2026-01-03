@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'COMMA CUBE HULL IDENT LBRACE LPAREN MINKOWSKI MULTMATRIX NUMBER RAW RBRACE ROTATE RPAREN SCALE SPHERE TRANSLATEprogram : statementsstatements : statements statementstatements : statementstatement : operationstatement : RAWoperation : CUBE LPAREN arg_list RPAREN\n                 | SPHERE LPAREN arg_list RPAREN\n                 | HULL LBRACE statements RBRACE\n                 | MINKOWSKI LBRACE statements RBRACE\n                 | TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE\n                 | ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE\n                 | SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE\n                 | MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACEarg_list : args\n                | emptyargs : args COMMA argargs : argarg : NUMBER\n           | IDENTempty :'
+_lr_signature = 'programleftCOMMACOLOR COMMA CUBE CYLINDER DIFFERENCE EQUALS HULL IDENT IMPORT INTERSECTION LBRACE LBRACK LPAREN MINKOWSKI MINUS MODULE NUMBER PLUS POLYHEDRON RBRACE RBRACK ROTATE RPAREN SCALE SEMI SPHERE STRING TRANSLATE UNIONprogram : stmt_liststmt_list : stmt_list stmt\n                 | stmt\n                 | emptystmt : operation\n            | raw_stmt SEMI\n            | assignment SEMI\n            | module_def\n    raw_stmt : IDENT LPAREN maybe_arglist RPARENoperation : IDENT LPAREN maybe_arglist RPAREN\n                 | IDENT LPAREN maybe_arglist RPAREN blockblock : LBRACE stmt_list RBRACEmaybe_arglist : arglist\n                     | emptyarglist : arglist COMMA arg\n               | argarg : NUMBER\n           | STRING\n           | array\n           | IDENT EQUALS value\n           | valuevalue : NUMBER\n             | STRING\n             | IDENT\n             | arrayarray : LBRACK maybe_array_vals RBRACKmaybe_array_vals : array_vals\n                        | emptyarray_vals : array_vals COMMA arg\n                  | argassignment : IDENT EQUALS valuemodule_def : MODULE IDENT LPAREN maybe_param_list RPAREN blockmaybe_param_list : param_list\n                        | emptyparam_list : param_list COMMA IDENT\n                  | IDENTmodule_call : IDENT LPAREN maybe_arglist RPARENempty :'
     
-_lr_action_items = {'RAW':([0,2,3,4,5,14,17,18,30,31,36,38,39,40,46,47,48,49,50,51,52,53,54,55,56,57,],[5,5,-3,-4,-5,-2,5,5,5,5,-6,-7,-8,-9,5,5,5,5,5,5,5,5,-10,-11,-12,-13,]),'CUBE':([0,2,3,4,5,14,17,18,30,31,36,38,39,40,46,47,48,49,50,51,52,53,54,55,56,57,],[6,6,-3,-4,-5,-2,6,6,6,6,-6,-7,-8,-9,6,6,6,6,6,6,6,6,-10,-11,-12,-13,]),'SPHERE':([0,2,3,4,5,14,17,18,30,31,36,38,39,40,46,47,48,49,50,51,52,53,54,55,56,57,],[7,7,-3,-4,-5,-2,7,7,7,7,-6,-7,-8,-9,7,7,7,7,7,7,7,7,-10,-11,-12,-13,]),'HULL':([0,2,3,4,5,14,17,18,30,31,36,38,39,40,46,47,48,49,50,51,52,53,54,55,56,57,],[8,8,-3,-4,-5,-2,8,8,8,8,-6,-7,-8,-9,8,8,8,8,8,8,8,8,-10,-11,-12,-13,]),'MINKOWSKI':([0,2,3,4,5,14,17,18,30,31,36,38,39,40,46,47,48,49,50,51,52,53,54,55,56,57,],[9,9,-3,-4,-5,-2,9,9,9,9,-6,-7,-8,-9,9,9,9,9,9,9,9,9,-10,-11,-12,-13,]),'TRANSLATE':([0,2,3,4,5,14,17,18,30,31,36,38,39,40,46,47,48,49,50,51,52,53,54,55,56,57,],[10,10,-3,-4,-5,-2,10,10,10,10,-6,-7,-8,-9,10,10,10,10,10,10,10,10,-10,-11,-12,-13,]),'ROTATE':([0,2,3,4,5,14,17,18,30,31,36,38,39,40,46,47,48,49,50,51,52,53,54,55,56,57,],[11,11,-3,-4,-5,-2,11,11,11,11,-6,-7,-8,-9,11,11,11,11,11,11,11,11,-10,-11,-12,-13,]),'SCALE':([0,2,3,4,5,14,17,18,30,31,36,38,39,40,46,47,48,49,50,51,52,53,54,55,56,57,],[12,12,-3,-4,-5,-2,12,12,12,12,-6,-7,-8,-9,12,12,12,12,12,12,12,12,-10,-11,-12,-13,]),'MULTMATRIX':([0,2,3,4,5,14,17,18,30,31,36,38,39,40,46,47,48,49,50,51,52,53,54,55,56,57,],[13,13,-3,-4,-5,-2,13,13,13,13,-6,-7,-8,-9,13,13,13,13,13,13,13,13,-10,-11,-12,-13,]),'$end':([1,2,3,4,5,14,36,38,39,40,54,55,56,57,],[0,-1,-3,-4,-5,-2,-6,-7,-8,-9,-10,-11,-12,-13,]),'RBRACE':([3,4,5,14,30,31,36,38,39,40,50,51,52,53,54,55,56,57,],[-3,-4,-5,-2,39,40,-6,-7,-8,-9,54,55,56,57,-10,-11,-12,-13,]),'LPAREN':([6,7,10,11,12,13,],[15,16,19,20,21,22,]),'LBRACE':([8,9,41,42,43,44,],[17,18,46,47,48,49,]),'RPAREN':([15,16,19,20,21,22,23,24,25,26,27,28,29,32,33,34,35,45,],[-20,-20,-20,-20,-20,-20,36,-14,-15,-17,-18,-19,38,41,42,43,44,-16,]),'NUMBER':([15,16,19,20,21,22,37,],[27,27,27,27,27,27,27,]),'IDENT':([15,16,19,20,21,22,37,],[28,28,28,28,28,28,28,]),'COMMA':([24,26,27,28,45,],[37,-17,-18,-19,-16,]),}
+_lr_action_items = {'IDENT':([0,2,3,4,5,8,10,11,12,13,14,15,26,32,33,34,35,45,46,49,51,52,54,56,],[9,9,-3,-4,-5,-8,16,-2,-6,-7,17,27,17,40,27,-10,17,-11,9,17,55,9,-32,-12,]),'MODULE':([0,2,3,4,5,8,11,12,13,34,45,46,52,54,56,],[10,10,-3,-4,-5,-8,-2,-6,-7,-10,-11,10,10,-32,-12,]),'$end':([0,1,2,3,4,5,8,11,12,13,34,45,54,56,],[-38,0,-1,-3,-4,-5,-8,-2,-6,-7,-10,-11,-32,-12,]),'RBRACE':([3,4,5,8,11,12,13,34,45,46,52,54,56,],[-3,-4,-5,-8,-2,-6,-7,-10,-11,-38,56,-32,-12,]),'SEMI':([6,7,27,28,29,30,31,34,48,],[12,13,-24,-31,-22,-23,-25,-9,-26,]),'LPAREN':([9,16,],[14,32,]),'EQUALS':([9,17,],[15,33,]),'RPAREN':([14,17,18,19,20,21,22,23,24,25,27,29,30,31,32,40,41,42,43,44,47,48,55,],[-38,-24,34,-13,-14,-16,-17,-18,-19,-21,-24,-22,-23,-25,-38,-36,50,-33,-34,-20,-15,-26,-35,]),'NUMBER':([14,15,26,33,35,49,],[22,29,22,29,22,22,]),'STRING':([14,15,26,33,35,49,],[23,30,23,30,23,23,]),'LBRACK':([14,15,26,33,35,49,],[26,26,26,26,26,26,]),'COMMA':([17,19,21,22,23,24,25,27,29,30,31,37,39,40,42,44,47,48,53,55,],[-24,35,-16,-17,-18,-19,-21,-24,-22,-23,-25,49,-30,-36,51,-20,-15,-26,-29,-35,]),'RBRACK':([17,22,23,24,25,26,27,29,30,31,36,37,38,39,44,48,53,],[-24,-17,-18,-19,-21,-38,-24,-22,-23,-25,48,-27,-28,-30,-20,-26,-29,]),'LBRACE':([34,50,],[46,46,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'program':([0,],[1,]),'statements':([0,17,18,46,47,48,49,],[2,30,31,50,51,52,53,]),'statement':([0,2,17,18,30,31,46,47,48,49,50,51,52,53,],[3,14,3,3,14,14,3,3,3,3,14,14,14,14,]),'operation':([0,2,17,18,30,31,46,47,48,49,50,51,52,53,],[4,4,4,4,4,4,4,4,4,4,4,4,4,4,]),'arg_list':([15,16,19,20,21,22,],[23,29,32,33,34,35,]),'args':([15,16,19,20,21,22,],[24,24,24,24,24,24,]),'empty':([15,16,19,20,21,22,],[25,25,25,25,25,25,]),'arg':([15,16,19,20,21,22,37,],[26,26,26,26,26,26,45,]),}
+_lr_goto_items = {'program':([0,],[1,]),'stmt_list':([0,46,],[2,52,]),'stmt':([0,2,46,52,],[3,11,3,11,]),'empty':([0,14,26,32,46,],[4,20,38,43,4,]),'operation':([0,2,46,52,],[5,5,5,5,]),'raw_stmt':([0,2,46,52,],[6,6,6,6,]),'assignment':([0,2,46,52,],[7,7,7,7,]),'module_def':([0,2,46,52,],[8,8,8,8,]),'maybe_arglist':([14,],[18,]),'arglist':([14,],[19,]),'arg':([14,26,35,49,],[21,39,47,53,]),'array':([14,15,26,33,35,49,],[24,31,24,31,24,24,]),'value':([14,15,26,33,35,49,],[25,28,25,44,25,25,]),'maybe_array_vals':([26,],[36,]),'array_vals':([26,],[37,]),'maybe_param_list':([32,],[41,]),'param_list':([32,],[42,]),'block':([34,50,],[45,54,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,24 +27,42 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> program","S'",1,None,None,None),
-  ('program -> statements','program',1,'p_program','newImportCSG.py',110),
-  ('statements -> statements statement','statements',2,'p_statements_multi','newImportCSG.py',114),
-  ('statements -> statement','statements',1,'p_statements_single','newImportCSG.py',118),
-  ('statement -> operation','statement',1,'p_statement_op','newImportCSG.py',122),
-  ('statement -> RAW','statement',1,'p_statement_raw','newImportCSG.py',126),
-  ('operation -> CUBE LPAREN arg_list RPAREN','operation',4,'p_operation','newImportCSG.py',130),
-  ('operation -> SPHERE LPAREN arg_list RPAREN','operation',4,'p_operation','newImportCSG.py',131),
-  ('operation -> HULL LBRACE statements RBRACE','operation',4,'p_operation','newImportCSG.py',132),
-  ('operation -> MINKOWSKI LBRACE statements RBRACE','operation',4,'p_operation','newImportCSG.py',133),
-  ('operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE','operation',7,'p_operation','newImportCSG.py',134),
-  ('operation -> ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE','operation',7,'p_operation','newImportCSG.py',135),
-  ('operation -> SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE','operation',7,'p_operation','newImportCSG.py',136),
-  ('operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE','operation',7,'p_operation','newImportCSG.py',137),
-  ('arg_list -> args','arg_list',1,'p_arg_list','newImportCSG.py',147),
-  ('arg_list -> empty','arg_list',1,'p_arg_list','newImportCSG.py',148),
-  ('args -> args COMMA arg','args',3,'p_args_multi','newImportCSG.py',152),
-  ('args -> arg','args',1,'p_args_single','newImportCSG.py',156),
-  ('arg -> NUMBER','arg',1,'p_arg','newImportCSG.py',160),
-  ('arg -> IDENT','arg',1,'p_arg','newImportCSG.py',161),
-  ('empty -> <empty>','empty',0,'p_empty','newImportCSG.py',165),
+  ('program -> stmt_list','program',1,'p_program','createASTfromCSG.py',221),
+  ('stmt_list -> stmt_list stmt','stmt_list',2,'p_stmt_list','createASTfromCSG.py',231),
+  ('stmt_list -> stmt','stmt_list',1,'p_stmt_list','createASTfromCSG.py',232),
+  ('stmt_list -> empty','stmt_list',1,'p_stmt_list','createASTfromCSG.py',233),
+  ('stmt -> operation','stmt',1,'p_stmt','createASTfromCSG.py',242),
+  ('stmt -> raw_stmt SEMI','stmt',2,'p_stmt','createASTfromCSG.py',243),
+  ('stmt -> assignment SEMI','stmt',2,'p_stmt','createASTfromCSG.py',244),
+  ('stmt -> module_def','stmt',1,'p_stmt','createASTfromCSG.py',245),
+  ('raw_stmt -> IDENT LPAREN maybe_arglist RPAREN','raw_stmt',4,'p_raw_stmt','createASTfromCSG.py',250),
+  ('operation -> IDENT LPAREN maybe_arglist RPAREN','operation',4,'p_operation','createASTfromCSG.py',255),
+  ('operation -> IDENT LPAREN maybe_arglist RPAREN block','operation',5,'p_operation','createASTfromCSG.py',256),
+  ('block -> LBRACE stmt_list RBRACE','block',3,'p_block','createASTfromCSG.py',271),
+  ('maybe_arglist -> arglist','maybe_arglist',1,'p_maybe_arglist','createASTfromCSG.py',275),
+  ('maybe_arglist -> empty','maybe_arglist',1,'p_maybe_arglist','createASTfromCSG.py',276),
+  ('arglist -> arglist COMMA arg','arglist',3,'p_arglist','createASTfromCSG.py',280),
+  ('arglist -> arg','arglist',1,'p_arglist','createASTfromCSG.py',281),
+  ('arg -> NUMBER','arg',1,'p_arg','createASTfromCSG.py',288),
+  ('arg -> STRING','arg',1,'p_arg','createASTfromCSG.py',289),
+  ('arg -> array','arg',1,'p_arg','createASTfromCSG.py',290),
+  ('arg -> IDENT EQUALS value','arg',3,'p_arg','createASTfromCSG.py',291),
+  ('arg -> value','arg',1,'p_arg','createASTfromCSG.py',292),
+  ('value -> NUMBER','value',1,'p_value','createASTfromCSG.py',299),
+  ('value -> STRING','value',1,'p_value','createASTfromCSG.py',300),
+  ('value -> IDENT','value',1,'p_value','createASTfromCSG.py',301),
+  ('value -> array','value',1,'p_value','createASTfromCSG.py',302),
+  ('array -> LBRACK maybe_array_vals RBRACK','array',3,'p_array','createASTfromCSG.py',306),
+  ('maybe_array_vals -> array_vals','maybe_array_vals',1,'p_maybe_array_vals','createASTfromCSG.py',310),
+  ('maybe_array_vals -> empty','maybe_array_vals',1,'p_maybe_array_vals','createASTfromCSG.py',311),
+  ('array_vals -> array_vals COMMA arg','array_vals',3,'p_array_vals','createASTfromCSG.py',315),
+  ('array_vals -> arg','array_vals',1,'p_array_vals','createASTfromCSG.py',316),
+  ('assignment -> IDENT EQUALS value','assignment',3,'p_assignment','createASTfromCSG.py',323),
+  ('module_def -> MODULE IDENT LPAREN maybe_param_list RPAREN block','module_def',6,'p_module_def','createASTfromCSG.py',327),
+  ('maybe_param_list -> param_list','maybe_param_list',1,'p_maybe_param_list','createASTfromCSG.py',332),
+  ('maybe_param_list -> empty','maybe_param_list',1,'p_maybe_param_list','createASTfromCSG.py',333),
+  ('param_list -> param_list COMMA IDENT','param_list',3,'p_param_list','createASTfromCSG.py',337),
+  ('param_list -> IDENT','param_list',1,'p_param_list','createASTfromCSG.py',338),
+  ('module_call -> IDENT LPAREN maybe_arglist RPAREN','module_call',4,'p_module_call','createASTfromCSG.py',345),
+  ('empty -> <empty>','empty',0,'p_empty','createASTfromCSG.py',349),
 ]

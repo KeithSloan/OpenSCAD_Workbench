@@ -1,0 +1,1 @@
+hull(){cylinder(  20,   10, 10,true);translate([20,0]) cylinder(  20,   10, 10,true);}

@@ -1,0 +1,1 @@
+hull(){sphere(5);translate([20,0]) sphere(10);}

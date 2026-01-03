@@ -72,11 +72,6 @@ def insert(filename, docName):
 		objectName,
 		filename,
 		)
-	if hasattr(obj, 'Proxy'):
-		if options[0] == False:
-			obj.Proxy.executeFunction(obj)
-		elif options[0] == True:
-			obj.Proxy.editFile(filename)
 	#FreeCAD.ActiveDocument.recompute()
 	#obj.recompute()
 	doc.recompute()
