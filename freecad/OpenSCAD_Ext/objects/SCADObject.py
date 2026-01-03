@@ -390,7 +390,7 @@ def createSCADObject(title, createOption, objectName, filename):
 	#objectName  = pathText[0]
     doc = FreeCAD.ActiveDocument
     if doc is None:
-        doc = FreeCADGui.newDocument(objectName)
+        doc = FreeCAD.newDocument(objectName)
 
     QtGui.QGuiApplication.setOverrideCursor(QtGui.Qt.ArrowCursor)
     dialog = SCADObject_Options(title, objectName, createOption, parent=None)

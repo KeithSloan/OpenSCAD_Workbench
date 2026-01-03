@@ -5,6 +5,7 @@ from PySide import QtWidgets, QtCore
 from freecad.OpenSCAD_Ext.libraries.ensure_openSCADPATH import ensure_openSCADPATH
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
+from freecad.OpenSCAD_Ext.objects.SCADObject import createSCADObject
 from freecad.OpenSCAD_Ext.parsers.parse_scad_for_modules import parse_scad_for_modules
 from freecad.OpenSCAD_Ext.gui.SCAD_Module_Dialog import SCAD_Module_Dialog
 
@@ -116,50 +117,49 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
                 self.status.setText(f"Selected SCAD file: {full_path}")
 
     def create_scad_object(self):
+        if not self.selected_scad:
+            return
+
+        # Capture required values BEFORE closing
+        selected_scad = self.selected_scad
+
+        # Close dialog first
+        self.accept()   # preferred over close() for dialogs
+
+        # Defer creation until dialog is gone
+        QtCore.QTimer.singleShot(
+            0,
+            lambda: self._create_scad_object_impl(selected_scad)
+            )
+
+    def _create_scad_object_impl(self, selected_scad):
+
+        import os
         write_log("Info",f"Create SCAD Object {self.selected_scad}")
         if not self.selected_scad:
             return
 
+        #sourceDirectory = BaseParams.getScadSourcePath()
+        baseName = os.path.basename(self.selected_scad)
+        write_log("Info",f"baseName {baseName}")
+        objectName = baseName.split('.')[0]
+        write_log("Indo",f"Object Name {objectName}")
+        #scadSourceFile = os.path.join(sourceDirectory,baseName)
+        createOption = True
+        
         doc = FreeCAD.ActiveDocument
         if doc is None:
-            doc = FreeCAD.newDocument("SCAD_Import")
+            doc = FreeCAD.newDocument(objectName)
 
-        #obj = doc.addObject("Part::FeaturePython", obj_name)
-        #obj.Label = obj_name
-
-        # createSCADObject()
-
-        #newSCAD command ?
-
-        sourceDirectory = BaseParams.getScadSourcePath()
-
-        #sourceFilePath = os.path.join(sourceDirectory,obj.Label+".scad")
-        #print(f"SourceFilePath {sourceFilePath }")
-    
-        # View provider (THIS IS REQUIRED - Before calling SCADModuleObject)
-        write_log("Indo","Set ViewProvider")
-        #ViewSCADProvider(obj.ViewObject)
-        # Wrap in SCADModuleObject Data Proxy
-        #proxy = SCADObject(obj,
-        #        obj.Label,
-        #        sourceFilePath,
-        #        self.meta,
-        #        self.selected_module_meta,
-        #        args=args_values
-        #    )
-
-        name = os.path.splitext(os.path.basename(self.selected_scad))[0]
-        obj = doc.addObject("Part::FeaturePython", name)
-        obj.Label = name
-
-        if not hasattr(obj, "SourceFile"):
-            obj.addProperty("App::PropertyFile", "SourceFile", "SCAD", "SCAD source file")
-
-        obj.SourceFile = self.selected_scad
+        title = f"Create SCAD Object {objectName}"
+        #title, createOption, objectName, filename
+        #createSCADObject(title, createOption, objectName, scadSourceFile)
+        createSCADObject(title, createOption, objectName, self.selected_scad)
+        
         doc.recompute()
 
-        self.status.setText(f"Created SCAD Object: {name}")
-        write_log("Info", f"Created SCAD Object: {name}")
+        self.status.setText(f"Created SCAD Object: {objectName}")
+        write_log("Info", f"Created SCAD Object: {objectName}")
 
     def edit_copy(self):
         if not self.selected_scad:
