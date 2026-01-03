@@ -214,7 +214,7 @@ def parse(obj, src):
 
 
 class SCADfileBase:
-    def __init__(self, obj, scadName, sourceFile, mode='Mesh', fnmax=16, timeout=30, keep=False):
+    def __init__(self, obj, scadName, sourceFile, mode='Mesh', fnmax=16, timeout=30, keep=False, readOnly=False):
         super().__init__()
         obj.addProperty("App::PropertyString","scadName","OpenSCAD","OpenSCAD scadObject")
         obj.scadName = scadName
@@ -222,10 +222,11 @@ class SCADfileBase:
         obj.addProperty("App::PropertyFile","sourceFile","OpenSCAD","OpenSCAD source")
         obj.sourceFile = sourceFile
         obj.addProperty("App::PropertyString","message","OpenSCAD","OpenSCAD message")
-        obj.addProperty("App::PropertyBool","modules","OpenSCAD","OpenSCAD Uses Modules")
+        obj.addProperty("App::PropertyBool","readOnly","OpenSCAD","OpenSCAD Source should be treated as Read Only")
+        obj.readOnly = readOnly
+        obj.setEditorMode("readOnly",1)
         obj.addProperty("App::PropertyBool","edit","OpenSCAD","Edit SCAD source")
         obj.addProperty("App::PropertyBool","execute","OpenSCAD","Process SCAD source")
-        obj.modules = True
         obj.addProperty("App::PropertyEnumeration","mode","OpenSCAD","mode - create Brep or Mesh")
         modeLst = ['Mesh', 'Brep']
         modeIdx = modeLst.index(mode)
@@ -383,7 +384,7 @@ class SCADfileBase:
     #    else:
     #        print(f"Shape is None")
 
-def createSCADObject(title, createOption, objectName, filename):
+def createSCADObject(title, createOption, objectName, filename, readOnly=False):
     from PySide import QtGui
     from freecad.OpenSCAD_Ext.core.QtSCAD_Base import SCADObject_Options
 	#pathText = os.path.splitext(os.path.basename(filename))
@@ -411,7 +412,8 @@ def createSCADObject(title, createOption, objectName, filename):
  			filename, \
 			options[0], \
 			options[1], \
-			options[2])
+			options[2], \
+            readOnly=readOnly)    
 		#print(dir(scadObj))
         write_log("Info","ViewSCADProvider")
         ViewSCADProvider(obj.ViewObject)

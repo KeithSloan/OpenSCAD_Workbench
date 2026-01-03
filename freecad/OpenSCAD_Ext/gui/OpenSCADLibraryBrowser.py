@@ -154,7 +154,7 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         title = f"Create SCAD Object {objectName}"
         #title, createOption, objectName, filename
         #createSCADObject(title, createOption, objectName, scadSourceFile)
-        createSCADObject(title, createOption, objectName, self.selected_scad)
+        createSCADObject(title, createOption, objectName, self.selected_scad, readOnly=True)
         
         doc.recompute()
 
