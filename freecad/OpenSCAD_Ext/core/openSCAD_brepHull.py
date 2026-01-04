@@ -1,5 +1,7 @@
 import FreeCAD
 import Part
+import math
+from FreeCAD import Base
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 
@@ -150,24 +152,116 @@ def getCircularDetails(obj):
 # ============================================================
 
 def hullTwoEqCircles(obj1, obj2, flag2D):
-    r = getRadius(obj1)
-    v1, v2 = base(obj1), base(obj2)
+    """
+    Hull between two equal circles.
+    flag2D: True for 2D compound, False for 3D fusion.
+    """
 
-    n = someNormal(v1 - v2)
-    dv = (v1 - v2).cross(n).normalize().multiply(r)
+    # Radii in mm
+    r = obj1.Radius.getValueAs('mm')
+    v1 = obj1.Placement.Base
+    v2 = obj2.Placement.Base
 
-    pts = [v1 - dv, v1 + dv, v2 + dv, v2 - dv]
-    wire = Part.makePolygon(pts + [pts[0]])
-    face = Part.Face(wire)
+    # Normal vector perpendicular to line connecting centers
+    nm = someNormal(v1 - v2)
+    dv = (v1 - v2).cross(nm)
+    dn = dv.normalize()
+    dr = dn * r
+
+    # Points around the circles
+    t11 = v1 - dr
+    t12 = v1 + dr
+    t21 = v2 + dr
+    t22 = v2 - dr
+
+    # Connecting lines
+    l1 = Part.makeLine(t11, t12)
+    l2 = Part.makeLine(t12, t21)
+    l3 = Part.makeLine(t21, t22)
+    l4 = Part.makeLine(t22, t11)
+
+    wire = Part.Wire([l1, l2, l3, l4])
+    face = Part.makeFace(wire)
 
     if flag2D:
+        # Combine shapes efficiently using Compound instead of fuse
+        return Part.makeCompound([obj1.Shape, obj2.Shape, face])
+    else:
+        # 3D path: create circles as shapes and fuse
+        s1 = Part.makeCircle(r, v1)
+        s2 = Part.makeCircle(r, v2)
+        return s1.fuse(face.fuse(s2))
+
+
+def hullTwoCircles(obj1, obj2, flag2D):
+    """
+    Create a "hull" face between two circles, supporting equal and unequal radii.
+    flag2D: True for 2D fusion, False for 3D fusion with extra circles.
+    """
+
+    # Get radii in mm
+    r1 = obj1.Radius.getValueAs('mm')
+    r2 = obj2.Radius.getValueAs('mm')
+
+    # If radii are equal, use simpler hull
+    if abs(r1 - r2) < 1e-6:
+        return hullTwoEqCircles(obj1, obj2, flag2D)
+
+    # Ensure obj1 is the larger circle
+    if r2 > r1:
+        obj1, obj2 = obj2, obj1
+        r1, r2 = r2, r1
+
+    # Geometric circles for computations
+    c1 = Part.Circle(obj1.Placement.Base, obj1.Placement.Rotation.Axis, r1)
+    c2 = Part.Circle(obj2.Placement.Base, obj2.Placement.Rotation.Axis, r2)
+
+    # Helper circle at c1 with radius = difference of radii
+    c3 = Part.Circle()
+    c3.Center = obj1.Placement.Base
+    c3.Radius = r1 - r2
+
+    # Midpoint for Thales circle
+    v1 = obj1.Placement.Base
+    v2 = obj2.Placement.Base
+    v3 = (v1 + v2) * 0.5
+
+    # Thales circle through centers
+    c4 = Part.Circle()
+    c4.Center = v3
+    c4.Radius = (v1 - v2).Length / 2
+
+    # Intersections of Thales circle and helper circle
+    points = c4.intersect(c3)
+    if len(points) != 2:
+        raise ValueError(f"Expected 2 intersection points, got {len(points)}")
+    p1, p2 = points
+
+    # Convert to parameters on helper circle
+    t1 = c3.parameter(to_vector(p1))
+    t2 = c3.parameter(to_vector(p2))
+
+    # Trim arcs
+    a1 = c1.trim(t2, math.pi*2 + t1).toShape()  # Big circle long arc
+    a2 = c2.trim(t1, t2).toShape()              # Small circle short arc
+
+    # Connecting lines
+    l1 = Part.makeLine(c1.value(t1), c2.value(t1))
+    l2 = Part.makeLine(c2.value(t2), c1.value(t2))
+
+    # Make wire and face
+    wire = Part.Wire([a1, l1, a2, l2])
+    face = Part.makeFace(wire)
+
+    if flag2D:
+        # Fuse with original circle shapes for 2D
         return obj1.Shape.fuse(face.fuse(obj2.Shape))
+    else:
+        # Create small 3D circles for fusion
+        s1 = Part.makeCircle(r1, v1)
+        s2 = Part.makeCircle(r2, v2)
+        return s1.fuse(face.fuse(s2))
 
-    c1 = Part.makeCircle(r, v1, axisZ(obj1))
-    c2 = Part.makeCircle(r, v2, axisZ(obj2))
-    return c1.fuse(face.fuse(c2))
-
-from FreeCAD import Base
 
 def to_vector(p):
     """

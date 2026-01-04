@@ -46,7 +46,6 @@ if open.__module__ in ['__builtin__', 'io']:
 
 import ply.lex as lex
 import ply.yacc as yacc
-import Part
 import random
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
@@ -82,12 +81,15 @@ except AttributeError:
         from PySide import QtGui
         return QtGui.QApplication.translate(context, text, None)
 
-def num(string) :
-    try :
-      v = int(string)
-    except :
-      v = float(string)
-    return v
+def num(string):
+    try:
+        return int(string)
+    except ValueError:
+        try:
+            return float(string)
+        except ValueError:
+            raise ValueError(f"Cannot convert '{string}' to a number")
+
 
 def open(filename):
     "called when freecad opens a file."
@@ -120,7 +122,6 @@ def insert(filename,docname):
     "called when freecad imports a file"
     global doc
     global pathName
-    groupname = os.path.splitext(os.path.basename(filename))[0]
     try:
         doc=FreeCAD.getDocument(docname)
     except NameError:

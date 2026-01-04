@@ -1,11 +1,12 @@
 import FreeCAD, FreeCADGui, Part
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
-from freecad.OpenSCAD_Ext.core.checkObjectShapes import *
+from freecad.OpenSCAD_Ext.core.checkObjectShapes import checkObjShape
 from freecad.OpenSCAD_Ext.core.openSCAD_brepHull import create_Brep_Hull_Shape
+from freecad.OpenSCAD_Ext.core.OpenSCADUtils import process_ObjectsViaOpenSCADShape
 
-from FreeCAD import Units
 from pivy import coin
+import random
 
 printverbose = False
 
@@ -131,7 +132,7 @@ class ViewProviderMyGroupEx(ViewProviderHull):
             path.append(vobj.RootNode)
             path.append(vobj.SwitchNode)
 
-        node = vobj.SwitchNode.getChild(mode);
+        node = vobj.SwitchNode.getChild(mode)
         path.append(node)
         if mode > 0:
             if not objs[0]:
