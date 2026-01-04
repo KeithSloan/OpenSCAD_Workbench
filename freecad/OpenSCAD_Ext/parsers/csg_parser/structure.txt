@@ -1,0 +1,9 @@
+OpenSCAD_Ext/
+├─ csg_parser/
+│  ├─ __init__.py
+│  ├─ ast.py               # AST node definitions and builder
+│  ├─ parser.py            # Parses .csg file into AST
+│  ├─ processor.py         # Walk AST and create FreeCAD objects
+│  ├─ hull_minkowski.py    # Special handling functions
+│  └─ utils.py             # General helpers
+

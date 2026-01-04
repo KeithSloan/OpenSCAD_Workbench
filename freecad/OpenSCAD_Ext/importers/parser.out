@@ -1,0 +1,988 @@
+Created by PLY version 3.11 (http://www.dabeaz.com/ply)
+
+Grammar
+
+Rule 0     S' -> program
+Rule 1     program -> statements
+Rule 2     statements -> statements statement
+Rule 3     statements -> statement
+Rule 4     statement -> operation
+Rule 5     statement -> RAW
+Rule 6     operation -> CUBE LPAREN arg_list RPAREN
+Rule 7     operation -> SPHERE LPAREN arg_list RPAREN
+Rule 8     operation -> HULL LBRACE statements RBRACE
+Rule 9     operation -> MINKOWSKI LBRACE statements RBRACE
+Rule 10    operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+Rule 11    operation -> ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+Rule 12    operation -> SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE
+Rule 13    operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE
+Rule 14    arg_list -> args
+Rule 15    arg_list -> empty
+Rule 16    args -> args COMMA arg
+Rule 17    args -> arg
+Rule 18    arg -> NUMBER
+Rule 19    arg -> IDENT
+Rule 20    empty -> <empty>
+
+Terminals, with rules where they appear
+
+COMMA                : 16
+CUBE                 : 6
+HULL                 : 8
+IDENT                : 19
+LBRACE               : 8 9 10 11 12 13
+LPAREN               : 6 7 10 11 12 13
+MINKOWSKI            : 9
+MULTMATRIX           : 13
+NUMBER               : 18
+RAW                  : 5
+RBRACE               : 8 9 10 11 12 13
+ROTATE               : 11
+RPAREN               : 6 7 10 11 12 13
+SCALE                : 12
+SPHERE               : 7
+TRANSLATE            : 10
+error                : 
+
+Nonterminals, with rules where they appear
+
+arg                  : 16 17
+arg_list             : 6 7 10 11 12 13
+args                 : 14 16
+empty                : 15
+operation            : 4
+program              : 0
+statement            : 2 3
+statements           : 1 2 8 9 10 11 12 13
+
+Parsing method: LALR
+
+state 0
+
+    (0) S' -> . program
+    (1) program -> . statements
+    (2) statements -> . statements statement
+    (3) statements -> . statement
+    (4) statement -> . operation
+    (5) statement -> . RAW
+    (6) operation -> . CUBE LPAREN arg_list RPAREN
+    (7) operation -> . SPHERE LPAREN arg_list RPAREN
+    (8) operation -> . HULL LBRACE statements RBRACE
+    (9) operation -> . MINKOWSKI LBRACE statements RBRACE
+    (10) operation -> . TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (11) operation -> . ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (12) operation -> . SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (13) operation -> . MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    RAW             shift and go to state 5
+    CUBE            shift and go to state 6
+    SPHERE          shift and go to state 7
+    HULL            shift and go to state 8
+    MINKOWSKI       shift and go to state 9
+    TRANSLATE       shift and go to state 10
+    ROTATE          shift and go to state 11
+    SCALE           shift and go to state 12
+    MULTMATRIX      shift and go to state 13
+
+    program                        shift and go to state 1
+    statements                     shift and go to state 2
+    statement                      shift and go to state 3
+    operation                      shift and go to state 4
+
+state 1
+
+    (0) S' -> program .
+
+
+
+state 2
+
+    (1) program -> statements .
+    (2) statements -> statements . statement
+    (4) statement -> . operation
+    (5) statement -> . RAW
+    (6) operation -> . CUBE LPAREN arg_list RPAREN
+    (7) operation -> . SPHERE LPAREN arg_list RPAREN
+    (8) operation -> . HULL LBRACE statements RBRACE
+    (9) operation -> . MINKOWSKI LBRACE statements RBRACE
+    (10) operation -> . TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (11) operation -> . ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (12) operation -> . SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (13) operation -> . MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    $end            reduce using rule 1 (program -> statements .)
+    RAW             shift and go to state 5
+    CUBE            shift and go to state 6
+    SPHERE          shift and go to state 7
+    HULL            shift and go to state 8
+    MINKOWSKI       shift and go to state 9
+    TRANSLATE       shift and go to state 10
+    ROTATE          shift and go to state 11
+    SCALE           shift and go to state 12
+    MULTMATRIX      shift and go to state 13
+
+    statement                      shift and go to state 14
+    operation                      shift and go to state 4
+
+state 3
+
+    (3) statements -> statement .
+
+    RAW             reduce using rule 3 (statements -> statement .)
+    CUBE            reduce using rule 3 (statements -> statement .)
+    SPHERE          reduce using rule 3 (statements -> statement .)
+    HULL            reduce using rule 3 (statements -> statement .)
+    MINKOWSKI       reduce using rule 3 (statements -> statement .)
+    TRANSLATE       reduce using rule 3 (statements -> statement .)
+    ROTATE          reduce using rule 3 (statements -> statement .)
+    SCALE           reduce using rule 3 (statements -> statement .)
+    MULTMATRIX      reduce using rule 3 (statements -> statement .)
+    $end            reduce using rule 3 (statements -> statement .)
+    RBRACE          reduce using rule 3 (statements -> statement .)
+
+
+state 4
+
+    (4) statement -> operation .
+
+    RAW             reduce using rule 4 (statement -> operation .)
+    CUBE            reduce using rule 4 (statement -> operation .)
+    SPHERE          reduce using rule 4 (statement -> operation .)
+    HULL            reduce using rule 4 (statement -> operation .)
+    MINKOWSKI       reduce using rule 4 (statement -> operation .)
+    TRANSLATE       reduce using rule 4 (statement -> operation .)
+    ROTATE          reduce using rule 4 (statement -> operation .)
+    SCALE           reduce using rule 4 (statement -> operation .)
+    MULTMATRIX      reduce using rule 4 (statement -> operation .)
+    $end            reduce using rule 4 (statement -> operation .)
+    RBRACE          reduce using rule 4 (statement -> operation .)
+
+
+state 5
+
+    (5) statement -> RAW .
+
+    RAW             reduce using rule 5 (statement -> RAW .)
+    CUBE            reduce using rule 5 (statement -> RAW .)
+    SPHERE          reduce using rule 5 (statement -> RAW .)
+    HULL            reduce using rule 5 (statement -> RAW .)
+    MINKOWSKI       reduce using rule 5 (statement -> RAW .)
+    TRANSLATE       reduce using rule 5 (statement -> RAW .)
+    ROTATE          reduce using rule 5 (statement -> RAW .)
+    SCALE           reduce using rule 5 (statement -> RAW .)
+    MULTMATRIX      reduce using rule 5 (statement -> RAW .)
+    $end            reduce using rule 5 (statement -> RAW .)
+    RBRACE          reduce using rule 5 (statement -> RAW .)
+
+
+state 6
+
+    (6) operation -> CUBE . LPAREN arg_list RPAREN
+
+    LPAREN          shift and go to state 15
+
+
+state 7
+
+    (7) operation -> SPHERE . LPAREN arg_list RPAREN
+
+    LPAREN          shift and go to state 16
+
+
+state 8
+
+    (8) operation -> HULL . LBRACE statements RBRACE
+
+    LBRACE          shift and go to state 17
+
+
+state 9
+
+    (9) operation -> MINKOWSKI . LBRACE statements RBRACE
+
+    LBRACE          shift and go to state 18
+
+
+state 10
+
+    (10) operation -> TRANSLATE . LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    LPAREN          shift and go to state 19
+
+
+state 11
+
+    (11) operation -> ROTATE . LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    LPAREN          shift and go to state 20
+
+
+state 12
+
+    (12) operation -> SCALE . LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    LPAREN          shift and go to state 21
+
+
+state 13
+
+    (13) operation -> MULTMATRIX . LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    LPAREN          shift and go to state 22
+
+
+state 14
+
+    (2) statements -> statements statement .
+
+    RAW             reduce using rule 2 (statements -> statements statement .)
+    CUBE            reduce using rule 2 (statements -> statements statement .)
+    SPHERE          reduce using rule 2 (statements -> statements statement .)
+    HULL            reduce using rule 2 (statements -> statements statement .)
+    MINKOWSKI       reduce using rule 2 (statements -> statements statement .)
+    TRANSLATE       reduce using rule 2 (statements -> statements statement .)
+    ROTATE          reduce using rule 2 (statements -> statements statement .)
+    SCALE           reduce using rule 2 (statements -> statements statement .)
+    MULTMATRIX      reduce using rule 2 (statements -> statements statement .)
+    $end            reduce using rule 2 (statements -> statements statement .)
+    RBRACE          reduce using rule 2 (statements -> statements statement .)
+
+
+state 15
+
+    (6) operation -> CUBE LPAREN . arg_list RPAREN
+    (14) arg_list -> . args
+    (15) arg_list -> . empty
+    (16) args -> . args COMMA arg
+    (17) args -> . arg
+    (20) empty -> .
+    (18) arg -> . NUMBER
+    (19) arg -> . IDENT
+
+    RPAREN          reduce using rule 20 (empty -> .)
+    NUMBER          shift and go to state 27
+    IDENT           shift and go to state 28
+
+    arg_list                       shift and go to state 23
+    args                           shift and go to state 24
+    empty                          shift and go to state 25
+    arg                            shift and go to state 26
+
+state 16
+
+    (7) operation -> SPHERE LPAREN . arg_list RPAREN
+    (14) arg_list -> . args
+    (15) arg_list -> . empty
+    (16) args -> . args COMMA arg
+    (17) args -> . arg
+    (20) empty -> .
+    (18) arg -> . NUMBER
+    (19) arg -> . IDENT
+
+    RPAREN          reduce using rule 20 (empty -> .)
+    NUMBER          shift and go to state 27
+    IDENT           shift and go to state 28
+
+    arg_list                       shift and go to state 29
+    args                           shift and go to state 24
+    empty                          shift and go to state 25
+    arg                            shift and go to state 26
+
+state 17
+
+    (8) operation -> HULL LBRACE . statements RBRACE
+    (2) statements -> . statements statement
+    (3) statements -> . statement
+    (4) statement -> . operation
+    (5) statement -> . RAW
+    (6) operation -> . CUBE LPAREN arg_list RPAREN
+    (7) operation -> . SPHERE LPAREN arg_list RPAREN
+    (8) operation -> . HULL LBRACE statements RBRACE
+    (9) operation -> . MINKOWSKI LBRACE statements RBRACE
+    (10) operation -> . TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (11) operation -> . ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (12) operation -> . SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (13) operation -> . MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    RAW             shift and go to state 5
+    CUBE            shift and go to state 6
+    SPHERE          shift and go to state 7
+    HULL            shift and go to state 8
+    MINKOWSKI       shift and go to state 9
+    TRANSLATE       shift and go to state 10
+    ROTATE          shift and go to state 11
+    SCALE           shift and go to state 12
+    MULTMATRIX      shift and go to state 13
+
+    statements                     shift and go to state 30
+    statement                      shift and go to state 3
+    operation                      shift and go to state 4
+
+state 18
+
+    (9) operation -> MINKOWSKI LBRACE . statements RBRACE
+    (2) statements -> . statements statement
+    (3) statements -> . statement
+    (4) statement -> . operation
+    (5) statement -> . RAW
+    (6) operation -> . CUBE LPAREN arg_list RPAREN
+    (7) operation -> . SPHERE LPAREN arg_list RPAREN
+    (8) operation -> . HULL LBRACE statements RBRACE
+    (9) operation -> . MINKOWSKI LBRACE statements RBRACE
+    (10) operation -> . TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (11) operation -> . ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (12) operation -> . SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (13) operation -> . MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    RAW             shift and go to state 5
+    CUBE            shift and go to state 6
+    SPHERE          shift and go to state 7
+    HULL            shift and go to state 8
+    MINKOWSKI       shift and go to state 9
+    TRANSLATE       shift and go to state 10
+    ROTATE          shift and go to state 11
+    SCALE           shift and go to state 12
+    MULTMATRIX      shift and go to state 13
+
+    statements                     shift and go to state 31
+    statement                      shift and go to state 3
+    operation                      shift and go to state 4
+
+state 19
+
+    (10) operation -> TRANSLATE LPAREN . arg_list RPAREN LBRACE statements RBRACE
+    (14) arg_list -> . args
+    (15) arg_list -> . empty
+    (16) args -> . args COMMA arg
+    (17) args -> . arg
+    (20) empty -> .
+    (18) arg -> . NUMBER
+    (19) arg -> . IDENT
+
+    RPAREN          reduce using rule 20 (empty -> .)
+    NUMBER          shift and go to state 27
+    IDENT           shift and go to state 28
+
+    arg_list                       shift and go to state 32
+    args                           shift and go to state 24
+    empty                          shift and go to state 25
+    arg                            shift and go to state 26
+
+state 20
+
+    (11) operation -> ROTATE LPAREN . arg_list RPAREN LBRACE statements RBRACE
+    (14) arg_list -> . args
+    (15) arg_list -> . empty
+    (16) args -> . args COMMA arg
+    (17) args -> . arg
+    (20) empty -> .
+    (18) arg -> . NUMBER
+    (19) arg -> . IDENT
+
+    RPAREN          reduce using rule 20 (empty -> .)
+    NUMBER          shift and go to state 27
+    IDENT           shift and go to state 28
+
+    arg_list                       shift and go to state 33
+    args                           shift and go to state 24
+    empty                          shift and go to state 25
+    arg                            shift and go to state 26
+
+state 21
+
+    (12) operation -> SCALE LPAREN . arg_list RPAREN LBRACE statements RBRACE
+    (14) arg_list -> . args
+    (15) arg_list -> . empty
+    (16) args -> . args COMMA arg
+    (17) args -> . arg
+    (20) empty -> .
+    (18) arg -> . NUMBER
+    (19) arg -> . IDENT
+
+    RPAREN          reduce using rule 20 (empty -> .)
+    NUMBER          shift and go to state 27
+    IDENT           shift and go to state 28
+
+    arg_list                       shift and go to state 34
+    args                           shift and go to state 24
+    empty                          shift and go to state 25
+    arg                            shift and go to state 26
+
+state 22
+
+    (13) operation -> MULTMATRIX LPAREN . arg_list RPAREN LBRACE statements RBRACE
+    (14) arg_list -> . args
+    (15) arg_list -> . empty
+    (16) args -> . args COMMA arg
+    (17) args -> . arg
+    (20) empty -> .
+    (18) arg -> . NUMBER
+    (19) arg -> . IDENT
+
+    RPAREN          reduce using rule 20 (empty -> .)
+    NUMBER          shift and go to state 27
+    IDENT           shift and go to state 28
+
+    arg_list                       shift and go to state 35
+    args                           shift and go to state 24
+    empty                          shift and go to state 25
+    arg                            shift and go to state 26
+
+state 23
+
+    (6) operation -> CUBE LPAREN arg_list . RPAREN
+
+    RPAREN          shift and go to state 36
+
+
+state 24
+
+    (14) arg_list -> args .
+    (16) args -> args . COMMA arg
+
+    RPAREN          reduce using rule 14 (arg_list -> args .)
+    COMMA           shift and go to state 37
+
+
+state 25
+
+    (15) arg_list -> empty .
+
+    RPAREN          reduce using rule 15 (arg_list -> empty .)
+
+
+state 26
+
+    (17) args -> arg .
+
+    COMMA           reduce using rule 17 (args -> arg .)
+    RPAREN          reduce using rule 17 (args -> arg .)
+
+
+state 27
+
+    (18) arg -> NUMBER .
+
+    COMMA           reduce using rule 18 (arg -> NUMBER .)
+    RPAREN          reduce using rule 18 (arg -> NUMBER .)
+
+
+state 28
+
+    (19) arg -> IDENT .
+
+    COMMA           reduce using rule 19 (arg -> IDENT .)
+    RPAREN          reduce using rule 19 (arg -> IDENT .)
+
+
+state 29
+
+    (7) operation -> SPHERE LPAREN arg_list . RPAREN
+
+    RPAREN          shift and go to state 38
+
+
+state 30
+
+    (8) operation -> HULL LBRACE statements . RBRACE
+    (2) statements -> statements . statement
+    (4) statement -> . operation
+    (5) statement -> . RAW
+    (6) operation -> . CUBE LPAREN arg_list RPAREN
+    (7) operation -> . SPHERE LPAREN arg_list RPAREN
+    (8) operation -> . HULL LBRACE statements RBRACE
+    (9) operation -> . MINKOWSKI LBRACE statements RBRACE
+    (10) operation -> . TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (11) operation -> . ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (12) operation -> . SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (13) operation -> . MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    RBRACE          shift and go to state 39
+    RAW             shift and go to state 5
+    CUBE            shift and go to state 6
+    SPHERE          shift and go to state 7
+    HULL            shift and go to state 8
+    MINKOWSKI       shift and go to state 9
+    TRANSLATE       shift and go to state 10
+    ROTATE          shift and go to state 11
+    SCALE           shift and go to state 12
+    MULTMATRIX      shift and go to state 13
+
+    statement                      shift and go to state 14
+    operation                      shift and go to state 4
+
+state 31
+
+    (9) operation -> MINKOWSKI LBRACE statements . RBRACE
+    (2) statements -> statements . statement
+    (4) statement -> . operation
+    (5) statement -> . RAW
+    (6) operation -> . CUBE LPAREN arg_list RPAREN
+    (7) operation -> . SPHERE LPAREN arg_list RPAREN
+    (8) operation -> . HULL LBRACE statements RBRACE
+    (9) operation -> . MINKOWSKI LBRACE statements RBRACE
+    (10) operation -> . TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (11) operation -> . ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (12) operation -> . SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (13) operation -> . MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    RBRACE          shift and go to state 40
+    RAW             shift and go to state 5
+    CUBE            shift and go to state 6
+    SPHERE          shift and go to state 7
+    HULL            shift and go to state 8
+    MINKOWSKI       shift and go to state 9
+    TRANSLATE       shift and go to state 10
+    ROTATE          shift and go to state 11
+    SCALE           shift and go to state 12
+    MULTMATRIX      shift and go to state 13
+
+    statement                      shift and go to state 14
+    operation                      shift and go to state 4
+
+state 32
+
+    (10) operation -> TRANSLATE LPAREN arg_list . RPAREN LBRACE statements RBRACE
+
+    RPAREN          shift and go to state 41
+
+
+state 33
+
+    (11) operation -> ROTATE LPAREN arg_list . RPAREN LBRACE statements RBRACE
+
+    RPAREN          shift and go to state 42
+
+
+state 34
+
+    (12) operation -> SCALE LPAREN arg_list . RPAREN LBRACE statements RBRACE
+
+    RPAREN          shift and go to state 43
+
+
+state 35
+
+    (13) operation -> MULTMATRIX LPAREN arg_list . RPAREN LBRACE statements RBRACE
+
+    RPAREN          shift and go to state 44
+
+
+state 36
+
+    (6) operation -> CUBE LPAREN arg_list RPAREN .
+
+    RAW             reduce using rule 6 (operation -> CUBE LPAREN arg_list RPAREN .)
+    CUBE            reduce using rule 6 (operation -> CUBE LPAREN arg_list RPAREN .)
+    SPHERE          reduce using rule 6 (operation -> CUBE LPAREN arg_list RPAREN .)
+    HULL            reduce using rule 6 (operation -> CUBE LPAREN arg_list RPAREN .)
+    MINKOWSKI       reduce using rule 6 (operation -> CUBE LPAREN arg_list RPAREN .)
+    TRANSLATE       reduce using rule 6 (operation -> CUBE LPAREN arg_list RPAREN .)
+    ROTATE          reduce using rule 6 (operation -> CUBE LPAREN arg_list RPAREN .)
+    SCALE           reduce using rule 6 (operation -> CUBE LPAREN arg_list RPAREN .)
+    MULTMATRIX      reduce using rule 6 (operation -> CUBE LPAREN arg_list RPAREN .)
+    $end            reduce using rule 6 (operation -> CUBE LPAREN arg_list RPAREN .)
+    RBRACE          reduce using rule 6 (operation -> CUBE LPAREN arg_list RPAREN .)
+
+
+state 37
+
+    (16) args -> args COMMA . arg
+    (18) arg -> . NUMBER
+    (19) arg -> . IDENT
+
+    NUMBER          shift and go to state 27
+    IDENT           shift and go to state 28
+
+    arg                            shift and go to state 45
+
+state 38
+
+    (7) operation -> SPHERE LPAREN arg_list RPAREN .
+
+    RAW             reduce using rule 7 (operation -> SPHERE LPAREN arg_list RPAREN .)
+    CUBE            reduce using rule 7 (operation -> SPHERE LPAREN arg_list RPAREN .)
+    SPHERE          reduce using rule 7 (operation -> SPHERE LPAREN arg_list RPAREN .)
+    HULL            reduce using rule 7 (operation -> SPHERE LPAREN arg_list RPAREN .)
+    MINKOWSKI       reduce using rule 7 (operation -> SPHERE LPAREN arg_list RPAREN .)
+    TRANSLATE       reduce using rule 7 (operation -> SPHERE LPAREN arg_list RPAREN .)
+    ROTATE          reduce using rule 7 (operation -> SPHERE LPAREN arg_list RPAREN .)
+    SCALE           reduce using rule 7 (operation -> SPHERE LPAREN arg_list RPAREN .)
+    MULTMATRIX      reduce using rule 7 (operation -> SPHERE LPAREN arg_list RPAREN .)
+    $end            reduce using rule 7 (operation -> SPHERE LPAREN arg_list RPAREN .)
+    RBRACE          reduce using rule 7 (operation -> SPHERE LPAREN arg_list RPAREN .)
+
+
+state 39
+
+    (8) operation -> HULL LBRACE statements RBRACE .
+
+    RAW             reduce using rule 8 (operation -> HULL LBRACE statements RBRACE .)
+    CUBE            reduce using rule 8 (operation -> HULL LBRACE statements RBRACE .)
+    SPHERE          reduce using rule 8 (operation -> HULL LBRACE statements RBRACE .)
+    HULL            reduce using rule 8 (operation -> HULL LBRACE statements RBRACE .)
+    MINKOWSKI       reduce using rule 8 (operation -> HULL LBRACE statements RBRACE .)
+    TRANSLATE       reduce using rule 8 (operation -> HULL LBRACE statements RBRACE .)
+    ROTATE          reduce using rule 8 (operation -> HULL LBRACE statements RBRACE .)
+    SCALE           reduce using rule 8 (operation -> HULL LBRACE statements RBRACE .)
+    MULTMATRIX      reduce using rule 8 (operation -> HULL LBRACE statements RBRACE .)
+    $end            reduce using rule 8 (operation -> HULL LBRACE statements RBRACE .)
+    RBRACE          reduce using rule 8 (operation -> HULL LBRACE statements RBRACE .)
+
+
+state 40
+
+    (9) operation -> MINKOWSKI LBRACE statements RBRACE .
+
+    RAW             reduce using rule 9 (operation -> MINKOWSKI LBRACE statements RBRACE .)
+    CUBE            reduce using rule 9 (operation -> MINKOWSKI LBRACE statements RBRACE .)
+    SPHERE          reduce using rule 9 (operation -> MINKOWSKI LBRACE statements RBRACE .)
+    HULL            reduce using rule 9 (operation -> MINKOWSKI LBRACE statements RBRACE .)
+    MINKOWSKI       reduce using rule 9 (operation -> MINKOWSKI LBRACE statements RBRACE .)
+    TRANSLATE       reduce using rule 9 (operation -> MINKOWSKI LBRACE statements RBRACE .)
+    ROTATE          reduce using rule 9 (operation -> MINKOWSKI LBRACE statements RBRACE .)
+    SCALE           reduce using rule 9 (operation -> MINKOWSKI LBRACE statements RBRACE .)
+    MULTMATRIX      reduce using rule 9 (operation -> MINKOWSKI LBRACE statements RBRACE .)
+    $end            reduce using rule 9 (operation -> MINKOWSKI LBRACE statements RBRACE .)
+    RBRACE          reduce using rule 9 (operation -> MINKOWSKI LBRACE statements RBRACE .)
+
+
+state 41
+
+    (10) operation -> TRANSLATE LPAREN arg_list RPAREN . LBRACE statements RBRACE
+
+    LBRACE          shift and go to state 46
+
+
+state 42
+
+    (11) operation -> ROTATE LPAREN arg_list RPAREN . LBRACE statements RBRACE
+
+    LBRACE          shift and go to state 47
+
+
+state 43
+
+    (12) operation -> SCALE LPAREN arg_list RPAREN . LBRACE statements RBRACE
+
+    LBRACE          shift and go to state 48
+
+
+state 44
+
+    (13) operation -> MULTMATRIX LPAREN arg_list RPAREN . LBRACE statements RBRACE
+
+    LBRACE          shift and go to state 49
+
+
+state 45
+
+    (16) args -> args COMMA arg .
+
+    COMMA           reduce using rule 16 (args -> args COMMA arg .)
+    RPAREN          reduce using rule 16 (args -> args COMMA arg .)
+
+
+state 46
+
+    (10) operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE . statements RBRACE
+    (2) statements -> . statements statement
+    (3) statements -> . statement
+    (4) statement -> . operation
+    (5) statement -> . RAW
+    (6) operation -> . CUBE LPAREN arg_list RPAREN
+    (7) operation -> . SPHERE LPAREN arg_list RPAREN
+    (8) operation -> . HULL LBRACE statements RBRACE
+    (9) operation -> . MINKOWSKI LBRACE statements RBRACE
+    (10) operation -> . TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (11) operation -> . ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (12) operation -> . SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (13) operation -> . MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    RAW             shift and go to state 5
+    CUBE            shift and go to state 6
+    SPHERE          shift and go to state 7
+    HULL            shift and go to state 8
+    MINKOWSKI       shift and go to state 9
+    TRANSLATE       shift and go to state 10
+    ROTATE          shift and go to state 11
+    SCALE           shift and go to state 12
+    MULTMATRIX      shift and go to state 13
+
+    statements                     shift and go to state 50
+    statement                      shift and go to state 3
+    operation                      shift and go to state 4
+
+state 47
+
+    (11) operation -> ROTATE LPAREN arg_list RPAREN LBRACE . statements RBRACE
+    (2) statements -> . statements statement
+    (3) statements -> . statement
+    (4) statement -> . operation
+    (5) statement -> . RAW
+    (6) operation -> . CUBE LPAREN arg_list RPAREN
+    (7) operation -> . SPHERE LPAREN arg_list RPAREN
+    (8) operation -> . HULL LBRACE statements RBRACE
+    (9) operation -> . MINKOWSKI LBRACE statements RBRACE
+    (10) operation -> . TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (11) operation -> . ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (12) operation -> . SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (13) operation -> . MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    RAW             shift and go to state 5
+    CUBE            shift and go to state 6
+    SPHERE          shift and go to state 7
+    HULL            shift and go to state 8
+    MINKOWSKI       shift and go to state 9
+    TRANSLATE       shift and go to state 10
+    ROTATE          shift and go to state 11
+    SCALE           shift and go to state 12
+    MULTMATRIX      shift and go to state 13
+
+    statements                     shift and go to state 51
+    statement                      shift and go to state 3
+    operation                      shift and go to state 4
+
+state 48
+
+    (12) operation -> SCALE LPAREN arg_list RPAREN LBRACE . statements RBRACE
+    (2) statements -> . statements statement
+    (3) statements -> . statement
+    (4) statement -> . operation
+    (5) statement -> . RAW
+    (6) operation -> . CUBE LPAREN arg_list RPAREN
+    (7) operation -> . SPHERE LPAREN arg_list RPAREN
+    (8) operation -> . HULL LBRACE statements RBRACE
+    (9) operation -> . MINKOWSKI LBRACE statements RBRACE
+    (10) operation -> . TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (11) operation -> . ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (12) operation -> . SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (13) operation -> . MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    RAW             shift and go to state 5
+    CUBE            shift and go to state 6
+    SPHERE          shift and go to state 7
+    HULL            shift and go to state 8
+    MINKOWSKI       shift and go to state 9
+    TRANSLATE       shift and go to state 10
+    ROTATE          shift and go to state 11
+    SCALE           shift and go to state 12
+    MULTMATRIX      shift and go to state 13
+
+    statements                     shift and go to state 52
+    statement                      shift and go to state 3
+    operation                      shift and go to state 4
+
+state 49
+
+    (13) operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE . statements RBRACE
+    (2) statements -> . statements statement
+    (3) statements -> . statement
+    (4) statement -> . operation
+    (5) statement -> . RAW
+    (6) operation -> . CUBE LPAREN arg_list RPAREN
+    (7) operation -> . SPHERE LPAREN arg_list RPAREN
+    (8) operation -> . HULL LBRACE statements RBRACE
+    (9) operation -> . MINKOWSKI LBRACE statements RBRACE
+    (10) operation -> . TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (11) operation -> . ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (12) operation -> . SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (13) operation -> . MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    RAW             shift and go to state 5
+    CUBE            shift and go to state 6
+    SPHERE          shift and go to state 7
+    HULL            shift and go to state 8
+    MINKOWSKI       shift and go to state 9
+    TRANSLATE       shift and go to state 10
+    ROTATE          shift and go to state 11
+    SCALE           shift and go to state 12
+    MULTMATRIX      shift and go to state 13
+
+    statements                     shift and go to state 53
+    statement                      shift and go to state 3
+    operation                      shift and go to state 4
+
+state 50
+
+    (10) operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE statements . RBRACE
+    (2) statements -> statements . statement
+    (4) statement -> . operation
+    (5) statement -> . RAW
+    (6) operation -> . CUBE LPAREN arg_list RPAREN
+    (7) operation -> . SPHERE LPAREN arg_list RPAREN
+    (8) operation -> . HULL LBRACE statements RBRACE
+    (9) operation -> . MINKOWSKI LBRACE statements RBRACE
+    (10) operation -> . TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (11) operation -> . ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (12) operation -> . SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (13) operation -> . MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    RBRACE          shift and go to state 54
+    RAW             shift and go to state 5
+    CUBE            shift and go to state 6
+    SPHERE          shift and go to state 7
+    HULL            shift and go to state 8
+    MINKOWSKI       shift and go to state 9
+    TRANSLATE       shift and go to state 10
+    ROTATE          shift and go to state 11
+    SCALE           shift and go to state 12
+    MULTMATRIX      shift and go to state 13
+
+    statement                      shift and go to state 14
+    operation                      shift and go to state 4
+
+state 51
+
+    (11) operation -> ROTATE LPAREN arg_list RPAREN LBRACE statements . RBRACE
+    (2) statements -> statements . statement
+    (4) statement -> . operation
+    (5) statement -> . RAW
+    (6) operation -> . CUBE LPAREN arg_list RPAREN
+    (7) operation -> . SPHERE LPAREN arg_list RPAREN
+    (8) operation -> . HULL LBRACE statements RBRACE
+    (9) operation -> . MINKOWSKI LBRACE statements RBRACE
+    (10) operation -> . TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (11) operation -> . ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (12) operation -> . SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (13) operation -> . MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    RBRACE          shift and go to state 55
+    RAW             shift and go to state 5
+    CUBE            shift and go to state 6
+    SPHERE          shift and go to state 7
+    HULL            shift and go to state 8
+    MINKOWSKI       shift and go to state 9
+    TRANSLATE       shift and go to state 10
+    ROTATE          shift and go to state 11
+    SCALE           shift and go to state 12
+    MULTMATRIX      shift and go to state 13
+
+    statement                      shift and go to state 14
+    operation                      shift and go to state 4
+
+state 52
+
+    (12) operation -> SCALE LPAREN arg_list RPAREN LBRACE statements . RBRACE
+    (2) statements -> statements . statement
+    (4) statement -> . operation
+    (5) statement -> . RAW
+    (6) operation -> . CUBE LPAREN arg_list RPAREN
+    (7) operation -> . SPHERE LPAREN arg_list RPAREN
+    (8) operation -> . HULL LBRACE statements RBRACE
+    (9) operation -> . MINKOWSKI LBRACE statements RBRACE
+    (10) operation -> . TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (11) operation -> . ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (12) operation -> . SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (13) operation -> . MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    RBRACE          shift and go to state 56
+    RAW             shift and go to state 5
+    CUBE            shift and go to state 6
+    SPHERE          shift and go to state 7
+    HULL            shift and go to state 8
+    MINKOWSKI       shift and go to state 9
+    TRANSLATE       shift and go to state 10
+    ROTATE          shift and go to state 11
+    SCALE           shift and go to state 12
+    MULTMATRIX      shift and go to state 13
+
+    statement                      shift and go to state 14
+    operation                      shift and go to state 4
+
+state 53
+
+    (13) operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE statements . RBRACE
+    (2) statements -> statements . statement
+    (4) statement -> . operation
+    (5) statement -> . RAW
+    (6) operation -> . CUBE LPAREN arg_list RPAREN
+    (7) operation -> . SPHERE LPAREN arg_list RPAREN
+    (8) operation -> . HULL LBRACE statements RBRACE
+    (9) operation -> . MINKOWSKI LBRACE statements RBRACE
+    (10) operation -> . TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (11) operation -> . ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (12) operation -> . SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE
+    (13) operation -> . MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE
+
+    RBRACE          shift and go to state 57
+    RAW             shift and go to state 5
+    CUBE            shift and go to state 6
+    SPHERE          shift and go to state 7
+    HULL            shift and go to state 8
+    MINKOWSKI       shift and go to state 9
+    TRANSLATE       shift and go to state 10
+    ROTATE          shift and go to state 11
+    SCALE           shift and go to state 12
+    MULTMATRIX      shift and go to state 13
+
+    statement                      shift and go to state 14
+    operation                      shift and go to state 4
+
+state 54
+
+    (10) operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE .
+
+    RAW             reduce using rule 10 (operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    CUBE            reduce using rule 10 (operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    SPHERE          reduce using rule 10 (operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    HULL            reduce using rule 10 (operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    MINKOWSKI       reduce using rule 10 (operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    TRANSLATE       reduce using rule 10 (operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    ROTATE          reduce using rule 10 (operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    SCALE           reduce using rule 10 (operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    MULTMATRIX      reduce using rule 10 (operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    $end            reduce using rule 10 (operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    RBRACE          reduce using rule 10 (operation -> TRANSLATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+
+
+state 55
+
+    (11) operation -> ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE .
+
+    RAW             reduce using rule 11 (operation -> ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    CUBE            reduce using rule 11 (operation -> ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    SPHERE          reduce using rule 11 (operation -> ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    HULL            reduce using rule 11 (operation -> ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    MINKOWSKI       reduce using rule 11 (operation -> ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    TRANSLATE       reduce using rule 11 (operation -> ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    ROTATE          reduce using rule 11 (operation -> ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    SCALE           reduce using rule 11 (operation -> ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    MULTMATRIX      reduce using rule 11 (operation -> ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    $end            reduce using rule 11 (operation -> ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    RBRACE          reduce using rule 11 (operation -> ROTATE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+
+
+state 56
+
+    (12) operation -> SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE .
+
+    RAW             reduce using rule 12 (operation -> SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    CUBE            reduce using rule 12 (operation -> SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    SPHERE          reduce using rule 12 (operation -> SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    HULL            reduce using rule 12 (operation -> SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    MINKOWSKI       reduce using rule 12 (operation -> SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    TRANSLATE       reduce using rule 12 (operation -> SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    ROTATE          reduce using rule 12 (operation -> SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    SCALE           reduce using rule 12 (operation -> SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    MULTMATRIX      reduce using rule 12 (operation -> SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    $end            reduce using rule 12 (operation -> SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    RBRACE          reduce using rule 12 (operation -> SCALE LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+
+
+state 57
+
+    (13) operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE .
+
+    RAW             reduce using rule 13 (operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    CUBE            reduce using rule 13 (operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    SPHERE          reduce using rule 13 (operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    HULL            reduce using rule 13 (operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    MINKOWSKI       reduce using rule 13 (operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    TRANSLATE       reduce using rule 13 (operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    ROTATE          reduce using rule 13 (operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    SCALE           reduce using rule 13 (operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    MULTMATRIX      reduce using rule 13 (operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    $end            reduce using rule 13 (operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+    RBRACE          reduce using rule 13 (operation -> MULTMATRIX LPAREN arg_list RPAREN LBRACE statements RBRACE .)
+

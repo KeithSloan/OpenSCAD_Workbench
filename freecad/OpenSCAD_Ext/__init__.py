@@ -1,3 +1,5 @@
+# freecad/OpenSCAD_Ext/__init__.py
+
 import FreeCAD
 
 # ------------------------
@@ -15,15 +17,21 @@ write_log("INIT", "OpenSCAD_Ext module loaded — logging active")
 
 def setup_importers():
     # If marker exists, stop — already registered.
-    if getattr(FreeCAD, "_OpenSCAD_Ext_importers_registered", False):
+    if getattr(FreeCAD, "_OpenSCAD_Ext_registered", False):
         FreeCAD.Console.PrintMessage("[OpenSCAD_Ext] Importers already registered\n")
         return
 
     IMPORTER_BASE = __name__ + ".importers"
 
+    # ---- REGISTER IMPORT TYPES ----
     FreeCAD.addImportType(
         "External OpenSCAD Workbench : CSG importer (*.csg)",
         f"{IMPORTER_BASE}.importAltCSG"
+    )
+
+    FreeCAD.addImportType(
+        "External OpenSCAD Workbench : NEW CSG / AST importer (*.csg)",
+        f"{IMPORTER_BASE}.importASTCSG"
     )
 
     FreeCAD.addImportType(
@@ -41,10 +49,12 @@ def setup_importers():
         f"{IMPORTER_BASE}.importAltCSG"
     )
 
+
     FreeCAD.addImportType(
         "External OpenSCAD Workbench : import SCAD File Object (*.scad)",
         f"{IMPORTER_BASE}.importFileSCAD"
     )
+
 
     FreeCAD.addImportType(
         "DXF drawing (*.dxf)",
@@ -52,8 +62,39 @@ def setup_importers():
     )
 
     FreeCAD.Console.PrintMessage("[OpenSCAD_Ext] Importers registered.\n")
-    FreeCAD._OpenSCAD_Ext_importers_registered = True
 
+    # Mark as complete — **only NOW** set guard flag
+    FreeCAD._OpenSCAD_Ext_registered = True
+
+# ------------------------
+#  Exporter registration
+# ------------------------
+
+def setup_exporters():
+    # GUI-only
+    try:
+        import FreeCADGui
+    except ImportError:
+        return
+
+    if getattr(FreeCAD, "_OpenSCAD_Ext_exporters_registered", False):
+        FreeCAD.Console.PrintMessage("[OpenSCAD_Ext] Exporters already registered\n")
+        return
+
+    EXPORTER_BASE = __name__ + ".exporters"
+
+    FreeCAD.addExportType(
+        "External OpenSCAD Workbench : OpenSCAD (*.scad)",
+        f"{EXPORTER_BASE}.exportSCAD"
+    )
+
+    FreeCAD.addExportType(
+        "External OpenSCAD Workbench : CSG (*.csg)",
+        f"{EXPORTER_BASE}.exportALTCSG"
+    )
+
+    FreeCAD.Console.PrintMessage("[OpenSCAD_Ext] Exporters registered.\n")
+    FreeCAD._OpenSCAD_Ext_exporters_registered = True
 
 # ------------------------
 #  Exporter registration
@@ -89,6 +130,6 @@ def setup_exporters():
 # ------------------------
 #  Run registration
 # ------------------------
-
 setup_importers()
 setup_exporters()
+
