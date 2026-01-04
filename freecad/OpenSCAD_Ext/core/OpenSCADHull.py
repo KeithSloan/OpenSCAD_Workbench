@@ -24,26 +24,76 @@ class HullClassFeature:
         obj.Shape = createHullShape(obj.Group)
 
 class ViewProviderHull:
-    def __init__(self, vobj=None):
-        self.ViewObject = None
-        if vobj:
-            vobj.Proxy = self
+    """Custom ViewProvider for Hull compounds to display all solids individually."""
 
-    def attach(self, vobj):
-        vobj.addExtension("Gui::ViewProviderGeoFeatureGroupExtensionPython")
-        self.ViewObject = vobj
+    def __init__(self, obj):
+        """Attach the view provider to the object."""
+        obj.Proxy = self
+        self.obj = obj
+        self._colors = []
+        # Define _updateDisplay early so updateData won't fail
+        self._updateDisplay = self.__updateDisplay
 
-    def claimChildren(self):
-        return self.ViewObject.Object.Group
+    # Mandatory: attach the view provider
+    def attach(self, obj):
+        self.obj = obj
+        self._assignColors()
 
+    # Called when a property changes
+    def onChanged(self, vp, prop):
+        if prop == "Shape" and hasattr(self, "_updateDisplay"):
+            self._updateDisplay()
+
+    # Called when data changes
+    def updateData(self, fp, prop):
+        if prop == "Shape" and hasattr(self, "_updateDisplay"):
+            self._updateDisplay()
+
+    # Mandatory: provide display modes
+    def getDisplayModes(self, obj):
+        return ["Shaded", "Flat Lines"]
+
+    # Mandatory: default display mode
     def getDefaultDisplayMode(self):
-        return "Flat Lines"
+        return "Shaded"
 
-    def __getstate__(self):
-        return None
+    # Mandatory: set display mode
+    def setDisplayMode(self, mode):
+        if hasattr(self.obj, "ViewObject") and self.obj.ViewObject:
+            self.obj.ViewObject.DisplayMode = mode
+        return mode
 
-    def __setstate__(self, _state):
-        return None
+    # Optional: claim children so FreeCAD draws them
+    def claimChildren(self):
+        """Return each solid as a pseudo-child to force display."""
+        children = []
+        if hasattr(self.obj, "Shape") and self.obj.Shape:
+            for solid in self.obj.Shape.Solids:
+                children.append(solid)
+        return children
+
+    # Internal: assign random color per solid
+    def _assignColors(self):
+        if not hasattr(self.obj, "Shape") or not self.obj.Shape:
+            return
+        self._colors = []
+        for _ in self.obj.Shape.Solids:
+            self._colors.append((random.random(), random.random(), random.random()))
+        if hasattr(self, "_updateDisplay"):
+            self._updateDisplay()
+
+    # Internal: actual display update
+    def __updateDisplay(self):
+        if not hasattr(self.obj, "Shape") or not self.obj.Shape:
+            return
+        if self.obj.Shape.ShapeType != "Compound":
+            return
+        if hasattr(self.obj, "ViewObject") and self.obj.ViewObject:
+            self.obj.ViewObject.DisplayMode = "Shaded"
+            try:
+                self.obj.ViewObject.DiffuseColor = self._colors
+            except Exception:
+                self.obj.ViewObject.ShapeColor = (0.7, 0.7, 0.9)
 
 class ViewProviderMyGroupEx(ViewProviderHull):
     def __init__(self, vobj=None):
@@ -155,7 +205,7 @@ def deFuseListGroup(listGroup):
        if listGroup[0].TypeId == "Part::MultiFuse":
           write_log("Info",f"MultiFuse {listGroup.Label}")
           return listGroup[0].Shapes
-    return listgroup
+    return listGroup
 
 def makeHullObject(listGroup, ex=False):
     doc = FreeCAD.ActiveDocument
@@ -165,11 +215,11 @@ def makeHullObject(listGroup, ex=False):
     objList = deFuseListGroup(listGroup)
     #hullObj = doc.addObject("App::DocumentObjectGroupPython", "Hull")
     hullObj = doc.addObject("Part::FeaturePython", "Hull")
+    HullClassFeature(hullObj, objList)
     if ex:
         ViewProviderMyGroupEx(hullObj.ViewObject)
     else:
         ViewProviderHull(hullObj.ViewObject)
-    HullClassFeature(hullObj, objList)
 
     doc.recompute()
     return hullObj

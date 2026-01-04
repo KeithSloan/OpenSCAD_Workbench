@@ -167,36 +167,21 @@ def hullTwoEqCircles(obj1, obj2, flag2D):
     c2 = Part.makeCircle(r, v2, axisZ(obj2))
     return c1.fuse(face.fuse(c2))
 
-def hullTwoCircles(obj1, obj2, flag2D):
-    if getRadius(obj2) > getRadius(obj1):
-        obj1, obj2 = obj2, obj1
+from FreeCAD import Base
 
-    r1, r2 = getRadius(obj1), getRadius(obj2)
-    v1, v2 = base(obj1), base(obj2)
-    n = axisZ(obj1)
-
-    c1 = Part.Circle(v1, n, r1)
-    c2 = Part.Circle(v2, n, r2)
-    c3 = Part.Circle(v1, n, r1 - r2)
-
-    mid = (v1 + v2) * 0.5
-    c4 = Part.Circle(mid, n, (v1 - v2).Length / 2)
-
-    p1, p2 = c4.intersect(c3)
-    t1 = c3.parameter(p1)
-    t2 = c3.parameter(p2)
-
-    a1 = c1.trim(t2, t1 + 2 * 3.141592653589793)
-    a2 = c2.trim(t1, t2)
-
-    l1 = Part.makeLine(c1.value(t1), c2.value(t1))
-    l2 = Part.makeLine(c2.value(t2), c1.value(t2))
-
-    return Part.Face(Part.Wire([a1.toShape(), l1, a2.toShape(), l2]))
-
-def hullTwoEqSpheres(obj1, obj2):
-    axis = obj2.Placement.Base - obj1.Placement.Base
-    return Part.makeCylinder(getRadius(obj1), axis.Length, base(obj1), axis)
+def to_vector(p):
+    """
+    Version Safe
+    Convert Part.Vertex, Part.Point, or Base.Vector to Base.Vector
+    """
+    # Vertex → Base.Vector
+    if hasattr(p, "Point"):
+        return p.Point
+    # Part.Point (legacy) → Base.Vector
+    if hasattr(p, "X") and hasattr(p, "Y") and hasattr(p, "Z"):
+        return Base.Vector(p.X, p.Y, p.Z)
+    # Already Base.Vector
+    return p
 
 def hullTwoSpheres(obj1, obj2):
     if getRadius(obj2) > getRadius(obj1):
@@ -215,8 +200,67 @@ def hullTwoSpheres(obj1, obj2):
     c4 = Part.Circle(mid, n, (v1 - v2).Length / 2)
 
     p1, p2 = c4.intersect(c3)
-    t1 = c3.parameter(p1)
-    t2 = c3.parameter(p2)
+
+    # Extract Base.Vector from Part.Vertex
+    def vertex_to_vector(v):
+        return getattr(v, "Point", v)
+
+    t1 = c3.parameter(to_vector(p1))
+    t2 = c3.parameter(to_vector(p2))
+    t3 = (t1 + t2) / 2
+
+    a1 = c1.trim(t3 + 3.141592653589793, t1 + 2 * 3.141592653589793)
+    a2 = c2.trim(t1, t3)
+
+    l1 = Part.makeLine(c1.value(t1), c2.value(t1))
+    l2 = Part.makeLine(c2.value(t3), c1.value(t3 + 3.141592653589793))
+
+    wire = Part.Wire([a1.toShape(), l1, a2.toShape(), l2])
+
+    base_pt = c1.value(t3 + 3.141592653589793)
+    axis = c2.value(t3) - base_pt
+    return wire.revolve(base_pt, axis)
+
+def hullTwoEqSpheres(obj1, obj2):
+    r = getRadius(obj1)
+
+    p1 = obj1.Placement.Base
+    p2 = obj2.Placement.Base
+    axis = p2 - p1
+
+    # Cylinder between sphere centers
+    cyl = Part.makeCylinder(
+        r,
+        axis.Length,
+        p1,
+        axis
+    )
+
+    # Combine: sphere + cylinder + sphere
+    shapes = [obj1.Shape, cyl, obj2.Shape]
+
+    return Part.makeCompound(shapes)
+
+
+def hullTwoSpheres(obj1, obj2):
+    if getRadius(obj2) > getRadius(obj1):
+        obj1, obj2 = obj2, obj1
+
+    v1, v2 = base(obj1), base(obj2)
+    n = someNormal(v1 - v2)
+
+    r1, r2 = getRadius(obj1), getRadius(obj2)
+
+    c1 = Part.Circle(v1, n, r1)
+    c2 = Part.Circle(v2, n, r2)
+    c3 = Part.Circle(v1, n, r1 - r2)
+
+    mid = (v1 + v2) * 0.5
+    c4 = Part.Circle(mid, n, (v1 - v2).Length / 2)
+
+    p1, p2 = c4.intersect(c3)
+    t1 = c3.parameter(to_vector(p1))
+    t2 = c3.parameter(to_vector(p2))
     t3 = (t1 + t2) / 2
 
     a1 = c1.trim(t3 + 3.141592653589793, t1 + 2 * 3.141592653589793)

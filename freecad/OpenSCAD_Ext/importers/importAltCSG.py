@@ -541,7 +541,8 @@ def p_hull_action(p):
     # list could be single Type Part::MultiFuse
     from freecad.OpenSCAD_Ext.core.OpenSCADHull import makeHullObject
 
-    myHull = makeHullObject(p[5],True)
+    #myHull = makeHullObject(p[5],True)
+    myHull = makeHullObject(p[5],False)
     p[0] = [myHull]
     return
 
