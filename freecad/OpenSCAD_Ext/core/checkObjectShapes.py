@@ -28,7 +28,7 @@
 #***************************************************************************
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import *
-printverbose = False
+printverbose = True
 
 def checkObjShape(obj) :
     if hasattr(obj, 'Shape'):    

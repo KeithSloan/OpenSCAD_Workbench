@@ -184,8 +184,7 @@ class SCADModuleObject(SCADfileBase):
         write_log("INFO", f"library scad file {meta.sourceFile}")
         write_log("INFO", f"includes {meta.includes}")
         write_log("INFO", f"modules {module.name}")
-        # Causes JSON error write_log("INFO", f"args {args}")
-        write_log("INFO", f"args {repr(args)}")
+        write_log("INFO", f"args {args}")
 
         self._init_properties(obj)
         self.add_args_as_properties(obj)
