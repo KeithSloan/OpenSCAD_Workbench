@@ -53,7 +53,7 @@ fa = params.GetFloat('exportFa', 12.0)
 fs = params.GetFloat('exportFs', 2.0)
 conv = params.GetInt('exportConvexity', 10)
 #fafs = '$fa = %f, $fs = %f' % (fa, fs)
-convexity = 'convexity=%d' % conv  # TODO: create special variable $convexity
+#convexity = 'convexity=%d' % conv  # TODO: create special variable $convexity
 
 
 #***************************************************************************
@@ -253,14 +253,28 @@ def process_object(write, ob):
         print("Torus")
         print(ob.Radius1)
         print(ob.Radius2)
-        if ob.Angle3 == 360.00:
-            with placement(write, ob, 0, 0, 0):
-                write("// (FreeCAD Torus)\n")  # TODO: make torus an openscad module?
-                write("rotate_extrude(" + convexity + ") ")
-                write("translate([" + fstr(ob.Radius1) + ", 0, 0]) ")
-                write("circle(" + fstr(ob.Radius2) + ");\n")
-        else:  # Cannot convert to rotate extrude, so best effort is polyhedron
-            write('%s\n' % shape2polyhedron(ob.Shape))
+        print(ob.Angle1)
+        print(ob.Angle2)
+        print(ob.Angle3)
+        r1 = ob.Radius1.Value  # radius of the donut hole
+        r2 = ob.Radius2.Value  # half thickness of the donut rim
+        a1 = ob.Angle1.Value  # start angle of the rim's circle segment
+        a2 = ob.Angle2.Value  # end angle of the rim's circle segment
+        a3 = ob.Angle3.Value  # main donut circle segment angle
+        with placement(write, ob, 0, 0, 0):
+            write("// (FreeCAD Torus)\n")  # TODO: make torus an openscad module?
+            if practically_equal(a3, 360.0):
+                write("rotate_extrude() ")
+            else:
+                write(f"rotate_extrude(angle={fstr(a3)})")
+            write(f" translate([{fstr(r1)}, 0, 0]) ")
+            if practically_equal(a1, -180.0) and practically_equal(a2, 180.0):
+                write(f" circle({fstr(r2)});\n")
+            else:
+                start = -a1
+                angle = a1 - (a2 if a2 > a1 else a2 + 360)
+                write("\n // constructing a circle segment\n")  # TODO: make sector an openscad module
+                write(f" projection(cut=true) rotate_extrude(angle={fstr(angle)}, start={fstr(start)}) square([{fstr(r2)}, 1]);\n")
 
     elif ob.TypeId == "Part::Prism":
         f = fstr(ob.Polygon)
@@ -380,7 +394,8 @@ def export(export_list, filename):
         print("Write Initial Output")
         # Not sure if comments as per scad are allowed in csg file
         write("// SCAD file generated from FreeCAD %s\n" % '.'.join(FreeCAD.Version()[0:3]))
-        write(f"$fn = 0;\n$fa = {fa};\n$fs = {fs};\n\n")
+        write(f"$fn = 0;\n$fa = {fa};\n$fs = {fs};\n")
+        write(f"$convexity = {conv};\n\n")
         for ob in export_list:
             print(ob)
             print("Name : " + ob.Name)
