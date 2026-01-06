@@ -5,8 +5,6 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
 from freecad.OpenSCAD_Ext.objects.SCADObject import SCADfileBase, ViewSCADProvider
 
-SCAD_PARSER_VERSION = 1.0
-SCAD_GROUP_NAME = "SCAD Parameters"
 # -----------------------------
 # Utility functions
 # -----------------------------
@@ -157,7 +155,7 @@ def _add_argument_property(self, obj, arg):
     name = arg.name
     default = arg.default
     desc = arg.description
-    subsection = SCAD_GROUP_NAME
+    subsection = self.argsGroupName
 
     # Boolean
     if default in ("true", "false"):
@@ -191,90 +189,187 @@ def _add_argument_property(self, obj, arg):
 
 
 # -----------------------------
-# SCADModuleObject Class (Robust Version)
+# SCADModuleObject Class
 # -----------------------------
+
+SCAD_PARSER_VERSION=1.0
+SCAD_GROUP_NAME='SCAD Parameters'
+
 class SCADModuleObject(SCADfileBase):
-    def __init__(self, obj, name, sourceFile, meta, module, args, auto_execute=False):
+    def __init__(self, obj, name, sourceFile, meta, module, args):
         super().__init__(obj, self.clean_module_name(name), sourceFile)
-    #def __init__(self, obj, module, auto_execute=False):
-    #    super().__init__(obj)
-        self._initializing = True  # Prevent onChanged triggers during init
 
-        self.module = module           # <-- THIS is required
-        self.args = args or {}         # store arguments
+        self.Object = obj
         self.meta = meta
+        self.module = module
+        self.args = args
+        #self.argsGroupName = 'SCAD Parameters'
+        obj.Proxy = self
 
-        # Clean name
-        self.clean_name = self.clean_module_name(name)
+        obj.addProperty("App::PropertyString", "ModuleName", "SCAD_GROUP_NAME", "SCAD module name")
+        obj.ModuleName = module.name
+        obj.addProperty("App::PropertyBool","render_Needed","Base","Object requires a Render")
+        obj.render_Needed = False
+        obj.addProperty("App::PropertyString", "SCAD_Hash", "Base")
+        obj.addProperty("App::PropertyString", "ParserVersion", "Base")
+        obj.addProperty("App::PropertyPythonObject",
+                        "SCAD_MetaCache",
+                        "Base",
+                        "Cached parsed SCAD metadata"
+                        )
+        obj.setEditorMode("SCAD_MetaCache", 2)  # hide from UI
 
-        # Ensure properties exist
 
-        # --- Core SCAD properties ---
-        # Ensure module name
-        mod_name = self.clean_module_name(getattr(module, "name", "SCAD_Module"))
-        self._ensure_property(obj, "ModuleName", "App::PropertyString", "Parameters", "OpenSCAD module name")
-        obj.ModuleName = mod_name
+        write_log("INFO", f"library scad file {meta.sourceFile}")
+        write_log("INFO", f"includes {meta.includes}")
+        write_log("INFO", f"modules {module.name}")
+        write_log("INFO", f"args {args}")
 
-        # Description property
-        self._ensure_property(obj,"Description", "App::PropertyString", "Base", "Parameters","Module description")
-        obj.Description = getattr(module, "description", "")
-
-        # Parser version and render needed
-        self._ensure_property(obj, "ParserVersion", "App::PropertyString", "Base", "Parameters", "Parser version").ParserVersion = getattr(module, "parser_version", "")
-        self._ensure_property(obj, "render_Needed", "App::PropertyBool", "Base", "Parameters", "Flag for recompute").render_Needed = False
-
-        # --- Add SCAD args as properties ---
+        self._init_properties(obj)
         self.add_args_as_properties(obj)
+        self._prepare_scad_file(obj)
+        self.renderFunction(obj)
 
-        # Finished initialization
-        self._initializing = False
+    def _init_runtime_defaults(self):
+        self._in_execute = False
 
-        # Only execute/render if requested
-        if auto_execute:
-            self.execute()
+    def onDocumentRestored(self, obj):
+        self._init_runtime_defaults()
+        
+        if self._meta_cache_valid(obj):
+            self.meta = obj.SCAD_MetaCache
+        else:
+            self.meta = super.parse_scad(obj.SourceFile)
+            
+            obj.SCAD_MetaCache = self.meta
+            obj.SCAD_Hash = compute_file_hash(obj.SourceFile)
+            self.module = self.meta.getModule(obj.ModuleName)
+            self.args = self.module.args
+    
+    @staticmethod
+    def compute_file_hash(self, file_path: str) -> str:
+        """
+        Compute a SHA256 hash of the file contents.
 
-    # ---OnChanged handler ---
+        Returns a hex string.
+        """
+        file_path = Path(file_path)
+        if not file_path.is_file():
+            return ""
+
+        hasher = hashlib.sha256()
+        # Read in chunks to handle large files efficiently
+        with file_path.open("rb") as f:
+            for chunk in iter(lambda: f.read(8192), b""):
+                hasher.update(chunk)
+
+        return hasher.hexdigest()
+
+
+    def _meta_cache_valid(self, obj):
+        if not obj.SCAD_MetaCache:
+            return False
+        if obj.ParserVersion != SCAD_PARSER_VERSION:
+            return False
+        if obj.SCAD_Hash != compute_file_hash(obj.SourceFile):
+            return False
+        return True
+
+
+
     def onChanged(self, fp, prop):
-        # Only try to access args if module exists
-        module_args = getattr(self, "module", None)
-        if module_args is not None and prop in getattr(self.module, "args", {}):
+        super().onChanged(fp, prop)
+        write_log("INFO",f"{fp.Label} State : {fp.State} prop : {prop}")
+
+        group = fp.getGroupOfProperty(prop)
+
+        if group == self.argsGroupName:
+            print(f"SCAD property changed: {prop}")
+            # do your SCAD-specific handling here
+            fp.touch()   # mark for recompute, do NOT recompute now
             fp.render_Needed = True
 
+    def execute(self, obj):
+        """
+        Need to recreate Shape if render_Needed = True
+        """
+        try:
+            self._in_execute = True         # Flag to stop looping
+            super().renderFunction(obj)
+            obj.NeedsRecompute = False
+        
+        finally:
+            self._in_execute = False
 
-    # --- Ensures a property exists and returns it ---
-    def _ensure_property(self, obj, name, ptype, group="", subgroup="", desc=""):
-        if not hasattr(obj, name):
-            obj.addProperty(ptype, name, group, desc)
-        return obj
+    # -----------------------------
+    # SCADModuleObject methods
+    # -----------------------------
 
-    # --- Add SCAD arguments dynamically ---
-    def add_args_as_properties(self, obj):
-        if not hasattr(self.module, "args"):
+    def _add_argument_property(self, obj, arg):
+        """
+        Add a typed property to a FreeCAD object from a SCADArgument.
+        """
+        name = arg.name
+        default = arg.default
+        desc = arg.description
+        subsection = self.argsGroupName
+
+        # Boolean
+        if default in ("true", "false"):
+            prop = obj.addProperty("App::PropertyBool", name, subsection, desc)
+            setattr(obj, name, default == "true")
             return
-        for key, value in self.module.args.items():
-            prop_type = self._guess_property_type(value)
-            # Only add if it doesn't already exist
-            if not hasattr(obj, key):
-                obj.addProperty(prop_type, key, "Parameters", f"SCAD argument {key}")
-            setattr(obj, key, value)
 
-    # --- Guess property type from Python type ---
-    def _guess_property_type(self, value):
-        if isinstance(value, int):
-            return "App::PropertyInteger"
-        elif isinstance(value, float):
-            return "App::PropertyFloat"
-        elif isinstance(value, bool):
-            return "App::PropertyBool"
-        else:
-            return "App::PropertyString"
+        # Integer
+        try:
+            if default is not None and "." not in str(default):
+                ival = int(default)
+                prop = obj.addProperty("App::PropertyInteger", name, subsection, desc)
+                setattr(obj, name, ival)
+                return
+
+        except Exception:
+            pass
+
+        # Float
+        try:
+            fval = float(default)
+            prop = obj.addProperty("App::PropertyFloat", name, subsection, desc)
+            setattr(obj, name, fval)
+            return
+
+        except Exception:
+            pass
+
+        # String fallback
+        prop = obj.addProperty("App::PropertyString", name, subsection, desc)
+        if default:
+            setattr(obj, name, str(default).strip('"'))
 
 
-    # --- Clean module name ---
-    def clean_module_name(self, name):
-        # Remove illegal chars, spaces → underscores, etc.
-        import re
-        return re.sub(r'\W|^(?=\d)', '_', name)
+    def clean_module_name(self, name: str) -> str:
+        return name[:-2] if name.endswith("()") else name
+
+    def _init_properties(self, obj):
+        """
+        Initialize base properties like ModuleName and Description
+        """
+        obj.addProperty("App::PropertyString", "ModuleName", "Parameters", "OpenSCAD module name").ModuleName = self.module.name
+        obj.addProperty("App::PropertyString", "Description", "Parameters", "Module description").Description = getattr(self.module, "description", "")
+        obj.setEditorMode("Description", 1)
+
+    def add_args_as_properties(self, obj):
+        """
+        Add all module arguments as FreeCAD properties (typed as string).
+        """
+        for arg in getattr(self.module, "arguments", []):
+            _add_argument_property(obj, arg)
+
+    def _build_arg_assignments(self, obj):
+        """
+        Build a comma-separated string of argument assignments for this object/module.
+        """
+        return build_arg_assignments(obj, self.module)
 
     def _prepare_scad_file(self, obj):
         """
@@ -284,3 +379,7 @@ class SCADModuleObject(SCADfileBase):
         obj.Proxy.sourceFile = os.path.join(scad_dir, obj.Name + ".scad")
         os.makedirs(scad_dir, exist_ok=True)
         write_scad_file(obj, self.module, self.meta)
+
+    
+        
+
