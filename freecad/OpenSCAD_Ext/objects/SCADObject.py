@@ -259,7 +259,7 @@ class SCADfileBase:
         if prop in ['mode']:
                 print(f"Change of Mode")
 
-        if prop in ["execute"]:
+        if prop in ["execute"]:     # This execute property
             if fp.execute == True:
                 self.executeFunction(fp)
                 fp.execute = False
@@ -282,7 +282,7 @@ class SCADfileBase:
 
     def execute(self, fp):
         '''Do something when doing a recomputation, this method is mandatory'''
-        print(f"execute")
+        print(f"execute do nothing")
 
 
     # use name render for new workbench
@@ -421,8 +421,8 @@ def createSCADObject(title, createOption, objectName, filename):
         if hasattr(obj, 'Proxy'):
             if hasattr(obj, "editFile"):
                 obj.Proxy.editFile(filename)
-            elif hasattr(obj, "executeFunc"):
-                obj.Proxy.executeFunction(obj)
+            #elif hasattr(obj, "executeFunc"):
+            #    obj.Proxy.executeFunction(obj)
         return obj
 
 class ViewSCADProvider:

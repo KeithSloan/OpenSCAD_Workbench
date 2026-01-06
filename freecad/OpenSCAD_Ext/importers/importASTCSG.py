@@ -35,7 +35,7 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.process_SCAD_Object import process_
 from freecad.OpenSCAD_Ext.parsers.csg_parser.parser import parse_csg_file
 
 #
-# For SCAD files first process via OpenSCAD to creae CSG file then import
+# For SCAD files first process via OpenSCAD to create CSG file then import
 #
 import FreeCAD, Part, Draft, io, os, sys, xml.sax
 if FreeCAD.GuiUp:

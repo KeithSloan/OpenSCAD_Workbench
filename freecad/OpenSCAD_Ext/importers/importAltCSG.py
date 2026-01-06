@@ -59,10 +59,11 @@ from freecad.OpenSCAD_Ext.core.OpenSCADMinkowski import *
 DisplayName = "OpenSCAD Ext – CSG Importer"
 
 params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
+global printverbose
 printverbose = params.GetBool('printverbose',False)
 print(f'Verbose = {printverbose}')
 #print(params.GetContents())
-printverbose = True
+printverbose = False
 
 # Get the token map from the lexer.  This is required.
 import tokrules
@@ -163,10 +164,10 @@ def processCSG(docSrc, filename, fnmax_param = None):
     #from tokrules import tokens
     #print(f"tokens {tokens}")
 
-    if printverbose: print ('ImportCSG Version 0.6a')
+    print ('ImportCSG Version 0.6a')
     # Build the lexer
     if printverbose: write_log("INFO","Start Lex")
-    lex.lex(module=tokrules)
+    lex.lex(debug=False, module=tokrules)
     if printverbose: write_log("INFO","End Lex")
 
     # Build the parser   
@@ -213,6 +214,7 @@ def p_render_action(p):
 
 def p_group_action1(p):
     'group_action1 : group LPAREN RPAREN OBRACE block_list EBRACE'
+    printverbose = True
     if printverbose: write_log("INFO",f"Group : {p[5]}")
 # Test if need for implicit fuse
     if p[5] is None:
@@ -227,6 +229,7 @@ def p_group_action1(p):
        if printverbose: write_log("INFO",f"Group {p[5]} type {type(p[5])}")
        checkObjShape(p[5])
        p[0] = p[5]
+
 
 def p_group_action2(p) :
     'group_action2 : group LPAREN RPAREN SEMICOL'
@@ -667,21 +670,22 @@ def p_error(p):
     if printverbose: write_log("INFO","Syntax error in input!")
     if printverbose: write_log("INFO",p)
 
-def fuse(lst,name):
+def fuseList(lst,name):
     global doc
-    if printverbose: 
-       print("Fuse")
-       print(lst)
-       for obj in lst :
-           print(obj.Label)
-           checkObjShape(obj)
+    printverbose = False
+    if printverbose: write_log("INFO",f"Fuse {lst}")
+    for obj in lst :
+        print(obj.Label)
+        checkObjShape(obj)
     if len(lst) == 0:
         myfuse = placeholder('group',[],'{}')
     elif len(lst) == 1:
        return lst[0]
     # Is this Multi Fuse
     elif len(lst) > 2:
-       if printverbose: write_log("INFO","Multi Fuse")
+       if printverbose:
+            write_log("INFO","Multi Fuse")
+            printverbose = False
        myfuse = doc.addObject('Part::MultiFuse',name)
        myfuse.Shapes = lst
        for s in myfuse.Shapes:
@@ -706,18 +710,17 @@ def fuse(lst,name):
 def p_union_action(p):
     'union_action : union LPAREN RPAREN OBRACE block_list EBRACE'
     if printverbose: write_log("INFO","union")
-    print("union")
-    newpart = fuse(p[5],p[1])
+    #print("union")
+    newpart = fuseList(p[5],p[1])
     if printverbose: write_log("INFO","Push Union Result")
     p[0] = [newpart]
     if printverbose: write_log("INFO","End Union")
     
 def p_difference_action(p):  
     'difference_action : difference LPAREN RPAREN OBRACE block_list EBRACE'
-
-    if printverbose: write_log("INFO","difference")
-    if printverbose: write_log("INFO", len(p[5]))
-    if printverbose: write_log("INFO",p[5])
+    write_log("INFO",f"difference len {len(p[5])} {p[5]}")
+    if printverbose:
+        write_log("INFO",f"difference len {len(p[5])} {p[5]}")
     if (len(p[5]) == 0 ): #nochild
         mycut = placeholder('group',[],'{}')
     elif (len(p[5]) == 1 ): #single object
@@ -729,7 +732,7 @@ def p_difference_action(p):
         if (len(p[5]) > 2 ):
            # Need to fuse extra items first
            #print(len(p[5][1:]))
-           mycut.Tool = fuse(p[5][1:],'union')
+           mycut.Tool = fuseList(p[5][1:],'union')
         else:
            mycut.Tool = p[5][1]
            checkObjShape(mycut.Tool)
@@ -827,7 +830,7 @@ def p_rotate_extrude_action(p):
     #    "User parameter:BaseApp/Preferences/Mod/OpenSCAD").\
     #    GetInt('useMaxFN', 16)
     if (len(p[6]) > 1) :
-        part = fuse(p[6],"Rotate Extrude Union")
+        part = fuseList(p[6],"Rotate Extrude Union")
     else :
         part = p[6][0]
 
@@ -921,7 +924,7 @@ def p_linear_extrude_with_transform(p):
         p[0] = []
         return
     if (len(p[6]) > 1) :
-        obj = fuse(p[6],"Linear Extrude Union")
+        obj = fuseList(p[6],"Linear Extrude Union")
     else :
         obj = p[6][0]
     checkObjShape(obj)
@@ -1498,29 +1501,25 @@ def p_polyhedron_action(p) :
                       | polyhedron LPAREN points EQ OSQUARE points_list_3d ESQUARE COMMA triangles EQ OSQUARE points_list_3d ESQUARE COMMA keywordargument_list RPAREN SEMICOL'''
     if printverbose: write_log("INFO","Polyhedron Points")
     v = []
+    if printverbose: write_log("INFO", f"P[6] {P[6]}")
     for i in p[6] :
-        if printverbose: write_log("INFO", i)
         v.append(FreeCAD.Vector(float(i[0]),float(i[1]),float(i[2])))
-    if printverbose:
-        print(v)
-        print ("Polyhedron "+p[9])
-        print (p[12])
+    if printverbose: write_log("INFO",f"Polyhedron p[9] {p[9]} p[12] {p[12]}")
     faces_list = []    
     mypolyhed = doc.addObject('Part::Feature',p[1])
     for i in p[12] :
-        if printverbose: write_log("INFO", i)
+        #if printverbose: write_log("INFO", i)
         v2 = FreeCAD.Vector
         pp =[v2(v[k]) for k in i]
         # Add first point to end of list to close polygon
         pp.append(pp[0])
-        print("pp")
-        print(pp)
+        write_log("INFO",f"make Part Polygon {pp}")
         try:
             w = Part.makePolygon(pp)
-            print("w")
-            print(w)
+            #print("w")
+            #print(w)
             f = Part.Face(w)
-        except:
+        except Exception:
             secWireList = w.Edges[:]
             f = Part.makeFilledFace(Part.__sortEdges__(secWireList))
         #f = make_face(v[int(i[0])],v[int(i[1])],v[int(i[2])])
@@ -1534,7 +1533,7 @@ def p_polyhedron_action(p) :
 
 def p_projection_action(p) :
     'projection_action : projection LPAREN keywordargument_list RPAREN OBRACE block_list EBRACE'
-    if printverbose: write_log("INFO",'Projection')
+    if printverbose: write_log("INFO",f"Projection cut{p[3]}")
     if p[3]['cut']=='true' :
         planedim=1e9 # large but finite
         #infinite planes look bad in the GUI
@@ -1550,7 +1549,7 @@ def p_projection_action(p) :
             if gui:
                 plane.ViewObject.hide()
         if (len(p[6]) > 1):
-            subobj = [fuse(p[6],"projection_cut_implicit_group")]
+            subobj = [fuseList(p[6],"projection_cut_implicit_group")]
         else:
             subobj = p[6]
         obj.Shapes = [plane]+subobj

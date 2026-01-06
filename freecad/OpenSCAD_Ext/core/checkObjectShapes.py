@@ -26,11 +26,16 @@
 #*                                                                         *
 #*                                                                         *
 #***************************************************************************
+import FreeCAD
+import Part
 
-from freecad.OpenSCAD_Ext.logger.Workbench_logger import *
-printverbose = True
+from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+printverbose = False
 
 def checkObjShape(obj) :
+    if obj is None:
+        write_log(f"Error checkObjShape for None {obj}")
+        return
     if hasattr(obj, 'Shape'):    
         if printverbose: write_log("INFO",f"Check Object Shape {obj.Label}")
         if obj.Shape.isNull() == True :
@@ -40,7 +45,7 @@ def checkObjShape(obj) :
            print(f'Recompute failed : {obj.Name}')
     else:
         if len(obj) > 0:
-           print(f"check of obj list")
+           if printverbose: print(f"check of obj list")
            for i in obj:
                checkObjShape(i)
         elif hasattr(obj, 'Proxy'):

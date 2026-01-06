@@ -9,6 +9,9 @@
 # The parser builds an AST with nodes for operations, raw statements, arrays,
 # assignments, module definitions and calls. It marks OpNode.top_level_compound
 # when a hull/minkowski appears directly under the Program root.
+#
+# This is intended for parsing csg NOT scad source as no if, for, let etc
+#
 
 import ply.lex as lex
 import ply.yacc as yacc
@@ -364,8 +367,18 @@ parser = yacc.yacc(start='program', debug=False)
 
 COMPOUND_SET = {'hull', 'minkowski'}
 
+
+
 def mark_top_level_compounds(ast: Program):
-    """Traverse ast.statements and set OpNode.top_level_compound when the node
-    is a hull/minkowski directly under Program."""
-    for s in ast.sta:
-        print(f"ast.sta")
+    for s in ast.statements:
+        if isinstance(s, OpNode) and s.name in COMPOUND_SET:
+            s.top_level_compound = True
+
+def parse_csg(filename):
+    with open(filename, "r", encoding="utf-8") as f:
+        data = f.read()
+    ast = parser.parse(data, lexer=lexer)
+    mark_top_level_compounds(ast)
+    return ast
+
+
