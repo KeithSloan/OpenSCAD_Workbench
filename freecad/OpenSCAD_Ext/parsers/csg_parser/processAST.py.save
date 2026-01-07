@@ -1,5 +1,6 @@
 import FreeCAD
 import Part
+from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.core.OpenSCADUtils import process_ObjectsViaOpenSCADShape
 from .hull_minkowski import try_hull, try_minkowski
 
@@ -68,7 +69,10 @@ def process_node(doc, node, stack=None, mode="single"):
 
     # Fallback
     if shape is None:
-        shape = process_ObjectsViaOpenSCADShape(doc, node)
+        shape_name = node.node_type.capitalize()
+        write_log("Info", f"Falling back to process_ObjectsViaOpenSCADShape for {shape_name}")
+        shape = process_ObjectsViaOpenSCADShape(doc, node, shape_name)
+
 
     # In "objects" mode, create individual FreeCAD objects
     if mode == "objects" and shape:

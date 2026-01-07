@@ -1,0 +1,74 @@
+from dataclasses import dataclass, field
+from typing import List, Optional
+
+@dataclass
+class Node:
+    node_type: str
+    params: dict = field(default_factory=dict)
+    children: List['Node'] = field(default_factory=list)
+
+@dataclass
+class Cube(Node):
+    def __init__(self, size=[1,1,1], center=False):
+        super().__init__("cube", {"size": size, "center": center})
+
+@dataclass
+class Sphere(Node):
+    def __init__(self, r=1, fn=None, fa=None, fs=None):
+        super().__init__("sphere", {"r": r, "$fn": fn, "$fa": fa, "$fs": fs})
+
+@dataclass
+class Cylinder(Node):
+    def __init__(self, r=1, h=1, center=False, fn=None, fa=None, fs=None):
+        super().__init__("cylinder", {"r": r, "h": h, "center": center, "$fn": fn, "$fa": fa, "$fs": fs})
+
+@dataclass
+class Union(Node):
+    def __init__(self, children=None):
+        super().__init__("union", {}, children or [])
+
+@dataclass
+class Difference(Node):
+    def __init__(self, children=None):
+        super().__init__("difference", {}, children or [])
+
+@dataclass
+class Intersection(Node):
+    def __init__(self, children=None):
+        super().__init__("intersection", {}, children or [])
+
+@dataclass
+class Hull(Node):
+    def __init__(self, children=None):
+        super().__init__("hull", {}, children or [])
+
+@dataclass
+class Minkowski(Node):
+    def __init__(self, children=None):
+        super().__init__("minkowski", {}, children or [])
+
+@dataclass
+class Group(Node):
+    def __init__(self, children=None):
+        super().__init__("group", {}, children or [])
+
+@dataclass
+class MultMatrix(Node):
+    def __init__(self, matrix=None, children=None):
+        super().__init__("multmatrix", {"matrix": matrix}, children or [])
+
+@dataclass
+class Translate(Node):
+    def __init__(self, vector=None, children=None):
+        super().__init__("translate", {"vector": vector or [0,0,0]}, children or [])
+
+@dataclass
+class Rotate(Node):
+    def __init__(self, vector=None, angle=None, children=None):
+        super().__init__("rotate", {"vector": vector or [0,0,1], "angle": angle or 0}, children or [])
+
+@dataclass
+class Scale(Node):
+    def __init__(self, vector=None, children=None):
+        super().__init__("scale", {"vector": vector or [1,1,1]}, children or [])
+
