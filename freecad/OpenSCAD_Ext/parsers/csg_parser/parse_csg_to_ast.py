@@ -1,6 +1,6 @@
 from .ast import Cube, Cylinder, Union, Hull, Minkowski
 
-def parse_csg_file(filename):
+def parse_csg_file_to_ast(filename):
     """
     Parse a modern OpenSCAD CSG file into an AST.
     Currently placeholder parser: extend for your OpenSCAD output.
