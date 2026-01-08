@@ -56,8 +56,9 @@ class RenderSCADFileObject_Class:
                   f"Failed to Render SCAD file for {obj.Label}: {e}\n"
                   )
             # Test for old SCADfileObject - AlternateImporter
-            if hasattr(obj.Proxy, "executeFunction"):
-               write_log("WARN","Alternate Importer SCAD Object")
+            # causes double render
+            #if hasattr(obj.Proxy, "executeFunction"):
+            #   write_log("WARN","Alternate Importer SCAD Object")
 
                try:
                   write_log("Execute Function",f"obj.sourceFile {obj.sourceFile}")

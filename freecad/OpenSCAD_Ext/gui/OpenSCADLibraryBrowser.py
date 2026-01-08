@@ -5,8 +5,8 @@ from PySide import QtWidgets, QtCore
 from freecad.OpenSCAD_Ext.libraries.ensure_openSCADPATH import ensure_openSCADPATH
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
-#from freecad.OpenSCAD_Ext.parsers.scadmeta.scadmeta_parse_scad_file import parse_scad_meta
-from freecad.OpenSCAD_Ext.parsers.parse_scad_for_modules  import parse_scad_meta
+# parse_library_scad for dialog SCADLibraryBrowser - BSOL2 etc
+from freecad.OpenSCAD_Ext.parsers.parse_library_scad  import parse_scad_meta
 
 from freecad.OpenSCAD_Ext.parsers.scadmeta.scadmeta_parse_scad_file  import create_scad_vars_spreadsheet
 from freecad.OpenSCAD_Ext.gui.SCAD_Module_Dialog import SCAD_Module_Dialog
