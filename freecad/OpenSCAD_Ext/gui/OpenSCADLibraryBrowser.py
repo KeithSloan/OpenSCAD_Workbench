@@ -5,7 +5,8 @@ from PySide import QtWidgets, QtCore
 from freecad.OpenSCAD_Ext.libraries.ensure_openSCADPATH import ensure_openSCADPATH
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
-from freecad.OpenSCAD_Ext.parsers.parse_scad_for_modules import parse_scad_for_modules
+from freecad.OpenSCAD_Ext.parsers.scadmeta.scadmeta_parse_scad_file import parse_scad_meta
+from freecad.OpenSCAD_Ext.parsers.scadmeta.scadmeta_parse_scad_file  import create_scad_vars_spreadsheet
 from freecad.OpenSCAD_Ext.gui.SCAD_Module_Dialog import SCAD_Module_Dialog
 
 class OpenSCADLibraryBrowser(QtWidgets.QDialog):
@@ -45,6 +46,10 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         self.edit_btn = QtWidgets.QPushButton("Edit Copy")
         self.edit_btn.setEnabled(False)
         self.edit_btn.clicked.connect(self.edit_copy)
+
+        self.edit_btn = QtWidgets.QPushButton("Extract Variables")
+        self.edit_btn.setEnabled(False)
+        self.edit_btn.clicked.connect(self.extract_variables)
 
         self.scan_btn = QtWidgets.QPushButton("Scan Modules")
         self.scan_btn.setEnabled(False)
@@ -171,6 +176,20 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         bp.editFile(obj_name, self.selected_scad)
         self.status.setText(f"Opened SCAD file for editing: {self.selected_scad}")
 
+    def extract_variables(self):
+        if not self.selected_scad:
+            return
+
+        write_log("Info", f"Extracting Variables from {self.selected_scad}")
+        obj_name = os.path.splitext(os.path.basename(self.selected_scad))[0]
+        meta = parse_scad_meta(self.selected_scad)
+        doc = FreeCAD.ActiveDocument
+        if doc:
+            create_scad_vars_spreadsheet(doc, meta, obj_name)
+        
+        self.status.setText(f"Extracted Variables from SCAD file  {self.selected_scad}")
+
+     
     def scan_modules(self):
         if not self.selected_scad or not os.path.isfile(self.selected_scad):
             QtWidgets.QMessageBox.warning(self, "Scan Modules", "No SCAD file selected.")
@@ -179,7 +198,7 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         write_log("Info", f"Scanning SCAD file: {self.selected_scad}")
 
         try:
-            meta = parse_scad_for_modules(self.selected_scad)
+            meta = parse_scad_meta(self.selected_scad)
             if not meta.modules:
                 QtWidgets.QMessageBox.information(self, "Scan Modules", "No documented modules found.")
                 write_log("Info", "No modules found in SCAD file.")

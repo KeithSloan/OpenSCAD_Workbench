@@ -3,7 +3,12 @@ import FreeCADGui
 
 # Fully-qualified imports
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
-from freecad.OpenSCAD_Ext.parsers.scadmeta.scadmeta_parser import varsSCAD
+#from freecad.OpenSCAD_Ext.parsers.scadmeta.scadmeta_parser import varsSCAD
+from freecad.OpenSCAD_Ext.parsers.parse_scad_for_modules import parse_scad_for_modules
+from freecad.OpenSCAD_Ext.parsers.scadmeta.scadmeta_parser import parse_scad_meta
+
+from freecad.OpenSCAD_Ext.parsers.scadmeta.scadmeta_parse_scad_file import create_scad_vars_spreadsheet
+
 from freecad.OpenSCAD_Ext.objects.SCADObject import SCADfileBase
 #from freecad.OpenSCAD_Ext.parsers.varset_utils import add_scad_vars_to_varset, mirror_varset_to_spreadsheet
 
@@ -42,7 +47,8 @@ class VarsSCADFile_Class:
                 continue
 
             # Use the new varsSCAD function
-            varsSCAD(obj)
+            #arsSCAD(obj)
+            self.processVariables(obj)
             doc.recompute()
 
             FreeCAD.Console.PrintMessage(f"SCAD variables extracted for {obj.Label}\n")
@@ -57,7 +63,7 @@ class VarsSCADFile_Class:
 
         try:
             scad_file = obj.sourceFile
-            write_log("EDIT", f"Parsing SCAD file: {scad_file}")
+            write_log("INFO", f"Process variables from SCAD file: {scad_file}")
 
             # Parse variables from SCAD meta (returns dict keyed by module name)
             meta = parse_scad_meta(scad_file)

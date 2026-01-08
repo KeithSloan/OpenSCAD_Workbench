@@ -33,6 +33,7 @@ __url__ = ["http://www.sloan-home.co.uk/ImportCSG"]
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.parsers.csg_parser.processAST import process_AST
 from freecad.OpenSCAD_Ext.parsers.csg_parser.parse_csg_file_to_AST_nodes import parse_csg_file_to_AST_nodes
+from freecad.OpenSCAD_Ext.parsers.csg_parser.parse_csg_file_to_AST_nodes import normalize_ast
 
 #
 # For SCAD files first process via OpenSCAD to creae CSG file then import
@@ -141,8 +142,9 @@ def processCSG(docSrc, filename, fnmax_param = None):
     write_log("Info","Using OpenSCAD AST / CSG Importer")
     write_log("Info",f"Doc {doc.Name} useMaxFn {fnmax}")
     if printverbose: print ('ImportCSG Version 0.6a')
-    ast_nodes = parse_csg_file_to_AST_nodes(filename)
-    shapes = process_AST(doc, ast_nodes)
+    raw_ast_nodes = parse_csg_file_to_AST_nodes(filename)
+    ast_nodes = normalize_ast(raw_ast_nodes)
+    shapes = process_AST(doc, ast_nodes, mode="multiple")
 
     if printverbose: print ('ImportCSG Version 0.6a')
     
