@@ -127,7 +127,8 @@ def _parse_modules(lines):
 
 
 # --- Main parsing function ---
-def parse_scad_for_modules(filename):
+#def parse_scad_for_modules(filename):
+def parse_scad_meta(filename):
     write_log("Info", f"Parsing SCAD file: {filename}")
     meta = SCADMeta(filename)
     try:

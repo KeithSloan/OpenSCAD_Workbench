@@ -4,7 +4,7 @@ import FreeCADGui
 # Fully-qualified imports
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 #from freecad.OpenSCAD_Ext.parsers.scadmeta.scadmeta_parser import varsSCAD
-from freecad.OpenSCAD_Ext.parsers.parse_scad_for_modules import parse_scad_for_modules
+#from freecad.OpenSCAD_Ext.parsers.parse_scad_for_modules import parse_scad_for_modules
 from freecad.OpenSCAD_Ext.parsers.scadmeta.scadmeta_parser import parse_scad_meta
 
 from freecad.OpenSCAD_Ext.parsers.scadmeta.scadmeta_parse_scad_file import create_scad_vars_spreadsheet
