@@ -1,10 +1,13 @@
 import os
+from pathlib import Path
 import FreeCAD
-from PySide import QtWidgets, QtCore
+from PySide import QtGui, QtWidgets, QtCore
 
 from freecad.OpenSCAD_Ext.libraries.ensure_openSCADPATH import ensure_openSCADPATH
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
+from freecad.OpenSCAD_Ext.commands.newSCAD import OpenSCADeditOptions
+
 # parse_library_scad for dialog SCADLibraryBrowser - BSOL2 etc
 from freecad.OpenSCAD_Ext.parsers.parse_library_scad  import parse_scad_meta
 
@@ -127,46 +130,27 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         if not self.selected_scad:
             return
 
-        doc = FreeCAD.ActiveDocument
-        if doc is None:
-            doc = FreeCAD.newDocument("SCAD_Import")
+        QtGui.QGuiApplication.setOverrideCursor(QtGui.Qt.ArrowCursor)
+        dialog = OpenSCADeditOptions(
+            scadName=self.selected_scad,
+            newObject=False,
+            parent=self
+            )
+        result = dialog.exec_()
+        QtGui.QGuiApplication.restoreOverrideCursor()
+        if result != QtGui.QDialog.Accepted:
+            pass
+        write_log("Info",f"Action")
+        options = dialog.getValues()
+        write_log("Info",f"Options {options}") 
 
-        #obj = doc.addObject("Part::FeaturePython", obj_name)
-        #obj.Label = obj_name
+        # Create SCAD Object
+        scadName = dialog.getName()
+        sourceFile = dialog.get_sourceFile()
+        scadObj = dialog.create_from_dialog(scadName)
+        if scadObj:
+            scadObj.editFile(sourceFile)
 
-        # createSCADObject()
-
-        #newSCAD command ?
-
-        sourceDirectory = BaseParams.getScadSourcePath()
-
-        #sourceFilePath = os.path.join(sourceDirectory,obj.Label+".scad")
-        #print(f"SourceFilePath {sourceFilePath }")
-    
-        # View provider (THIS IS REQUIRED - Before calling SCADModuleObject)
-        write_log("Indo","Set ViewProvider")
-        #ViewSCADProvider(obj.ViewObject)
-        # Wrap in SCADModuleObject Data Proxy
-        #proxy = SCADObject(obj,
-        #        obj.Label,
-        #        sourceFilePath,
-        #        self.meta,
-        #        self.selected_module_meta,
-        #        args=args_values
-        #    )
-
-        name = os.path.splitext(os.path.basename(self.selected_scad))[0]
-        obj = doc.addObject("Part::FeaturePython", name)
-        obj.Label = name
-
-        if not hasattr(obj, "SourceFile"):
-            obj.addProperty("App::PropertyFile", "SourceFile", "SCAD", "SCAD source file")
-
-        obj.SourceFile = self.selected_scad
-        doc.recompute()
-
-        self.status.setText(f"Created SCAD Object: {name}")
-        write_log("Info", f"Created SCAD Object: {name}")
 
     def edit_copy(self):
         if not self.selected_scad:

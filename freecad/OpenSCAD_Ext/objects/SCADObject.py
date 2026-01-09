@@ -347,21 +347,21 @@ class SCADfileBase:
     #    fps.close()
 
 
-    # def editFile(self, fname):
-    #    import FreeCAD
-    #    import subprocess,  os, sys
-    #    editorPathName = FreeCAD.ParamGet(\
-    #        "User parameter:BaseApp/Preferences/Mod/OpenSCAD").GetString('externalEditor')
-    #    print(f"Path to external editor {editorPathName}")
-    #    # ToDo : Check pathname valid
-    #    if editorPathName != "":
-    #        p1 = subprocess.Popen( \
-    #            [editorPathName, fname], \
-    #            stdin=subprocess.PIPE,\
-    #            stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    #
-    #    else:
-    #        print(f"External Editor preference editorPathName not set")
+    def editFile(self, fname):
+        import FreeCAD
+        import subprocess,  os, sys
+        editorPathName = FreeCAD.ParamGet(\
+            "User parameter:BaseApp/Preferences/Mod/OpenSCAD").GetString('externalEditor')
+        print(f"Path to external editor {editorPathName}")
+        # ToDo : Check pathname valid
+        if editorPathName != "":
+            p1 = subprocess.Popen( \
+                [editorPathName, fname], \
+                stdin=subprocess.PIPE,\
+                stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    
+        else:
+            print(f"External Editor preference editorPathName not set")
 
 
     def createGeometry(self, obj):

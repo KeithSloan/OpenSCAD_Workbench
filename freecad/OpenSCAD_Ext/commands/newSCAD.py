@@ -1,10 +1,14 @@
+import os
+from pathlib import Path
+
 import FreeCAD
 import FreeCADGui
 
-from PySide import QtCore
+from PySide import QtWidgets
 from PySide import QtGui
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
 from freecad.OpenSCAD_Ext.objects.SCADObject import SCADfileBase, ViewSCADProvider
 
 
@@ -76,9 +80,18 @@ class BooleanValue(QtGui.QWidget):
 			return False
 
 class OpenSCADeditOptions(QtGui.QDialog):
-    def __init__(self, parent=None, scadName="SCAD_Object"):
+    def __init__(self, parent=None, scadName="SCAD_Object", newObject=True):
         super(OpenSCADeditOptions, self).__init__(parent)
-        self.scadNname = scadName
+        self.newObject = newObject
+        if newObject:
+            self.sourceFile = os.path.join(BaseParams.getScadSourcePath(),scadName)
+            self.scadName = scadName
+        else:
+            write_log("INFO",f"{scadName} newObject = {newObject}")
+            self.sourceFile = scadName
+            self.scadName = Path(self.sourceFile).stem
+            write_log("INFO",f"{scadName} newObject = {newObject}")
+
         self.initUI()
 
     def initUI(self):
@@ -91,7 +104,11 @@ class OpenSCADeditOptions(QtGui.QDialog):
         self.setMouseTracking(True)
 
         # ---------- Options ----------
-        self.scadName = EditTextValue(label="SCADname",default="SCADname")
+        self.scadName = EditTextValue(label="SCADname", default=self.scadName)
+        if not self.newObject:
+            line_edit = self.scadName.findChild(QtWidgets.QLineEdit)
+            if line_edit:
+                line_edit.setReadOnly(True)
         self.layout.addWidget(self.scadName)
         self.geometryType = GeometryType()
         self.layout.addWidget(self.geometryType)
@@ -124,6 +141,31 @@ class OpenSCADeditOptions(QtGui.QDialog):
               self.keepOption.getVal()
               )
 
+    def create_from_dialog(self, sourceFile, newFile=True):
+        name = Path(sourceFile).stem
+        if newFile:
+            sourceFile = os.path.join(BaseParams.getScadSourcePath(),sourceFile)
+        doc = FreeCAD.ActiveDocument
+        if not doc:
+            doc = FreeCAD.newDocument(name)
+            write_log("Info", f"Created new document: {name}")    
+        obj = doc.addObject("Part::FeaturePython", name)
+        write_log("Info", f"Created new SCAD Object: {name}")
+        scadObj = SCADfileBase(obj, name, sourceFile, \
+            self.geometryType.getVal(), \
+            self.fnMax.getVal(), \
+            self.timeOut.getVal(), \
+            self.keepOption.getVal()
+            )
+        ViewSCADProvider(obj.ViewObject)
+        return scadObj
+
+    def getName(self):
+        return self.scadName.getVal()
+
+    def get_sourceFile(self):
+        return self.sourceFile
+
     def onCancel(self):
         self.result = 'cancel'
         #QtGui.QGuiApplication.restoreOverrideCursor()
@@ -132,7 +174,28 @@ class OpenSCADeditOptions(QtGui.QDialog):
         self.result = 'ok'
         #QtGui.QGuiApplication.restoreOverrideCursor()
 
-from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
+
+# Can be called from newSCAD and OpenSCADLibraryBrowser
+@staticmethod
+def create_NewObject(sourceFile, newFile=True):
+    if newFile:
+        sourceFile = os.path.join(BaseParams.getScadSourcePath(),sourceFile)
+    QtGui.QGuiApplication.setOverrideCursor(QtGui.Qt.ArrowCursor)
+    dialog = OpenSCADeditOptions()
+    result = dialog.exec_()
+    QtGui.QGuiApplication.restoreOverrideCursor()
+    if result != QtGui.QDialog.Accepted:
+        pass
+    write_log("Info",f"Result {dialog.result}")
+    write_log("Info",f"Action")
+    options = dialog.getValues()
+    write_log("Info",f"Options {options}")
+
+    # Create SCAD Object
+    scadName = dialog.getName()
+    scadObj = dialog.create_from_dialog(scadName)
+    if scadObj:
+        scadObj.editFile(sourceFile)
 
 class NewSCADFile_Class(BaseParams):
     """Create a new SCAD file Object """
@@ -147,40 +210,49 @@ class NewSCADFile_Class(BaseParams):
         import os
         FreeCAD.Console.PrintMessage("New SCAD File Object executed\n")
         write_log("Info", "New SCAD File Object executed")
+        #create_NewObject("SCADname", newFile=True)
         QtGui.QGuiApplication.setOverrideCursor(QtGui.Qt.ArrowCursor)
         dialog = OpenSCADeditOptions()
         result = dialog.exec_()
         QtGui.QGuiApplication.restoreOverrideCursor()
         if result != QtGui.QDialog.Accepted:
-             pass
+            pass
         write_log("Info",f"Result {dialog.result}")
         write_log("Info",f"Action")
         options = dialog.getValues()
         write_log("Info",f"Options {options}")
 
         # Create SCAD Object
-        doc = FreeCAD.ActiveDocument
-        if doc is None:
-           doc_name = options[0]
-           doc = FreeCAD.newDocument(doc_name)
-           write_log("Info", f"Created new document: {doc_name}")
+        scadName = dialog.getName()
+        sourceFile = dialog.get_sourceFile()
+        scadObj = dialog.create_from_dialog(scadName)
+        if scadObj:
+            scadObj.editFile(sourceFile)
+        
 
-        obj = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", options[0])
+
+        #doc = FreeCAD.ActiveDocument
+        #if doc is None:
+        #   doc_name = options[0]
+        #   doc = FreeCAD.newDocument(doc_name)
+        #   write_log("Info", f"Created new document: {doc_name}")
+
+        #obj = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", options[0])
         #
         #scadObj = SCADfileBase(obj, scadName, sourcefile, mode='Mesh', fnmax=16, timeout=30)
         # change SCADfileBase to accept single options call ?
         #
-        scadName = options[0]
-        scadBase = scadName + ".scad"
-        sourceFile = os.path.join(BaseParams.getScadSourcePath(), scadBase)
-        scadObj = SCADfileBase(obj, scadName, sourceFile, \
-                  options[1], \
-                  options[2], \
-                  options[3], \
-                  options[4], \
-                  )
-        ViewSCADProvider(obj.ViewObject)
-        self.editFile(scadName, sourceFile)
+        #scadName = options[0]
+        #scadBase = scadName + ".scad"
+        #sourceFile = os.path.join(BaseParams.getScadSourcePath(), scadBase)
+        #scadObj = SCADfileBase(obj, scadName, sourceFile, \
+        #          options[1], \
+        #          options[2], \
+        #          options[3], \
+        #          options[4], \
+        #          )
+        #ViewSCADProvider(obj.ViewObject)
+        #self.editFile(scadName, sourceFile)
 
         #if hasattr(obj, 'Proxy'):
         #filename = "New_File"
