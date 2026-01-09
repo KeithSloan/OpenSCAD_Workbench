@@ -185,6 +185,7 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         write_log("Info", f"Extracting Variables from {self.selected_scad}")
         obj_name = os.path.splitext(os.path.basename(self.selected_scad))[0]
         meta = parse_scad_meta(self.selected_scad)
+        write_log("Info",meta)
         doc = FreeCAD.ActiveDocument
         if doc:
             create_scad_vars_spreadsheet(doc, meta, obj_name)
