@@ -69,207 +69,82 @@ def fallback_to_OpenSCAD(node, operation_type="Hull"):
     write_log("AST", f"OpenSCAD returned Shape {shape}")
     return shape
 
-
-
 # -----------------------------
 # AST processing
 # -----------------------------
 
-# -*- coding: utf-8 -*-
-
-import FreeCAD, Part
-from .ast_helpers import apply_transform, write_log
-
-
-# ============================================================
-# Helpers
-# ============================================================
-
-def _flatten_shapes(obj):
-    """Yield Part.Shape(s) from shape or list"""
-    if obj is None:
-        return
-    if isinstance(obj, (list, tuple)):
-        for s in obj:
-            yield from _flatten_shapes(s)
-    else:
-        yield obj
-
-
-def _compound(shapes):
-    shapes = list(_flatten_shapes(shapes))
-    if not shapes:
-        return None
-    if len(shapes) == 1:
+def process_AST(nodes, mode="multiple"):
+    shapes = []
+    if not isinstance(nodes, list):
+        nodes = [nodes]
+    for node in nodes:
+        s = process_AST_node(node)
+        if s is None:
+            continue
+        elif isinstance(s, (list, tuple)):
+            shapes.extend(s)
+        else:
+            shapes.append(s)
+        write_log("AST", f"process AST Node {getattr(node,'node_type',str(type(node)))} returned Shape {s}")
+    if mode == "single" and shapes:
         return shapes[0]
-    return Part.makeCompound(shapes)
-
-
-# ============================================================
-# Primitive builders (ignore None params ONLY)
-# ============================================================
-
-def build_cylinder(node):
-    p = node.params or {}
-
-    h = p.get("h")
-    r = p.get("r")
-    r1 = p.get("r1")
-    r2 = p.get("r2")
-    center = p.get("center", False)
-
-    # OpenSCAD semantics
-    if r is not None:
-        r1 = r2 = r
-
-    if r1 == r2:
-        shape = Part.makeCylinder(r1, h)
-    else:
-        shape = Part.makeCone(r1, r2, h)
-
-    if center:
-        shape.translate(FreeCAD.Vector(0, 0, -h / 2))
-
-    return apply_transform(shape, getattr(node, "transform", None))
-
-
-def build_cube(node):
-    p = node.params or {}
-    size = p.get("size", [1, 1, 1])
-    center = p.get("center", False)
-
-    shape = Part.makeBox(size[0], size[1], size[2])
-
-    if center:
-        shape.translate(FreeCAD.Vector(-size[0]/2, -size[1]/2, -size[2]/2))
-
-    return apply_transform(shape, getattr(node, "transform", None))
-
-
-def build_sphere(node):
-    p = node.params or {}
-    r = p.get("r")
-    shape = Part.makeSphere(r)
-    return apply_transform(shape, getattr(node, "transform", None))
-
-
-def build_circle(node):
-    p = node.params or {}
-    r = p.get("r")
-
-    edge = Part.makeCircle(r)
-    wire = Part.Wire(edge)
-    face = Part.Face(wire)
-
-    return apply_transform(face, getattr(node, "transform", None))
-
-
-# ============================================================
-# AST dispatcher
-# ============================================================
+    return shapes
 
 def process_AST_node(node):
-    t = getattr(node, "node_type", "").lower()
-    write_log("AST", f"Entering process_AST_node: {node.node_type}, "
-                     f"params={getattr(node,'params',{})}, "
-                     f"children={len(getattr(node,'children',[]))}")
+    # Dispatch by type
+    node_type = type(node).__name__
+    if node_type in ["Hull", "Minkowski"]:
+        if node_type == "Hull":
+            return process_hull(node)
+        else:
+            return process_minkowski(node)
 
-    # ----------------------------
-    # Primitives
-    # ----------------------------
-    if t == "cylinder":
-        return build_cylinder(node)
+    elif node_type == "Group":
+        # Process children and return as list of shapes
+        shapes = [process_AST_node(child) for child in getattr(node, "children", [])]
+        # Flatten nested lists
+        flat_shapes = []
+        for s in shapes:
+            if isinstance(s, (list, tuple)):
+                flat_shapes.extend(s)
+            elif s is not None:
+                flat_shapes.append(s)
+        return flat_shapes
 
-    if t == "cube":
-        return build_cube(node)
+    elif node_type in ["Sphere", "Cube", "Cylinder", "Circle"]:
+        return create_primitive(node)
 
-    if t == "sphere":
-        return build_sphere(node)
+    elif node_type in ["MultMatrix", "Translate", "Rotate", "Scale"]:
+        # Need a base shape to apply transform to; usually children
+        base_shapes = []
+        for child in getattr(node, "children", []):
+            s = process_AST_node(child)
+            if s is not None:
+                base_shapes.append(s)
+        if not base_shapes:
+            # fallback shape for transform
+            s = Part.makeBox(1,1,1)
+            return apply_transform(s, node)
+        elif len(base_shapes) == 1:
+            return apply_transform(base_shapes[0], node)
+        else:
+            # union all children first
+            union_shape = base_shapes[0].copy()
+            for s in base_shapes[1:]:
+                union_shape = union_shape.fuse(s)
+            return apply_transform(union_shape, node)
+    
+    elif node_type in ["Union", "Difference", "Intersection"]:
+        return create_boolean(node)
 
-    if t == "circle":
-        return build_circle(node)
-
-    # ----------------------------
-    # Group (flatten)
-    # ----------------------------
-    if t == "group":
-        shapes = []
-        for c in node.children:
-            shapes.extend(_flatten_shapes(process_AST_node(c)))
-        return shapes
-
-    # ----------------------------
-    # Boolean operations
-    # ----------------------------
-    if t == "union":
-        shapes = []
-        for c in node.children:
-            shapes.extend(_flatten_shapes(process_AST_node(c)))
-        return _compound(shapes)
-
-    if t == "difference":
-        base = process_AST_node(node.children[0])
-        for cut in node.children[1:]:
-            for s in _flatten_shapes(cut := process_AST_node(cut)):
-                base = base.cut(s)
-        return base
-
-    if t == "intersection":
-        shapes = [process_AST_node(c) for c in node.children]
-        base = shapes[0]
-        for s in shapes[1:]:
-            base = base.common(s)
-        return base
-
-    # ----------------------------
-    # Hull / Minkowski (KEEP)
-    # ----------------------------
-    if t == "hull":
-        shapes = []
-        for c in node.children:
-            shapes.extend(_flatten_shapes(process_AST_node(c)))
-        return try_hull(shapes)
-
-    if t == "minkowski":
-        shapes = []
-        for c in node.children:
-            shapes.extend(_flatten_shapes(process_AST_node(c)))
-        return try_minkowski(shapes)
-
-    # ----------------------------
-    # Transform nodes
-    # ----------------------------
-    if t in ("translate", "rotate", "scale", "multmatrix"):
-        shapes = []
-        for c in node.children:
-            for s in _flatten_shapes(process_AST_node(c)):
-                shapes.append(apply_transform(s, node))
-        return shapes
-
-    write_log("AST_WARNING", f"Unhandled AST node type: {node.node_type}")
-    return None
-
-
-# ============================================================
-# Entry point
-# ============================================================
-
-def process_AST(ast_nodes, mode="single"):
-    shapes = []
-    if not isinstance(ast_nodes, (list, tuple)):
-        ast_nodes = [ast_nodes]
-
-    for node in ast_nodes:
-        shapes.extend(_flatten_shapes(process_AST_node(node)))
-
-    if mode == "multiple":
-        return shapes
-
-    return _compound(shapes)
+    else:
+        write_log("AST", f"Unknown node type {node_type}, falling back to OpenSCAD")
+        return fallback_to_OpenSCAD(node, node_type)
 
 # -----------------------------
-# Hull / Minkowski helpers
+# Hull / Minkowski
 # -----------------------------
+
 def try_hull(node):
     return None
 def process_hull(node):
@@ -280,7 +155,6 @@ def process_hull(node):
 
 def try_minkowski(node):
     return None
-
 def process_minkowski(node):
     mink_shape = try_minkowski(node)
     if mink_shape:
@@ -290,21 +164,21 @@ def process_minkowski(node):
 # -----------------------------
 # Boolean operations
 # -----------------------------
+
 def create_boolean(node):
     shapes = []
     for child in getattr(node, "children", []):
         s = process_AST_node(child)
-        if s is None:
-            continue
-        if isinstance(s, list):
-            shapes.extend(s)
-        else:
+        if s is not None:
             shapes.append(s)
+    if isinstance(node, list):
+        return shapes
     return shapes
 
 # -----------------------------
 # Primitive creation
 # -----------------------------
+
 def to_vec3(s):
     if isinstance(s, (int,float)):
         return [s,s,s]
@@ -334,10 +208,14 @@ def create_primitive(node):
 
     elif node_type == "Cylinder":
         h = params.get("h", 1.0)
-        r1 = params.get("r1", params.get("r", 1.0)) or 1.0
-        r2 = params.get("r2", params.get("r", r1)) or r1
+        r1 = params.get("r1", params.get("r", 1.0))
+        r2 = params.get("r2", params.get("r", r1))
         center = params.get("center", False)
-        return Part.makeCone(r1, r2, h, FreeCAD.Vector(0,0,0), FreeCAD.Vector(0,0,1), center)
+        # Use tapered cylinder if r1 != r2
+        if r1 == r2:
+            return Part.makeCylinder(r1, h, FreeCAD.Vector(0,0,0), FreeCAD.Vector(0,0,1), center)
+        else:
+            return Part.makeCone(r1, r2, h, FreeCAD.Vector(0,0,0), FreeCAD.Vector(0,0,1), center)
 
     elif node_type == "Circle":
         r = params.get("r", 1.0)
@@ -349,6 +227,11 @@ def create_primitive(node):
 # -----------------------------
 # Flatten AST to SCAD string for fallback
 # -----------------------------
+
+# -----------------------------
+# Flatten AST to SCAD string for fallback (patched)
+# -----------------------------
+
 def flatten_ast_node(node, indent=0):
     ind = " " * indent
     code = ""
@@ -362,9 +245,9 @@ def flatten_ast_node(node, indent=0):
             code += flatten_ast_node(c, indent+4)
         code += f"{ind}}}\n"
 
-    elif node.node_type == "group":
-        for child in children:
-            code += flatten_ast_node(child, indent)
+    elif t in ["group", "Group"]:
+        for c in children:
+            code += flatten_ast_node(c, indent)
 
     elif t in ["minkowski", "Minkowski"]:
         code += f"{ind}minkowski() {{\n"
@@ -374,17 +257,19 @@ def flatten_ast_node(node, indent=0):
 
     elif t in ["cube", "Cube"]:
         size = params.get("size", [1,1,1])
+        # replace None with 1.0
+        size = [s if s is not None else 1.0 for s in size]
         center = str(params.get("center", False)).lower()
         code += f"{ind}cube(size={size}, center={center});\n"
 
     elif t in ["sphere", "Sphere"]:
-        r = params.get("r", 1.0)
+        r = params.get("r", 1.0) or 1.0
         code += f"{ind}sphere(r={r});\n"
 
     elif t in ["cylinder", "Cylinder"]:
-        h = params.get("h", 1.0)
-        r1 = params.get("r1", params.get("r", 1.0))
-        r2 = params.get("r2", params.get("r", r1))
+        h = params.get("h", 1.0) or 1.0
+        r1 = params.get("r1", params.get("r", 1.0)) or 1.0
+        r2 = params.get("r2", params.get("r", r1)) or r1
         center = str(params.get("center", False)).lower()
         code += f"{ind}cylinder(h={h}, r1={r1}, r2={r2}, center={center});\n"
 
@@ -397,14 +282,17 @@ def flatten_ast_node(node, indent=0):
 
     elif t in ["translate", "Translate"]:
         v = params.get("v", params.get("vector", [0,0,0]))
+        # replace None with 0
+        v = [vi if vi is not None else 0.0 for vi in v]
         code += f"{ind}translate({v}) {{\n"
         for c in children:
             code += flatten_ast_node(c, indent+4)
         code += f"{ind}}}\n"
 
     elif t in ["rotate", "Rotate"]:
-        angle = params.get("a", params.get("angle", 0))
+        angle = params.get("a", params.get("angle", 0)) or 0.0
         axis = params.get("v", params.get("vector", [0,0,1]))
+        axis = [ai if ai is not None else 0.0 for ai in axis]
         code += f"{ind}rotate(a={angle}, v={axis}) {{\n"
         for c in children:
             code += flatten_ast_node(c, indent+4)
@@ -412,6 +300,7 @@ def flatten_ast_node(node, indent=0):
 
     elif t in ["scale", "Scale"]:
         v = params.get("v", params.get("vector", [1,1,1]))
+        v = [vi if vi is not None else 1.0 for vi in v]
         code += f"{ind}scale({v}) {{\n"
         for c in children:
             code += flatten_ast_node(c, indent+4)
@@ -439,3 +328,4 @@ def flatten_ast_node(node, indent=0):
         write_log("flatten_ast_node", f"Unhandled node type: {t} — subtree may be lost")
 
     return code
+

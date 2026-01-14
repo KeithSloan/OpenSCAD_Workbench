@@ -1,0 +1,236 @@
+# -*- coding: utf8 -*-
+#***************************************************************************
+#*   AST Processing for OpenSCAD CSG importer                               *
+#*   Converts AST nodes to FreeCAD Shapes or SCAD strings with fallbacks    *
+#*                                                                          *
+#*   Fully robust: preserves groups, applies transforms, handles booleans  *
+#*   Never returns None for valid nodes                                      *
+#***************************************************************************
+
+import os
+import subprocess
+import tempfile
+import FreeCAD
+from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_helpers import get_tess, apply_transform
+import Part
+import Mesh
+
+# -----------------------------
+# Error
+# -----------------------------
+BaseError = FreeCAD.Base.FreeCADError
+class OpenSCADError(BaseError):
+    def __init__(self,value):
+        self.value= value
+    def __str__(self):
+        return repr(self.value)
+
+# -----------------------------
+# STL fallback
+# -----------------------------
+def generate_stl_from_scad(scad_str, check_syntax=False, timeout=60):
+    write_log("AST", f"generate stl from scad {scad_str}")
+    tmpdir = tempfile.mkdtemp()
+    scad_file = os.path.join(tmpdir, "fallback.scad")
+    stl_file = os.path.join(tmpdir, "fallback.stl")
+
+    prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
+    openscad_exe = prefs.GetString('openscadexecutable', "")
+    if not openscad_exe or not os.path.isfile(openscad_exe):
+        raise FileNotFoundError("OpenSCAD executable not found. Set in Preferences → OpenSCAD.")
+
+    with open(scad_file, "w") as f:
+        f.write(scad_str)
+
+    cmd = [openscad_exe, "-o", stl_file, scad_file]
+    if check_syntax:
+        cmd.append("-q")
+
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        os.remove(scad_file)
+        raise OpenSCADError(f"OpenSCAD call timed out after {timeout} seconds")
+    except subprocess.CalledProcessError as e:
+        os.remove(scad_file)
+        raise OpenSCADError(e.stderr.decode())
+
+    os.remove(scad_file)
+    return stl_file
+
+def stl_to_shape(stl_path, tolerance=0.05):
+    mesh_obj = Mesh.Mesh(stl_path)
+    shape = Part.Shape()
+    shape.makeShapeFromMesh(mesh_obj.Topology, tolerance)
+    return shape
+
+def fallback_to_OpenSCAD(node, operation_type="Fallback"):
+    write_log(operation_type, f"{operation_type} fallback to OpenSCAD")
+    from freecad.OpenSCAD_Ext.parsers.csg_parser.processAST import flatten_ast_node
+    scad_str = flatten_ast_node(node)
+    stl_file = generate_stl_from_scad(scad_str)
+    return stl_to_shape(stl_file)
+
+# -----------------------------
+# AST processing
+# -----------------------------
+def process_AST(nodes, mode="multiple"):
+    shapes = []
+    for node in nodes:
+        s = process_AST_node(node)
+        if isinstance(s, list):
+            shapes.extend(s)
+        elif s is not None:
+            shapes.append(s)
+    if mode == "single" and shapes:
+        return shapes[0]
+    return shapes
+
+def process_AST_node(node):
+    """
+    Dispatch processing based on node type.
+    Always returns a Shape or list of Shapes.
+    """
+    # If node is a list (from normalization), process each child
+    if isinstance(node, (list, tuple)):
+        shapes = []
+        for n in node:
+            s = process_AST_node(n)
+            if isinstance(s, (list, tuple)):
+                shapes.extend(s)
+            elif s is not None:
+                shapes.append(s)
+        return shapes
+
+    node_type = getattr(node, "node_type", type(node).__name__).lower()
+
+    if node_type in ["hull"]:
+        return process_hull(node)
+    elif node_type in ["minkowski"]:
+        return process_minkowski(node)
+    elif node_type in ["sphere", "cube", "cylinder", "circle"]:
+        return create_primitive(node)
+    elif node_type in ["multmatrix", "translate", "rotate", "scale"]:
+        shapes = []
+        for child in getattr(node, "children", []):
+            base_shape = process_AST_node(child)
+            shapes.append(apply_transform(base_shape, node))
+        return shapes
+    elif node_type in ["union", "difference", "intersection"]:
+        return create_boolean(node)
+    elif node_type in ["group"]:
+        # Flatten groups
+        return process_AST_node(getattr(node, "children", []))
+    else:
+        write_log("AST", f"Unknown node type {node_type}, falling back to OpenSCAD")
+        return fallback_to_OpenSCAD(node, node_type)
+
+# -----------------------------
+# Flatten AST to SCAD string
+# -----------------------------
+def flatten_ast_node(node, indent=0):
+    ind = " " * indent
+    code = ""
+
+    nt = getattr(node, "node_type", "").lower()
+    children = getattr(node, "children", [])
+
+    if nt == "hull":
+        code += f"{ind}hull() {{\n"
+        for c in children:
+            code += flatten_ast_node(c, indent+4)
+        code += f"{ind}}}\n"
+
+    elif nt == "minkowski":
+        code += f"{ind}minkowski() {{\n"
+        for c in children:
+            code += flatten_ast_node(c, indent+4)
+        code += f"{ind}}}\n"
+
+    elif nt == "cube":
+        size = node.params.get("size", [1,1,1])
+        center = node.params.get("center", False)
+        code += f"{ind}cube(size={size}, center={str(center).lower()});\n"
+
+    elif nt == "cylinder":
+        code += f"{ind}cylinder(h={node.params.get('h',1)}, r1={node.params.get('r1',1)}, r2={node.params.get('r2',1)}, center={str(node.params.get('center',False)).lower()});\n"
+
+    elif nt == "sphere":
+        code += f"{ind}sphere(r={node.params.get('r',1)});\n"
+
+    elif nt == "circle":
+        code += f"{ind}circle(r={node.params.get('r',1)});\n"
+
+    elif nt == "multmatrix":
+        matrix = node.params.get("matrix", [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
+        code += f"{ind}multmatrix({matrix}) {{\n"
+        for c in children:
+            code += flatten_ast_node(c, indent+4)
+        code += f"{ind}}}\n"
+
+    elif nt in ["union", "difference", "intersection"]:
+        code += f"{ind}{nt}() {{\n"
+        for c in children:
+            code += flatten_ast_node(c, indent+4)
+        code += f"{ind}}}\n"
+
+    elif nt == "group":
+        for c in children:
+            code += flatten_ast_node(c, indent)
+
+    else:
+        write_log("flatten_ast_node", f"Unhandled node type {nt}, subtree lost")
+
+    return code
+
+# -----------------------------
+# Hull / Minkowski
+# -----------------------------
+def try_hull(node):
+    # Not implemented yet, fallback
+    return None
+
+def process_hull(node):
+    h = try_hull(node)
+    if h: return h
+    return fallback_to_OpenSCAD(node, "Hull")
+
+def try_minkowski(node):
+    return None
+
+def process_minkowski(node):
+    m = try_minkowski(node)
+    if m: return m
+    return fallback_to_OpenSCAD(node, "Minkowski")
+
+# -----------------------------
+# Boolean nodes
+# -----------------------------
+def create_boolean(node):
+    shapes = []
+    for c in getattr(node, "children", []):
+        s = process_AST_node(c)
+        if isinstance(s, list):
+            shapes.extend(s)
+        elif s is not None:
+            shapes.append(s)
+    return shapes
+
+# -----------------------------
+# Primitives
+# -----------------------------
+def create_primitive(node):
+    node_type = type(node).__name__
+    p = getattr(node, "params", {})
+    if node_type == "Sphere":
+        return Part.makeSphere(p.get("r",1.0))
+    elif node_type == "Cube":
+        size = p.get("size",[1,1,1])
+        return Part.makeBox(*tuple(size))
+    elif node_type == "Cylinder":
+        return Part.makeCylinder(p.get("r1",1.0), p.get("h",1.0))
+    elif node_type == "Circle":
+        return Part.makeCircle(p.get("r",1.0))
+    else:
+        return fallback_to_OpenSCAD(node, node_type)

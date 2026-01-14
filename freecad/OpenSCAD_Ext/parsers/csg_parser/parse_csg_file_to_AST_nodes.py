@@ -81,30 +81,31 @@ def parse_matrix(text, fallback=None):
     return fallback
 
 
-TRANSPARENT_NODES = (Group, Translate, Rotate, Scale)
+# Example (from csg_parser.py or similar)
 
 def normalize_ast(node):
-    """Remove empty groups and collapse transparent wrappers."""
-    if not hasattr(node, "children"):
+    """
+    Recursively normalize raw AST into Node objects.
+    Ensures that all children are Node instances, never raw lists.
+    """
+    from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import Node, Group
+
+    if isinstance(node, list):
+        # Wrap raw list into a Group node
+        normalized_children = []
+        for n in node:
+            normalized_children.append(normalize_ast(n))
+        return Group(children=normalized_children)
+
+    elif isinstance(node, Node):
+        # Already a node, normalize its children
+        if hasattr(node, "children") and node.children:
+            node.children = [normalize_ast(c) for c in node.children]
         return node
 
-    children = []
-    for c in node.children:
-        nn = normalize_ast(c)
-        if nn is None:
-            continue
-        children.append(nn)
-    node.children = children
-
-    if isinstance(node, TRANSPARENT_NODES) and not node.children:
-        write_log("Info", f"Dropping empty {node.node_type}")
-        return None
-
-    if isinstance(node, TRANSPARENT_NODES) and len(node.children) == 1:
-        write_log("Info", f"Collapsing {node.node_type} → {node.children[0].node_type}")
-        return node.children[0]
-
-    return node
+    else:
+        # Unknown type, wrap into a Group with a placeholder node
+        return Group(children=[node])
 
 # ----------------------------
 # Main parser

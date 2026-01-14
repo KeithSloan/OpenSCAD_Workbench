@@ -79,90 +79,84 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 
 def apply_transform(shape, transform):
     """
-    Apply transform node to a Part.Shape.
+    Apply a transform node to a Part.Shape or list of shapes.
 
-    - Accepts AST nodes or legacy dict transforms
-    - Supports translate / scale / rotate / multmatrix
-    - NEVER throws
-    - NEVER returns None
+    Supports:
+      - translate, scale, rotate, multmatrix
+      - AST nodes or legacy dict transforms
+      - Works on single Part.Shape or list of Part.Shapes
+    NEVER throws. NEVER returns None.
     """
-    if shape is None or transform is None:
-        return shape
+    from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 
-    try:
-        # Always work on a copy
-        s = shape.copy()
+    def _apply_single(s, t):
+        if s is None or t is None:
+            return s
+        try:
+            # ---- AST node style
+            if hasattr(t, "node_type"):
+                node_type = t.node_type
+                params = getattr(t, "params", {}) or {}
+                # translate
+                if node_type == "translate":
+                    v = params.get("vector", params.get("v", [0,0,0]))
+                    s.translate(FreeCAD.Vector(*v))
+                    return s
+                # scale
+                if node_type == "scale":
+                    v = params.get("vector", params.get("v", [1,1,1]))
+                    m = FreeCAD.Matrix()
+                    m.A11, m.A22, m.A33 = v
+                    return s.transformGeometry(m)
+                # rotate
+                if node_type == "rotate":
+                    angle = params.get("angle", params.get("a", 0))
+                    axis = params.get("vector", params.get("v", [0,0,1]))
+                    rot = FreeCAD.Rotation(FreeCAD.Vector(*axis), angle)
+                    s.rotate(FreeCAD.Vector(0,0,0), rot.Axis, rot.Angle)
+                    return s
+                # multmatrix
+                if node_type == "multmatrix":
+                    m = params.get("matrix", params.get("m"))
+                    if m and len(m) == 4:
+                        mat = FreeCAD.Matrix(*sum(m, []))
+                        return s.transformGeometry(mat)
+            # ---- legacy dict style
+            if isinstance(t, dict):
+                t_type = t.get("type")
+                if t_type == "translate":
+                    v = t.get("v", [0,0,0])
+                    s.translate(FreeCAD.Vector(*v))
+                    return s
+                if t_type == "scale":
+                    v = t.get("v", [1,1,1])
+                    m = FreeCAD.Matrix()
+                    m.A11, m.A22, m.A33 = v
+                    return s.transformGeometry(m)
+                if t_type == "rotate":
+                    a = t.get("a", 0)
+                    v = t.get("v", [0,0,1])
+                    rot = FreeCAD.Rotation(FreeCAD.Vector(*v), a)
+                    s.rotate(FreeCAD.Vector(0,0,0), rot.Axis, rot.Angle)
+                    return s
+                if t_type == "multmatrix":
+                    m = t.get("m")
+                    if m and len(m) == 4:
+                        mat = FreeCAD.Matrix(*sum(m, []))
+                        return s.transformGeometry(mat)
+        except Exception as e:
+            write_log("Info", f"apply_transform failed: {e}")
 
-        # ====================================================
-        # Class-based AST nodes
-        # ====================================================
-        if hasattr(transform, "node_type"):
-            t = transform.node_type
-            p = getattr(transform, "params", {}) or {}
+        return s  # fallback unchanged
 
-            # ---- translate
-            if t == "translate":
-                v = p.get("vector", p.get("v", [0, 0, 0]))
-                s.translate(FreeCAD.Vector(*v))
-                return s
+    # ============================================================
+    # If shape is a list, apply individually
+    # ============================================================
+    if isinstance(shape, list):
+        return [_apply_single(sh.copy(), transform) if sh is not None else None for sh in shape]
 
-            # ---- scale
-            if t == "scale":
-                v = p.get("vector", p.get("v", [1, 1, 1]))
-                m = FreeCAD.Matrix()
-                m.A11, m.A22, m.A33 = v
-                return s.transformGeometry(m)
+    return _apply_single(shape.copy(), transform)
 
-            # ---- rotate (OpenSCAD-style: angle + axis)
-            if t == "rotate":
-                angle = p.get("angle", p.get("a", 0))
-                axis  = p.get("vector", p.get("v", [0, 0, 1]))
-                rot = FreeCAD.Rotation(FreeCAD.Vector(*axis), angle)
-                s.rotate(FreeCAD.Vector(0, 0, 0), rot.Axis, rot.Angle)
-                return s
-
-            # ---- multmatrix
-            if t == "multmatrix":
-                m = p.get("matrix", p.get("m"))
-                if m and len(m) == 4:
-                    mat = FreeCAD.Matrix(*sum(m, []))
-                    return s.transformGeometry(mat)
-
-        # ====================================================
-        # Dict-based legacy AST
-        # ====================================================
-        if isinstance(transform, dict):
-            t = transform.get("type")
-
-            if t == "translate":
-                v = transform.get("v", [0, 0, 0])
-                s.translate(FreeCAD.Vector(*v))
-                return s
-
-            if t == "scale":
-                v = transform.get("v", [1, 1, 1])
-                m = FreeCAD.Matrix()
-                m.A11, m.A22, m.A33 = v
-                return s.transformGeometry(m)
-
-            if t == "rotate":
-                a = transform.get("a", 0)
-                v = transform.get("v", [0, 0, 1])
-                rot = FreeCAD.Rotation(FreeCAD.Vector(*v), a)
-                s.rotate(FreeCAD.Vector(0, 0, 0), rot.Axis, rot.Angle)
-                return s
-
-            if t == "multmatrix":
-                m = transform.get("m")
-                if m and len(m) == 4:
-                    mat = FreeCAD.Matrix(*sum(m, []))
-                    return s.transformGeometry(mat)
-
-    except Exception as e:
-        write_log("Info", f"apply_transform failed: {e}")
-
-    # Absolute fallback: unchanged copy
-    return shape.copy()
 
 
 # ============================================================
