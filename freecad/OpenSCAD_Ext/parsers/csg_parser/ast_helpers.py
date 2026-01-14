@@ -70,6 +70,9 @@ def get_tess(obj):
     return None
 
 
+import FreeCAD
+from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+
 # ============================================================
 # Transform application helper (EXPECTED BY processAST)
 # ============================================================
@@ -78,73 +81,88 @@ def apply_transform(shape, transform):
     """
     Apply transform node to a Part.Shape.
 
-    For now:
-    - Accepts MultMatrix / Translate / Rotate / Scale nodes
-    - If unsupported, returns shape unchanged
+    - Accepts AST nodes or legacy dict transforms
+    - Supports translate / scale / rotate / multmatrix
     - NEVER throws
+    - NEVER returns None
     """
     if shape is None or transform is None:
         return shape
 
     try:
-        # ---- class-based AST
+        # Always work on a copy
+        s = shape.copy()
+
+        # ====================================================
+        # Class-based AST nodes
+        # ====================================================
         if hasattr(transform, "node_type"):
             t = transform.node_type
             p = getattr(transform, "params", {}) or {}
 
+            # ---- translate
             if t == "translate":
                 v = p.get("vector", p.get("v", [0, 0, 0]))
-                return shape.copy().translate(FreeCAD.Vector(*v))
+                s.translate(FreeCAD.Vector(*v))
+                return s
 
+            # ---- scale
             if t == "scale":
                 v = p.get("vector", p.get("v", [1, 1, 1]))
                 m = FreeCAD.Matrix()
                 m.A11, m.A22, m.A33 = v
-                return shape.copy().transformGeometry(m)
+                return s.transformGeometry(m)
 
+            # ---- rotate (OpenSCAD-style: angle + axis)
             if t == "rotate":
-                a = p.get("angle", p.get("a", 0))
-                v = p.get("vector", p.get("v", [0, 0, 1]))
-                rot = FreeCAD.Rotation(FreeCAD.Vector(*v), a)
-                return shape.copy().rotate(FreeCAD.Vector(0, 0, 0), rot.Axis, rot.Angle)
+                angle = p.get("angle", p.get("a", 0))
+                axis  = p.get("vector", p.get("v", [0, 0, 1]))
+                rot = FreeCAD.Rotation(FreeCAD.Vector(*axis), angle)
+                s.rotate(FreeCAD.Vector(0, 0, 0), rot.Axis, rot.Angle)
+                return s
 
+            # ---- multmatrix
             if t == "multmatrix":
                 m = p.get("matrix", p.get("m"))
-                if m:
+                if m and len(m) == 4:
                     mat = FreeCAD.Matrix(*sum(m, []))
-                    return shape.copy().transformGeometry(mat)
+                    return s.transformGeometry(mat)
 
-        # ---- dict-based AST
+        # ====================================================
+        # Dict-based legacy AST
+        # ====================================================
         if isinstance(transform, dict):
             t = transform.get("type")
 
             if t == "translate":
                 v = transform.get("v", [0, 0, 0])
-                return shape.copy().translate(FreeCAD.Vector(*v))
+                s.translate(FreeCAD.Vector(*v))
+                return s
 
             if t == "scale":
                 v = transform.get("v", [1, 1, 1])
                 m = FreeCAD.Matrix()
                 m.A11, m.A22, m.A33 = v
-                return shape.copy().transformGeometry(m)
+                return s.transformGeometry(m)
 
             if t == "rotate":
                 a = transform.get("a", 0)
                 v = transform.get("v", [0, 0, 1])
                 rot = FreeCAD.Rotation(FreeCAD.Vector(*v), a)
-                return shape.copy().rotate(FreeCAD.Vector(0, 0, 0), rot.Axis, rot.Angle)
+                s.rotate(FreeCAD.Vector(0, 0, 0), rot.Axis, rot.Angle)
+                return s
 
             if t == "multmatrix":
                 m = transform.get("m")
-                if m:
+                if m and len(m) == 4:
                     mat = FreeCAD.Matrix(*sum(m, []))
-                    return shape.copy().transformGeometry(mat)
+                    return s.transformGeometry(mat)
 
     except Exception as e:
         write_log("Info", f"apply_transform failed: {e}")
 
-    # Fallback: return unchanged
-    return shape
+    # Absolute fallback: unchanged copy
+    return shape.copy()
 
 
 # ============================================================

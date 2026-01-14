@@ -142,6 +142,8 @@ def getopenscadversion(osfilename=None):
         stderr=p.stderr.read().strip()
         return (stdout or stderr)
 
+
+
 def newtempfilename():
     import os,time
     formatstr='fc-%05d-%06d-%06d'
@@ -149,6 +151,8 @@ def newtempfilename():
     while True:
         count+=1
         yield formatstr % (os.getpid(),int(time.time()*100) % 1000000,count)
+
+tempfilenamegen=newtempfilename()
 
 
 def errorDialog(msg):

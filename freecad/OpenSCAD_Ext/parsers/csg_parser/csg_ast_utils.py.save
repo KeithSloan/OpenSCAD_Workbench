@@ -1,3 +1,99 @@
+"""
+OpenSCAD CSG Import Pipeline for FreeCAD
+----------------------------------------
+
+This module implements the parsing and processing of OpenSCAD CSG (.csg) files
+into FreeCAD Part objects. The pipeline consists of several stages, each handled
+by specific functions across different modules.  
+
+Pipeline Steps:
+
+1. Read CSG File
+----------------
+Module: importASTCSG.py
+Function: processCSG(doc, filename)
+Purpose:
+    - Opens the .csg file
+    - Reads lines, strips whitespace and comments
+Notes:
+    - Produces a list of cleaned lines for parsing
+    - Does not interpret or validate content
+
+2. Parse Block Lines
+-------------------
+Module: parse_csg_file_to_AST_nodes.py
+Function: parse_block(idx)
+Purpose:
+    - Recursively parses lines into AST nodes
+    - Detects primitives (cube, sphere, cylinder, etc.)
+    - Detects 2D shapes (circle, square, polygon)
+    - Detects CSG blocks (union, difference, intersection, hull, minkowski, group)
+    - Detects transforms (translate, rotate, scale, multmatrix)
+Notes:
+    - Recursion handles nested blocks
+    - Returns a list of AST node objects and next line index
+
+3. Regex Parameter Extraction
+-----------------------------
+Module: parse_csg_file_to_AST_nodes.py
+Location: inside parse_block()
+Purpose:
+    - Extracts numeric or vector parameters from lines
+      e.g., cube(size=[7,17,1]) -> [7,17,1]
+    - Handles $fn, r, h, points, faces, etc.
+Notes:
+    - Regex failures can result in missing parameters (None)
+    - Missing or malformed parameters will trigger TypeError downstream
+
+4. Build AST Nodes
+-----------------
+Module: parse_csg_file_to_AST_nodes.py
+Location: inside parse_block()
+Purpose:
+    - Instantiates AST node objects (Cube, Sphere, Cylinder, Hull, Translate, etc.)
+    - Assigns extracted parameters and child nodes
+    - Creates tree structure representing the CSG model
+
+5. Normalize AST
+----------------
+Module: parse_csg_file_to_AST_nodes.py
+Function: normalize_ast(node)
+Purpose:
+    - Simplifies AST by:
+        - Dropping empty transparent nodes (Group, Translate, Rotate, Scale)
+        - Collapsing single-child transparent nodes
+    - Ensures tree is minimal for easier processing
+Notes:
+    - Does not fix missing primitive parameters
+    - Useful for reducing unnecessary nesting
+
+6. Process AST Nodes to FreeCAD Shapes
+--------------------------------------
+Module: processAST.py
+Function: process_AST_node(doc, node)
+Purpose:
+    - Converts AST nodes into FreeCAD Part shapes
+    - Handles primitives, booleans, hulls/minkowski, and transforms
+    - Fallback to OpenSCAD if native BRep fails for hull/minkowski
+Key functions:
+    - create_primitive(node)  → Converts Cube, Sphere, Cylinder, etc. to Part.Shape
+    - create_boolean(node)    → Performs Union, Difference, Intersection
+    - process_hull(node)      → Tries native BRep hull, fallback to OpenSCAD
+    - process_minkowski(node) → Tries native BRep Minkowski, fallback to OpenSCAD
+
+7. Combine and Output FreeCAD Objects
+-------------------------------------
+Module: processAST.py
+Function: process_AST(doc, ast_nodes, mode)
+Purpose:
+    - Combines all processed shapes into a single Part::Feature
+    - Or returns multiple objects if mode="objects" or "multiple"
+Notes:
+    - Final FreeCAD objects are inserted into the active document
+    - Shape may be a BRep or imported from OpenSCAD fallback
+"""
+
+
 # csg_to_ast_utils.py
 import re
 import ast
