@@ -30,6 +30,9 @@ __title__="FreeCAD OpenSCAD Workbench - AST / CSG importer"
 __author__ = "Keith Sloan <keith@sloan-home.co.uk>"
 __url__ = ["http://www.sloan-home.co.uk/ImportCSG"]
 
+import FreeCADGui
+from pathlib import Path
+
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.parsers.csg_parser.processAST import process_AST
 from freecad.OpenSCAD_Ext.parsers.csg_parser.parse_csg_file_to_AST_nodes import parse_csg_file_to_AST_nodes
@@ -127,6 +130,49 @@ def insert(filename,docname):
         pathName = os.path.dirname(os.path.normpath(filename))
         processCSG(doc, filename)
 
+
+def add_shapes_to_document(doc, name, shapes):
+    """
+    Add one or more Part.Shape objects to the FreeCAD document.
+    Creates a Part::Feature with either a single Shape or a Compound.
+
+    Args:
+        doc   : FreeCAD document
+        name  : Base object name
+        shapes: Part.Shape or list[Part.Shape]
+
+    Returns:
+        App.DocumentObject or None
+    """
+    write_log("Import",f"Shapes to Doc {shapes}")
+    if not shapes:
+        return None
+
+    # Normalize to list
+    if not isinstance(shapes, (list, tuple)):
+        shapes = [shapes]
+
+    # Filter invalid shapes
+    valid = [s for s in shapes if s and not s.isNull()]
+
+    if not valid:
+        return None
+
+    # Single shape → direct
+    if len(valid) == 1:
+        obj = doc.addObject("Part::Feature", name)
+        obj.Shape = valid[0]
+        obj.recompute()
+        return obj
+
+    # Multiple shapes → compound
+    compound = Part.makeCompound(valid)
+    obj = doc.addObject("Part::Feature", name)
+    obj.Shape = compound
+    obj.recompute()
+    return obj
+
+
 def processCSG(docSrc, filename, fnmax_param = None):
     global doc
     global fnmax
@@ -138,15 +184,19 @@ def processCSG(docSrc, filename, fnmax_param = None):
         fnmax = fnmax_param
     doc = docSrc
 
+    name = Path(filename).stem
     write_log("Info","Using OpenSCAD AST / CSG Importer")
     write_log("Info",f"Doc {doc.Name} useMaxFn {fnmax}")
-    if printverbose: print ('ImportCSG Version 0.6a')
+    if printverbose: 
+        print ('ImportCSG Version 0.6a')
     raw_ast_nodes = parse_csg_file_to_AST_nodes(filename)
     ast_nodes = normalize_ast(raw_ast_nodes)
-    shapes = process_AST(doc, ast_nodes, mode="multiple")
-
-    if printverbose: print ('ImportCSG Version 0.6a')
-    
+    shapes = process_AST(ast_nodes, mode="multiple")
+    write_log("AST",f"Shapes {shapes}")
+    add_shapes_to_document(doc, name, shapes)
+    FreeCADGui.SendMsgToActiveView("ViewFit")
+    if printverbose:
+        print ('ImportCSG Version 0.6a')
     FreeCAD.Console.PrintMessage('End processing CSG file\n')
     doc.recompute()
 

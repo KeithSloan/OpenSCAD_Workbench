@@ -1,24 +1,19 @@
 # -*- coding: utf8 -*-
-#***************************************************************************
-#*   AST Processing for OpenSCAD CSG importer                              *
-#*   Converts AST nodes to FreeCAD Shapes or SCAD strings with fallbacks   *
-#***************************************************************************
+#****************************************************************************
+#*   AST Processing for OpenSCAD CSG importer                               *
+#*   Converts AST nodes to FreeCAD Shapes or SCAD strings with fallbacks    *
+#*                                                                          *
+#*      Returns Shaoe                                                       *
+#****************************************************************************
 
-from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
-from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_helpers import get_tess, apply_transform
-#from freecad.OpenSCAD_Ext.core.OpenSCADFallback import fallback_to_OpenSCAD
-
-import FreeCAD 
-# -*- coding: utf-8 -*-
-"""
-AST-based Hull and Minkowski processing for OpenSCAD_Ext
-"""
 import os
 import subprocess
 import tempfile
-from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
+import FreeCAD 
+
+#from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
-#from freecad.OpenSCAD_Ext.core.ast_utils import flatten_ast_node
+from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_helpers import get_tess, apply_transform
 import Part
 import Mesh
 
@@ -26,11 +21,7 @@ import Mesh
 # Utility functions
 # -----------------------------
 
-try:
-    import FreeCAD
-    BaseError = FreeCAD.Base.FreeCADError
-except (ImportError, AttributeError):
-    BaseError = RuntimeError
+BaseError = FreeCAD.Base.FreeCADError
 
 class OpenSCADError(BaseError):
     def __init__(self,value):
@@ -56,7 +47,7 @@ def generate_stl_from_scad(scad_str, check_syntax=False, timeout=60):
 
     if not openscad_exe or not os.path.isfile(openscad_exe):
         raise FileNotFoundError(
-            f"OpenSCAD executable not found. Set 'openscadexecutable' under Preferences → OpenSCAD."
+            "OpenSCAD executable not found. Set 'openscadexecutable' under Preferences → OpenSCAD."
         )
 
     with open(scad_file, "w") as f:
@@ -90,6 +81,7 @@ def stl_to_shape(stl_path, tolerance=0.05):
     mesh_obj = Mesh.Mesh(stl_path)
     shape = Part.Shape()
     shape.makeShapeFromMesh(mesh_obj.Topology, tolerance)
+    write_log("AST",f"stl to Shape {shape}")
     return shape
 
 
@@ -101,6 +93,7 @@ def fallback_to_OpenSCAD(node, operation_type="Hull"):
     scad_str = flatten_ast_node(node, indent=4)
     stl_file = generate_stl_from_scad(scad_str)
     shape = stl_to_shape(stl_file)
+    write_log("AST",f"OpenSCAD returned Shape {shape}")
     return shape
     
 
@@ -108,7 +101,7 @@ def fallback_to_OpenSCAD(node, operation_type="Hull"):
 # High-level AST processing
 # -------------------------
 
-def process_AST(doc, nodes, mode="multiple"):
+def process_AST(nodes, mode="multiple"):
     """
     Process a list of AST nodes, returning a list of FreeCAD shapes or a single Shape.
     Booleans only work on Shapes
@@ -116,14 +109,20 @@ def process_AST(doc, nodes, mode="multiple"):
     """
     shapes = []
     for node in nodes:
-        s = process_AST_node(doc, node)
-        shapes.append(s)
+        s = process_AST_node(node)
+        if s is None:
+            pass
+        elif isinstance(s, (list, tuple)):
+            shapes.extend(s)
+        else:
+            shapes.append(s)
+        write_log("AST",f"process AST Node {node} returned Shape {s}")
     if mode == "single" and shapes:
         return shapes[0]
     return shapes
 
 
-def process_AST_node(doc, node):
+def process_AST_node(node):
     """
     Dispatch processing based on node type
     Should always return a Shape
@@ -131,18 +130,18 @@ def process_AST_node(doc, node):
     node_type = type(node).__name__
     if node_type in ["Hull", "Minkowski"]:
         if node_type == "Hull":
-            return process_hull(doc, node)
+            return process_hull(node)
         else:
-            return process_minkowski(doc, node)
+            return process_minkowski(node)
     elif node_type in ["Sphere", "Cube", "Circle"]:
-        return create_primitive(doc, node)
+        return create_primitive(node)
     elif node_type in ["MultMatrix", "Translate", "Rotate", "Scale"]:
-        return apply_transform(doc, node)
+        return apply_transform(node)
     elif node_type in ["Union",  "Difference", "Intersection"]:
-        return create_boolean(doc, node)
+        return create_boolean(node)
     else:
         write_log("AST", f"Unknown node type {node_type}, falling back to OpenSCAD")
-        return fallback_to_OpenSCAD(doc, node, node_type)
+        return fallback_to_OpenSCAD(node, node_type)
 
 
 # -------------------------------------------------------
@@ -233,7 +232,7 @@ def try_hull(node):
     return None
 
 
-def process_hull(doc, node):
+def process_hull(node):
     """
     Process a Hull AST node.
     Tries native FreeCAD hull; if not possible, fallback to OpenSCAD.
@@ -267,7 +266,7 @@ def try_minkowski(node):
     return None
 
 
-def process_minkowski(doc, node):
+def process_minkowski(node):
     """
     Process a Minkowski AST node.
     Tries native FreeCAD Minkowski; if not possible, fallback to OpenSCAD.
@@ -281,15 +280,17 @@ def process_minkowski(doc, node):
     return fallback_to_OpenSCAD(node, "Minkowski")
 
 
-def create_boolean(doc,node):
+def create_boolean(node):
     node_type = type(node).__name__
     params = getattr(node, "params", {})
     write_log("Info",f"node {node_type} params {params}")
+    shapes = []
     for child in node.children:
         node_type = type(child),__name__
         params = getattr(child, "params", {})
         write_log("Info",f"node {node_type} params {params}")
-        process_AST_node(doc, child)
+        shapes.append(process_AST_node(child))
+    return shapes
 
 #   helper functions
 def to_vec3(s):
@@ -309,7 +310,7 @@ def to_tuple3(s):
 
 
 #   Should be creating Shapes or Objects ??
-def create_primitive(doc, node):
+def create_primitive(node):
     """
     Create a native FreeCAD primitive shape from an AST node.
     Supports Sphere, Cube, Cylinder, Circle.
@@ -349,6 +350,7 @@ def create_primitive(doc, node):
 
     else:
         FreeCAD.Console.PrintMessage(f"[Warning] Unknown primitive: {node_type}, falling back to OpenSCAD\n")
+        return None
         # Return fallback dict if unknown primitive
-        from freecad.OpenSCAD_Ext.core.fallback_to_OpenSCAD import fallback_to_OpenSCAD
-        return fallback_to_OpenSCAD(doc, node, f"Unknown primitive: {node_type}")
+        #from freecad.OpenSCAD_Ext.core.fallback_to_OpenSCAD import fallback_to_OpenSCAD
+        #return fallback_to_OpenSCAD(node, f"Unknown primitive: {node_type}")
