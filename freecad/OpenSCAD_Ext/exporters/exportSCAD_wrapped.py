@@ -50,10 +50,12 @@ PI = 3.1415926536
 
 #***************************************************************************
 params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
+fn = params.GetInt('exportFn', 0)
 fa = params.GetFloat('exportFa', 12.0)
+fa_rad = fa*PI/180.0
 fs = params.GetFloat('exportFs', 2.0)
 conv = params.GetInt('exportConvexity', 10)
-# TODO: parameters for SIGNIFICANT_DIGITS and other decisions
+# TODO: parameters for SIGNIFICANT_DIGITS and other decisions (and fn?)
 
 #***************************************************************************
 # Radius values not fixed for value apart from cylinder & Cone
@@ -157,6 +159,22 @@ def vecstr(x):
 #              +fstr(m.A21)+", "+fstr(m.A22)+", "+fstr(m.A23)+", "+fstr(m.A24)+"], ["\
 #              +fstr(m.A31)+", "+fstr(m.A32)+", "+fstr(m.A33)+", "+fstr(m.A34)+"]]) {\n")  #, [0, 0, 0, 1]]) {\n")
 #         return 1 # center = false and mm
+
+
+def discretize(wire_or_edge, transform=None):
+    # OpenSCAD implementation of circle facet calculation: https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Other_Language_Features#$fs
+    if fn > 0:
+        num_points = int(max(3, fn))
+    else:
+        num_points = int(max(min(360.0 / fa, wire_or_edge.Length / fs), 5) + 1)
+    print(f"Discretizing object {wire_or_edge} with {num_points=}")
+    disc_vectors = wire_or_edge.discretize(Number=num_points)
+    if practically_equal(disc_vectors[0], disc_vectors[-1]):
+        disc_vectors.pop()
+    if transform is not None:
+        disc_vectors = [transform(v) for v in disc_vectors]
+    return disc_vectors
+
 
 def check_naming(write, ob):
     """If object is labeled in a nonstandard way, creates a comment with the label"""
@@ -469,17 +487,34 @@ def process_object(write, ob):
 
                                 else:
                                     # Another type of closed curve
-                                    print("Skipping unknown closed single-edge curve")
-                                    pass
-                                    # TODO: discretize
+                                    print("Discretizing unrecognized closed single-edge curve to polygon")
+                                    disc_vectors = discretize(wire)
+                                    pts2d = [v_local((p[0], p[1])) for p in disc_vectors]
+                                    print(f"Discretizing curved Edge {e.Curve if hasattr(e, 'Curve') else e} in Wire")
+                                    write(f"polygon(points={vecstr(pts2d)});\n")  # TODO: unify/refactor
 
                             else:
                                 print("Wire extrusion:", wire)
                                 # General closed loop -> ordered vertex list
-                                pts = [v_local(e.Vertexes[0].Point) for e in wire.OrderedEdges]  # TODO: recognize curve segments and discretize them
-                                pts.append(v_local(wire.OrderedEdges[-1].Vertexes[-1].Point))
+                                pts = []
+                                last_point = None
+                                contains_discretization = False
+                                for e in wire.OrderedEdges:
+                                    if hasattr(e, 'Curve') and e.Curve.TypeId == "Part::GeomLine":
+                                        pts.append(v_local(e.Vertexes[0].Point))
+                                        last_point = v_local(e.Vertexes[1].Point)
+                                    else:
+                                        print(f"Discretizing curved Edge {e.Curve if hasattr(e, 'Curve') else e} in Wire")
+                                        disc_pts = [v_local(p) for p in discretize(e)]
+                                        pts += disc_pts[:-1]
+                                        last_point = disc_pts[-1]
+                                        contains_discretization = True
+                                pts.append(last_point)
                                 if practically_equal(pts[0], pts[-1]):
                                     pts.pop()
+
+                                if contains_discretization:
+                                    write("// Polygon with discretized curve(s) (using OpenSCAD export parameters)\n")
 
                                 if any(not practically_equal(p[2], 0) for p in pts):
                                     print("Warning: dropping third dimension of sketch wire points")
@@ -525,10 +560,10 @@ def process_object(write, ob):
                                         write(f" square({vecstr(width_height)});\n")
                                     else:
                                         print("Did not recognize rectangle")
-                                        write(f"polygon(points={vecstr(pts2d)});\n")
+                                        write(f"polygon(points={vecstr(pts2d)});\n")  # TODO: unify/refactor
                                 else:
                                     print("Did not recognize special 2d shape. Exporting as polygon")
-                                    write(f"polygon(points={vecstr(pts2d)});\n")
+                                    write(f"polygon(points={vecstr(pts2d)});\n")  # TODO: unify/refactor
                         write("}\n")
 
         elif ob.Base.Name.startswith('this_is_a_bad_idea'):  # TODO: Wut? :)
