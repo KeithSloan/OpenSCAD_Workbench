@@ -479,7 +479,7 @@ def process_object(write, ob):
                                         local_x_axis = FreeCAD.Base.Vector(d_local(curve.XAxis))
                                         # local_focus1 = FreeCAD.Base.Vector(d_local(curve.Focus1))
                                         # local_focus2 = FreeCAD.Base.Vector(d_local(curve.Focus2))
-                                        angle = local_x_axis.getAngle(FreeCAD.Base.Vector([1, 0, 0]))*180/PI
+                                        angle = local_x_axis.getAngle(FreeCAD.Base.Vector([-1, 0, 0]))*180/PI
                                         if not practically_equal(angle, 0) and not practically_equal(angle, 180) and not practically_equal(angle, 360):
                                             write(f"rotate(a=[0, 0, {fstr(angle)}]) ")
                                         write(f"resize([{fstr(2*majorRadius)}, {fstr(2*minorRadius)}]) ")
