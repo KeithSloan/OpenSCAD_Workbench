@@ -1,203 +1,226 @@
-# parse_csg_file_to_AST_nodes.py
+# -*- coding: utf-8 -*-
+"""
+parse_csg_file_to_AST.py
+========================
+
+Parses a .csg file into AST nodes for FreeCAD processing.
+Handles transforms, booleans, groups, OpenSCAD fallback for hull/minkowski.
+"""
+
+import os
 import re
-import ast as py_ast
-from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+import tempfile
+import subprocess
+import Mesh
+import Part
 
-# ----------------------------
-# AST Nodes
-# ----------------------------
-from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import (
-    # 2D
-    Circle, Square, Polygon,
-    # 3D
-    Cube, Sphere, Cylinder, Polyhedron,
-    # CSG
-    Union, Difference, Intersection, Hull, Minkowski, Group,
-    # Transforms
-    Translate, Rotate, Scale, MultMatrix,
-    # Extrude
-    LinearExtrude, RotateExtrude,
-)
+from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams  # adjust import to your wb
+from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import AstNode, Cube, Sphere, Hull, Minkowski, Group, Translate, Rotate, Scale, MultMatrix
 
-# ----------------------------
-# Helpers
-# ----------------------------
-def parse_vector(text):
-    try:
-        return py_ast.literal_eval(text)
-    except Exception:
-        return None
+# ------------------------------------------------------------------
+# Logging helper
+# ------------------------------------------------------------------
+def write_log(tag, msg):
+    print(f"[{tag}] {msg}")
 
-def parse_matrix(text):
-    try:
-        return py_ast.literal_eval(text)
-    except Exception:
-        return None
-
-# ----------------------------
-# Normalize AST
-# ----------------------------
-TRANSPARENT_NODES = (Group, Translate, Rotate, Scale)
-
-def normalize_ast(node):
-    """Remove empty groups and collapse transparent wrappers."""
-    if not hasattr(node, "children"):
-        return node
-
-    children = []
-    for c in node.children:
-        nn = normalize_ast(c)
-        if nn:
-            children.append(nn)
-    node.children = children
-
-    if isinstance(node, TRANSPARENT_NODES) and not node.children:
-        write_log("Info", f"Dropping empty {node.node_type}")
-        return None
-
-    if isinstance(node, TRANSPARENT_NODES) and len(node.children) == 1:
-        write_log("Info", f"Collapsing {node.node_type} → {node.children[0].node_type}")
-        return node.children[0]
-
-    return node
-
-# ----------------------------
-# Main parser
-# ----------------------------
+# ------------------------------------------------------------------
+# Public entry point
+# ------------------------------------------------------------------
 def parse_csg_file_to_AST_nodes(filename):
-    write_log("Info", f"Parsing CSG file: {filename}")
+    """
+    Returns a list of AST nodes for a CSG file.
+    """
+    write_log("AST", f"Parsing CSG file: {filename}")
 
     with open(filename, "r", encoding="utf-8") as f:
-        lines = [l.strip() for l in f if l.strip() and not l.strip().startswith("//")]
+        lines = [
+            l.strip() for l in f
+            if l.strip() and not l.strip().startswith("//")
+        ]
 
-    def parse_block(idx):
-        nodes = []
-        while idx < len(lines):
-            line = lines[idx]
+    nodes, _ = _parse_block(lines, 0)
+    return nodes
 
-            if line.startswith("}"):
-                return nodes, idx + 1
+# ------------------------------------------------------------------
+# Core parser
+# ------------------------------------------------------------------
+def _parse_block(lines, idx):
+    nodes = []
 
-            # ---------- 2D ----------
-            if line.startswith("circle"):
-                r = float(re.search(r"r\s*=\s*([\d\.]+)", line).group(1))
-                nodes.append(Circle(r=r))
-                idx += 1
-                continue
+    while idx < len(lines):
+        line = lines[idx]
 
-            if line.startswith("square"):
-                size = parse_vector(re.search(r"\((.*)\)", line).group(1))
-                nodes.append(Square(size=size))
-                idx += 1
-                continue
+        if line == "}":
+            return nodes, idx + 1
 
-            if line.startswith("polygon"):
-                pts_m = re.search(r"points\s*=\s*(\[.*\])", line)
-                paths_m = re.search(r"paths\s*=\s*(\[.*\])", line)
-                pts = parse_vector(pts_m.group(1)) if pts_m else []
-                paths = parse_vector(paths_m.group(1)) if paths_m else []
-                nodes.append(Polygon(points=pts, paths=paths))
-                idx += 1
-                continue
+        if line.endswith("{"):
+            header = line[:-1].strip()
+            node_type, csg_params = _parse_header(header)
+            children, idx = _parse_block(lines, idx + 1)
 
-            # ---------- 3D ----------
-            if line.startswith("cube"):
-                size = parse_vector(re.search(r"\((.*)\)", line).group(1))
-                nodes.append(Cube(size=size))
-                idx += 1
-                continue
+            node = AstNode(node_type, params={}, csg_params=csg_params, children=children)
+            nodes.append(node)
+            continue
 
-            if line.startswith("sphere"):
-                r = float(re.search(r"r\s*=\s*([\d\.]+)", line).group(1))
-                nodes.append(Sphere(r=r))
-                idx += 1
-                continue
+        # Single statement
+        node_type, csg_params = _parse_header(line.rstrip(";"))
+        node = AstNode(node_type, params={}, csg_params=csg_params)
+        nodes.append(node)
+        idx += 1
 
-            if line.startswith("cylinder"):
-                r = float(re.search(r"r\s*=\s*([\d\.]+)", line).group(1))
-                h = float(re.search(r"h\s*=\s*([\d\.]+)", line).group(1))
-                nodes.append(Cylinder(r=r, h=h))
-                idx += 1
-                continue
+    return nodes, idx
 
-            if line.startswith("polyhedron"):
-                pts_m = re.search(r"points\s*=\s*(\[.*\])", line)
-                faces_m = re.search(r"faces\s*=\s*(\[.*\])", line)
-                pts = parse_vector(pts_m.group(1)) if pts_m else []
-                faces = parse_vector(faces_m.group(1)) if faces_m else []
-                nodes.append(Polyhedron(points=pts, faces=faces))
-                idx += 1
-                continue
+# ------------------------------------------------------------------
+# Header / param parsing
+# ------------------------------------------------------------------
+def _parse_header(header):
+    """
+    Parses node_type and raw csg_params
+    """
+    m = re.match(r"(\w+)\s*\((.*)\)", header)
+    if not m:
+        return header, {}
 
-            # ---------- CSG / Block nodes ----------
-            block_nodes = {
-                "union": Union,
-                "difference": Difference,
-                "intersection": Intersection,
-                "hull": Hull,
-                "minkowski": Minkowski,
-                "group": Group,
-            }
-            for key, cls in block_nodes.items():
-                if line.startswith(key):
-                    idx += 1
-                    if idx < len(lines) and lines[idx].startswith("{"):
-                        idx += 1
-                    children, idx = parse_block(idx)
-                    nodes.append(cls(children))
-                    break
+    node_type = m.group(1)
+    arg_str = m.group(2)
+    params = _parse_params(arg_str)
+    return node_type, params
+
+def _parse_params(arg_str):
+    """
+    Very lightweight param parser storing raw csg_params
+    """
+    params = {}
+    if not arg_str:
+        return params
+
+    parts = re.split(r",(?![^\[]*\])", arg_str)
+    for p in parts:
+        if "=" in p:
+            k, v = p.split("=", 1)
+            params[k.strip()] = v.strip()
+        else:
+            # positional args like cube(10) => store as '0', '1', ...
+            params[p.strip()] = None
+    return params
+
+# ------------------------------------------------------------------
+# Flatten AST to OpenSCAD source
+# ------------------------------------------------------------------
+"""
+def flatten_ast_for_hull_minkowski(node, indent=0):
+    pad = " " * indent
+    scad_lines = []
+
+    if node is None:
+        return ""
+
+    write_log("FLATTEN", f"{pad}Flatten node: {node.node_type}, children={len(node.children)}, csg_params={node.csg_params}")
+
+    # Only group is transparent
+    if node.node_type == "group":
+        for child in node.children:
+            scad_lines.append(flatten_ast_for_hull_minkowski(child, indent))
+        return "\n".join(scad_lines)
+
+    # Leaf node
+    if not node.children:
+        args = []
+        for k, v in node.csg_params.items():
+            if v is None:
+                args.append(f"{k}")
             else:
-                # ---------- Transforms ----------
-                if line.startswith("translate"):
-                    vec = parse_vector(re.search(r"\((.*)\)", line).group(1))
-                    idx += 1
-                    if idx < len(lines) and lines[idx].startswith("{"):
-                        idx += 1
-                    children, idx = parse_block(idx)
-                    nodes.append(Translate(vec, children))
-                    continue
+                args.append(f"{k}={v}")
+        args_str = ", ".join(args)
+        scad_lines.append(f"{pad}{node.node_type}({args_str});")
+        return "\n".join(scad_lines)
 
-                if line.startswith("scale"):
-                    vec = parse_vector(re.search(r"\((.*)\)", line).group(1))
-                    idx += 1
-                    if idx < len(lines) and lines[idx].startswith("{"):
-                        idx += 1
-                    children, idx = parse_block(idx)
-                    nodes.append(Scale(vec, children))
-                    continue
+    # Node with children
+    args = []
+    for k, v in node.csg_params.items():
+        if v is None:
+            args.append(f"{k}")
+        else:
+            args.append(f"{k}={v}")
+    args_str = ", ".join(args)
 
-                if line.startswith("rotate"):
-                    vec = parse_vector(re.search(r"\((.*)\)", line).group(1))
-                    idx += 1
-                    if idx < len(lines) and lines[idx].startswith("{"):
-                        idx += 1
-                    children, idx = parse_block(idx)
-                    nodes.append(Rotate(vec, None, children))
-                    continue
+    scad_lines.append(f"{pad}{node.node_type}({args_str}) {{")
+    for child in node.children:
+        scad_lines.append(flatten_ast_for_hull_minkowski(child, indent + 4))
+    scad_lines.append(f"{pad}}}")
 
-                if line.startswith("multmatrix"):
-                    mat = parse_matrix(re.search(r"\((\[\[.*\]\])\)", line).group(1))
-                    idx += 1
-                    if idx < len(lines) and lines[idx].startswith("{"):
-                        idx += 1
-                    children, idx = parse_block(idx)
-                    nodes.append(MultMatrix(mat, children))
-                    continue
+    write_log("FLATTEN_SCAD", f"{pad}{node.node_type} block generated with {len(node.children)} children")
+    return "\n".join(scad_lines)
+"""
 
-                write_log("Info", f"Skipping unsupported line: {line}")
-                idx += 1
+def flatten_for_hull_minkowski(node, indent=4):
+    pad = " " * indent
+    lines = []
 
-        return nodes, idx
+    for child in node.children:
+        params_str = ""
+        if hasattr(child, "csg_params"):
+            arg_list = []
+            for k, v in child.csg_params.items():
+                if v is None:
+                    arg_list.append(k)
+                elif isinstance(v, (int, float)):
+                    arg_list.append(f"{k}={v}")
+                elif isinstance(v, (list, tuple)):
+                    arg_list.append(f"{k}={v}")
+                elif isinstance(v, str):
+                    arg_list.append(f'{k}="{v}"')
+            params_str = ", ".join(arg_list)
 
-    nodes, _ = parse_block(0)
+        if child.children:
+            lines.append(f"{pad}{child.node_type}({params_str}) {{")
+            lines.append(flatten_for_hull_minkowski(child, indent + 4))
+            lines.append(f"{pad}}}")
+        else:
+            lines.append(f"{pad}{child.node_type}({params_str});")
+    
+    return "\n".join(lines)
 
-    # 🔑 Normalize AST
-    ast_nodes = []
-    for n in nodes:
-        nn = normalize_ast(n)
-        if nn:
-            ast_nodes.append(nn)
 
-    write_log("Info", f"AST nodes after normalize: {len(ast_nodes)}")
-    return ast_nodes
+
+# ------------------------------------------------------------------
+# OpenSCAD fallback
+# ------------------------------------------------------------------
+def fallback_to_OpenSCAD(node):
+    """
+    Called ONLY for hull and minkowski.
+    Generates temporary SCAD, runs OpenSCAD, imports STL.
+    """
+    write_log("AST_FALLBACK", f"Fallback to OpenSCAD: {node.node_type}")
+
+    if node.node_type not in ("hull", "minkowski"):
+        return None
+
+    # Flatten AST to SCAD using raw csg_params
+    scad_src = flatten_for_hull_minkowski(node)
+
+    tmp_dir = tempfile.mkdtemp()
+    scad_file = os.path.join(tmp_dir, f"{node.node_type}.scad")
+    stl_file = os.path.join(tmp_dir, "fallback.stl")
+
+    with open(scad_file, "w", encoding="utf-8") as f:
+        f.write(scad_src)
+
+    write_log("AST_DEBUG", f"SCAD written to {scad_file}")
+
+    # Get OpenSCAD executable path
+    openscad_exe = BaseParams.get_openscad_path()  # adjust for your wb
+    cmd = [openscad_exe, "-o", stl_file, scad_file]
+
+    write_log("AST_FALLBACK", f"Calling OpenSCAD CLI: {' '.join(cmd)}")
+    subprocess.run(cmd, check=True)
+
+    # Import STL to Part.Shape
+    mesh = Mesh.Mesh(stl_file)
+    shape = Part.Shape()
+    shape.makeShapeFromMesh(mesh.Topology, 0.05)
+    shape.removeSplitter()
+
+    write_log("AST_FALLBACK", f"Imported STL to Shape: {shape}")
+    return shape
 

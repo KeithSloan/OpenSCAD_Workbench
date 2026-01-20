@@ -36,7 +36,7 @@ from pathlib import Path
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.parsers.csg_parser.processAST import process_AST
 from freecad.OpenSCAD_Ext.parsers.csg_parser.parse_csg_file_to_AST_nodes import parse_csg_file_to_AST_nodes
-from freecad.OpenSCAD_Ext.parsers.csg_parser.parse_csg_file_to_AST_nodes import normalize_ast
+#from freecad.OpenSCAD_Ext.parsers.csg_parser.parse_csg_file_to_AST_nodes import normalize_ast
 
 #
 # For SCAD files first process via OpenSCAD to creae CSG file then import
@@ -190,10 +190,11 @@ def processCSG(docSrc, filename, fnmax_param = None):
     if printverbose: 
         print ('ImportCSG Version 0.6a')
     raw_ast_nodes = parse_csg_file_to_AST_nodes(filename)
-    ast_nodes = normalize_ast(raw_ast_nodes)
+    ast_nodes = raw_ast_nodes
+    #ast_nodes = normalize_ast(raw_ast_nodes)
     shapes = process_AST(ast_nodes, mode="multiple")
-    write_log("AST",f"Shapes {shapes}")
-    add_shapes_to_document(doc, name, shapes)
+    # write_log("AST",f"Shapes {shapes}")
+    #add_shapes_to_document(doc, name, shapes)
     FreeCADGui.SendMsgToActiveView("ViewFit")
     if printverbose:
         print ('ImportCSG Version 0.6a')
