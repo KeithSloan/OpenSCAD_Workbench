@@ -430,7 +430,7 @@ def process_AST_node(node):
         return node._shape
 
     node_type = node.node_type.lower()
-    write_log("AST", f"Processing node: {node_type}, children={len(node.children)}")
+    write_log(f"AST: {node_type}", f"Processing node: {node_type}, children={len(node.children)}")
 
     # Hull / Minkowski
     if node_type == "hull":
@@ -438,7 +438,10 @@ def process_AST_node(node):
         shape = try_hull(node)
         if shape is None:
             shape = fallback_to_OpenSCAD(node, "Hull")
-        return shape
+            logShapeState(shape, node_type)
+            solid = Part.makeSolid(shape)
+            logShapeState(solid,"Solid")
+        return solid
 
     if node_type == "minkowski":
 
@@ -458,6 +461,7 @@ def process_AST_node(node):
 
     # Booleans
     if node_type in ("union", "difference", "intersection"):
+        write_log("Booleans",f"{node_type} Children {len(node.children)}")
         shapes = []
         for c in node.children:
             s = process_AST_node(c)
@@ -466,6 +470,7 @@ def process_AST_node(node):
         if not shapes:
             return None
 
+        write_log("Boolean",f"Shapes {shapes}")
         result = shapes[0]
         for s in shapes[1:]:
             if node_type == "union":
@@ -474,11 +479,14 @@ def process_AST_node(node):
                 result = result.cut(s)
             elif node_type == "intersection":
                 result = result.common(s)
+        logShapeState(result,node)
         return result
 
     # Primitives
     if node_type in ("cube", "sphere", "cylinder", "polyhedron", "circle", "square", "polygon"):
-        return create_primitive(node)
+        shape = create_primitive(node)
+        logShapeState(shape, node_type)
+        return shape
 
     # Unknown
     write_log("AST", f"Unknown node type '{node.node_type}', fallback to OpenSCAD")
@@ -502,6 +510,53 @@ def process_AST(nodes, mode=None):
     return shapes
 
 
+def logShapeState(shape, label="", indent=""):
+    """
+    Drop-in diagnostic helper for FreeCAD Part.Shapes.
+    Does NOT modify the shape.
+    Safe to call anywhere.
+
+    :param shape: Part.Shape or None
+    :param label: Optional label (node name, operation, filename, etc.)
+    :param indent: Optional indent string for nested logs
+    """
+
+    try:
+        if shape is None:
+            FreeCAD.Console.PrintMessage(
+                f"{indent}[Shape] {label}: None\n"
+            )
+            return
+
+        msg = f"{indent}[Shape] {label}: "
+
+        if shape.isNull():
+            msg += "NULL"
+        else:
+            msg += shape.ShapeType
+
+            if not shape.isValid():
+                msg += " (INVALID)"
+            else:
+                msg += " (valid)"
+
+            # Useful counts without touching geometry
+            msg += (
+                f" V:{len(shape.Vertexes)}"
+                f" E:{len(shape.Edges)}"
+                f" F:{len(shape.Faces)}"
+                f" S:{len(shape.Solids)}"
+            )
+
+        FreeCAD.Console.PrintMessage(msg + "\n")
+
+    except Exception as e:
+        FreeCAD.Console.PrintError(
+            f"{indent}[Shape] {label}: ERROR {e}\n"
+        )
+
+
+
 # -----------------------------
 # Primitives
 # -----------------------------
@@ -517,6 +572,8 @@ def create_primitive(node):
             size = p.get("size", [1,1,1])
             if isinstance(size, (int, float)):
                 size = [size, size, size]
+            shape = Part.makeBox(*size)
+            shape.check(False)    
             return Part.makeBox(*size)
         elif t == "sphere":
             r = p.get("r", 1)
