@@ -29,6 +29,8 @@ This Script includes various python helper functions that are shared across
 the module
 '''
 
+import os
+import tempfile
 from freecad.OpenSCAD_Ext.core.checkObjectShapes import *
 
 try:
@@ -140,6 +142,8 @@ def getopenscadversion(osfilename=None):
         stderr=p.stderr.read().strip()
         return (stdout or stderr)
 
+
+
 def newtempfilename():
     import os,time
     formatstr='fc-%05d-%06d-%06d'
@@ -150,7 +154,6 @@ def newtempfilename():
 
 tempfilenamegen=newtempfilename()
 
-from PySide import QtCore, QtGui
 
 def errorDialog(msg):
     # Create a simple dialog QMessageBox
@@ -160,7 +163,14 @@ def errorDialog(msg):
     diag.exec_()
 
 
-def callopenscad(inputfilename,outputfilename=None,outputext='csg',keepname=False, timeout=None):
+def callopenscad(
+    inputfilename,
+    outputfilename=None,
+    outputext='csg',
+    keepname=False,
+    timeout=None,
+    check_syntax=False
+):
     '''call the open scad binary
     returns the filename of the result (or None),
     please delete the file afterwards'''
@@ -208,7 +218,116 @@ def callopenscad(inputfilename,outputfilename=None,outputext='csg',keepname=Fals
     else:
         raise OpenSCADError('OpenSCAD executable unavailable')
 
-def callopenscadstring(scadstr,outputext='csg'):
+
+def callopenscad_check_syntax(inputfilename, timeout=None):
+    """
+    Call OpenSCAD to check syntax only.
+    Returns True if OK, raises OpenSCADError on failure.
+    """
+    import FreeCAD, os, subprocess
+    from subprocess import TimeoutExpired
+
+    osfilename = FreeCAD.ParamGet(
+        "User parameter:BaseApp/Preferences/Mod/OpenSCAD"
+    ).GetString('openscadexecutable')
+
+    if not (osfilename and os.path.isfile(osfilename)):
+        raise OpenSCADError('OpenSCAD executable unavailable')
+
+    cmd = [osfilename, "--check-parameters", inputfilename]
+
+    p = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+
+    try:
+        stdoutd, stderrd = p.communicate(timeout=timeout)
+        stdoutd = stdoutd.decode("utf8")
+        stderrd = stderrd.decode("utf8")
+
+        if p.returncode != 0:
+            raise OpenSCADError(
+                'OpenSCAD syntax error:\n%s%s' %
+                (stdoutd.strip(), stderrd.strip())
+            )
+
+        if stderrd.strip():
+            FreeCAD.Console.PrintWarning(stderrd + u'\n')
+        if stdoutd.strip():
+            FreeCAD.Console.PrintMessage(stdoutd + u'\n')
+
+        return True
+
+    except TimeoutExpired:
+        p.kill()
+        raise OpenSCADError(
+            "OpenSCAD syntax check timed out after %s secs" % timeout
+        )
+
+def get_openscad_path():
+    # Reads path from preferences
+    prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD_Ext")
+    path = prefs.GetString("OpenSCAD_Path", "")  # default empty
+    if not path:
+        raise FileNotFoundError("OpenSCAD path not defined in FreeCAD preferences")
+    return path
+
+
+def callopenscadstring_to_file(scad_str, check_syntax=False, outputfilename=None, outputext="stl", timeout=45):
+    """
+    Calls OpenSCAD on a string and writes output to a file.
+    Returns the filename of the generated output.
+
+    If outputfilename is None, a temporary file is created.
+    timeout: seconds before subprocess is killed
+    """
+    import subprocess
+    import tempfile
+    import os
+    import FreeCAD
+
+    # --- get OpenSCAD executable from FreeCAD preferences ---
+    prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
+    openscad_exe = prefs.GetString('openscadexecutable', "")
+
+    if not openscad_exe or not os.path.isfile(openscad_exe):
+        raise FileNotFoundError(
+            f"OpenSCAD executable not found. Set 'openscadexecutable' under Preferences → OpenSCAD."
+        )
+
+    # --- create output file if needed ---
+    if outputfilename is None:
+        fd, outputfilename = tempfile.mkstemp(suffix=f".{outputext}")
+        os.close(fd)
+
+    # --- write SCAD string to temp file ---
+    fd, scad_file = tempfile.mkstemp(suffix=".scad")
+    os.close(fd)
+    with open(scad_file, "w", encoding="utf-8") as f:
+        f.write(scad_str)
+
+    # --- build and run OpenSCAD command ---
+    cmd = [openscad_exe, "-o", outputfilename, scad_file]
+    if check_syntax:
+        cmd.append("-q")
+
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        os.remove(scad_file)
+        raise OpenSCADError(f"OpenSCAD call timed out after {timeout} seconds")
+    except subprocess.CalledProcessError as e:
+        os.remove(scad_file)
+        raise OpenSCADError(e.stderr.decode())
+
+    # --- clean up temporary SCAD file and return output ---
+    os.remove(scad_file)
+    return outputfilename
+
+
+def callopenscadstring(scadstr,outputext='csg',check_syntax=False):
     '''create a tempfile and call the open scad binary
     returns the filename of the result (or None),
     please delete the file afterwards'''
@@ -219,9 +338,12 @@ def callopenscadstring(scadstr,outputext='csg'):
     inputfile.write(scadstr)
     inputfile.close()
     outputfilename = callopenscad(inputfilename,outputext=outputext,\
-        keepname=True)
+         keepname=True, check_syntax=check_syntax)
     os.unlink(inputfilename)
     return outputfilename
+
+
+
 
 def reverseimporttypes():
     '''allows to search for supported filetypes by module'''

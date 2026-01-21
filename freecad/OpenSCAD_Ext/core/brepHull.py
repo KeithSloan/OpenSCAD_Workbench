@@ -198,14 +198,22 @@ def createHullShape(groupList):
 #             return makeHullObject(List[0].Shapes)
              
 
+def deFuseListGroup(listGroup):
+    ##########################################################
+    # List could be a list of Parts or a single MultiFuse Part
+    ##########################################################
+    if len(listGroup) == 1:
+       if listGroup[0].TypeId == "Part::MultiFuse":
+          write_log("Info",f"MultiFuse {listGroup.Label}")
+          return listGroup[0].Shapes
+    return listGroup
 
 def makeHullObject(listGroup, ex=False):
     doc = FreeCAD.ActiveDocument
     if not doc:
         doc = FreeCAD.newDocument()
 
-    #objList = deFuseListGroup(listGroup)
-    objList =listGroup
+    objList = deFuseListGroup(listGroup)
     #hullObj = doc.addObject("App::DocumentObjectGroupPython", "Hull")
     hullObj = doc.addObject("Part::FeaturePython", "Hull")
     HullClassFeature(hullObj, objList)

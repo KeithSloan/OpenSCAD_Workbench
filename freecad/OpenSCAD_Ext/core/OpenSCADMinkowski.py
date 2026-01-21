@@ -26,8 +26,8 @@
 import FreeCAD
 #from OpenSCADFeatures import CGALFeature
 from freecad.OpenSCAD_Ext.core.checkObjectShapes import *
-#printverbose = False
-printverbose = True
+printverbose = False
+#printverbose = True
 
 def setObjColor(obj, color):
     # set color for all faces of selected object

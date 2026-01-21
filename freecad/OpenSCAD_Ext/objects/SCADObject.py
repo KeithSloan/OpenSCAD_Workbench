@@ -24,10 +24,32 @@
 
 import FreeCAD, FreeCADGui, Part, Mesh
 import os, tempfile
+from pathlib import Path
 
+from PySide import QtGui, QtWidgets
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
 from freecad.OpenSCAD_Ext.core.OpenSCADUtils import callopenscad, \
                                                OpenSCADError
+
+def create_scad_object(title, newFile, sourceFile, scadName="SCAD_Object"):
+    write_log("Info",f"create scad object  ; newFile {newFile} scadName = {scadName} sourceFile = {sourceFile}")
+    QtGui.QGuiApplication.setOverrideCursor(QtGui.Qt.ArrowCursor)
+    dialog = OpenSCADeditOptions(scadName, sourceFile, newFile)
+    result = dialog.exec_()
+    QtGui.QGuiApplication.restoreOverrideCursor()
+    if result != QtGui.QDialog.Accepted:
+        pass
+    write_log("Info",f"Action")
+    options = dialog.getValues()
+    write_log("Info",f"Options {options}") 
+
+    # Create SCAD Object
+    scadName = dialog.getName()
+    sourceFile = dialog.get_sourceFile()
+    scadObj = dialog.create_from_dialog(scadName)
+    if scadObj:
+        scadObj.editFile(sourceFile)
 
 # Shared between SCADObject and SCADModule
 def createMesh(srcObj, wrkSrc):
@@ -213,11 +235,170 @@ def parse(obj, src):
     #obj.setEditorMode("text",2)
 
 
+class EditTextValue(QtGui.QWidget):
+    def __init__(self, label="", default="", parent=None):
+        super(EditTextValue, self).__init__(parent)
+
+        layout = QtGui.QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        self.label = QtGui.QLabel(label)
+        layout.addWidget(self.label)
+
+        self.textName = QtGui.QLineEdit(default)
+        #self.textName.setPlaceholderText(default"Enterfilename")
+        layout.addWidget(self.textName, 1)
+        self.textName.editingFinished.connect(self.getVal)
+        self.show()
+
+    def getVal(self):
+        return self.textName.text()
+
+class GeometryType(QtGui.QWidget):
+        def __init__(self):
+                super().__init__()
+                self.layout = QtGui.QHBoxLayout()
+                self.label = QtGui.QLabel('Geometry Type')
+                self.layout.addWidget(self.label)
+                self.importType = QtGui.QComboBox()
+                self.importType.addItem('Mesh')
+                self.importType.addItem('Brep')
+                self.importType.addItem('Opt')
+                self.layout.addWidget(self.importType)
+                self.setLayout(self.layout)
+
+        def getVal(self):
+                return self.importType.currentText()
+                     
+
+class IntegerValue(QtGui.QWidget):
+	def __init__(self, label, value):
+		super().__init__()
+		self.layout = QtGui.QHBoxLayout()
+		self.label = QtGui.QLabel(label)
+		self.value = QtGui.QLineEdit()
+		self.value.setText(str(value))
+		self.layout.addWidget(self.label)
+		self.layout.addWidget(self.value)
+		self.setLayout(self.layout)
+
+	def getVal(self):
+		return int(self.value.text())
+
+class BooleanValue(QtGui.QWidget):
+	def __init__(self, label, value):
+		super().__init__()
+		self.layout = QtGui.QHBoxLayout()
+		self.label = QtGui.QLabel(label)
+		self.value = QtGui.QRadioButton()
+		self.value.setChecked(value)
+		self.layout.addWidget(self.label)
+		self.layout.addWidget(self.value)
+		self.setLayout(self.layout)
+
+	def getVal(self):
+		if self.value.isChecked():
+			return True
+		else:
+			return False
+
+
+class OpenSCADeditOptions(QtWidgets.QDialog):
+    def __init__(self, newFile=True, sourceFile=None, parent=None):
+        super().__init__(parent)
+        self.newFile = newFile
+        self.sourceFile = sourceFile  # Only known if editing an existing file
+
+        self.setWindowTitle("SCAD File Options")
+        self.layout = QtWidgets.QVBoxLayout()
+        self.setLayout(self.layout)
+
+        # ---------- SCAD Name ----------
+        if self.newFile:
+            # User must type the new file name
+            scadNameVal = ""
+            readOnly = False
+        else:
+            # Existing file → read-only stem
+            scadNameVal = Path(sourceFile).stem
+            readOnly = True
+
+        self.scadName = EditTextValue("SCAD Name", default=scadNameVal, readOnly=readOnly)
+        self.layout.addWidget(self.scadName)
+
+        # ---------- Other fields ----------
+        self.geometryType = GeometryType()
+        self.layout.addWidget(self.geometryType)
+
+        self.fnMax = IntegerValue("FnMax", 16)
+        self.layout.addWidget(self.fnMax)
+
+        self.timeOut = IntegerValue("TimeOut", 30)
+        self.layout.addWidget(self.timeOut)
+
+        self.keepOption = BooleanValue("Keep File", False)
+        self.layout.addWidget(self.keepOption)
+
+        # ---------- OK / Cancel ----------
+        self.buttonBox = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
+        )
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+        self.layout.addWidget(self.buttonBox)
+
+
+    # ---------- collect values ----------
+    def getValues(self):
+        scadName = self.scadName.getVal().strip()
+
+        if self.newFile:
+            # Generate full sourceFile path from workbench preference + user-provided name
+            sourceDir = BaseParams.getScadSourcePath()  # <- your preference path
+            self.sourceFile = str(Path(sourceDir) / scadName)
+        # else: sourceFile already set for editing
+
+        return {
+            "scadName": scadName,
+            "geometryType": self.geometryType.getVal(),
+            "fnMax": self.fnMax.getVal(),
+            "timeOut": self.timeOut.getVal(),
+            "keepOption": self.keepOption.getVal(),
+            "newFile": self.newFile,
+            "sourceFile": self.sourceFile,
+        }
+
+
+
+def create_from_dialog(self, sourceFile, newFile=True):
+    return create_scad_object(
+        sourceFile=sourceFile,
+        geometryType=self.geometryType.getVal(),
+        fnMax=self.fnMax.getVal(),
+        timeOut=self.timeOut.getVal(),
+        keepOption=self.keepOption.getVal(),
+        newFile=newFile
+    )
+
+    def getName(self):
+        return self.scadName.getVal()
+
+    def get_sourceFile(self):
+        return self.sourceFile
+
+    def onCancel(self):
+        self.result = 'cancel'
+        #QtGui.QGuiApplication.restoreOverrideCursor()
+
+    def onOk(self):
+        self.result = 'ok'
+        #QtGui.QGuiApplication.restoreOverrideCursor()
 
 
 class SCADfileBase:
     def __init__(self, obj, scadName, sourceFile, mode='Mesh', fnmax=16, timeout=30, keep=False):
         super().__init__()
+        self.Object = obj      # ← REQUIRED in your case
         obj.addProperty("App::PropertyString","scadName","OpenSCAD","OpenSCAD scadObject")
         obj.scadName = scadName
         obj.setEditorMode("scadName",1)
@@ -234,7 +415,6 @@ class SCADfileBase:
         obj.mode = modeLst
         obj.mode = modeIdx
         obj.addProperty("App::PropertyInteger","fnmax","OpenSCAD","Max Poylgon - If circle or cylinder has more than this number of sides, treat as circle or cyliner")
-        #obj.fnmax = 16
         obj.fnmax = fnmax
         obj.addProperty("App::PropertyBool","mesh_recombine","OpenSCAD","Mesh Recombine")
         obj.mesh_recombine = False
@@ -242,7 +422,6 @@ class SCADfileBase:
         obj.keep_work_doc = keep
         obj.addProperty("App::PropertyInteger","timeout","OpenSCAD","OpenSCAD process timeout (secs)")
         obj.timeout = timeout
-        #self.obj = obj
         obj.Proxy = self
         self.createGeometry(obj)
 
@@ -337,31 +516,31 @@ class SCADfileBase:
         #FreeCADGui.Selection.addSelection(obj)
 
 
-    #def copyFile(self, src, trg):
-    #    print(f"Copy File {src} {trg}")
-    #    fps = open(src,'r')
-    #    fpt = open(trg,'w')
-    #    buffer = fps.read()
-    #    fpt.write(buffer)
-    #    fpt.close()
-    #    fps.close()
+    def editFunction(self):
+        obj = self.Object
+
+        if not hasattr(obj, "sourceFile"):
+            FreeCAD.Console.PrintError("SCAD object has no sourceFile\n")
+            return
+
+        self.editFile(obj.sourceFile)
 
 
-    # def editFile(self, fname):
-    #    import FreeCAD
-    #    import subprocess,  os, sys
-    #    editorPathName = FreeCAD.ParamGet(\
-    #        "User parameter:BaseApp/Preferences/Mod/OpenSCAD").GetString('externalEditor')
-    #    print(f"Path to external editor {editorPathName}")
-    #    # ToDo : Check pathname valid
-    #    if editorPathName != "":
-    #        p1 = subprocess.Popen( \
-    #            [editorPathName, fname], \
-    #            stdin=subprocess.PIPE,\
-    #            stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    #
-    #    else:
-    #        print(f"External Editor preference editorPathName not set")
+    def editFile(self, fname):  # For compatibility with legacy
+        import FreeCAD
+        import subprocess,  os, sys
+        editorPathName = FreeCAD.ParamGet(\
+            "User parameter:BaseApp/Preferences/Mod/OpenSCAD").GetString('externalEditor')
+        print(f"Path to external editor {editorPathName}")
+        # ToDo : Check pathname valid
+        if editorPathName != "":
+            p1 = subprocess.Popen( \
+                [editorPathName, fname], \
+                stdin=subprocess.PIPE,\
+                stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    
+        else:
+            print(f"External Editor preference editorPathName not set")
 
 
     def createGeometry(self, obj):
@@ -385,9 +564,9 @@ class SCADfileBase:
     #    else:
     #        print(f"Shape is None")
 
-def createSCADObject(title, createOption, objectName, filename):
+"""def createSCADObject(title, createOption, objectName, filename):
     from PySide import QtGui
-    from freecad.OpenSCAD_Ext.core.QtSCAD_Base import SCADObject_Options
+    from freecad.OpenSCAD_Ext.objects.menus_for_objects import SCADObject_Options
 	#pathText = os.path.splitext(os.path.basename(filename))
 	#objectName  = pathText[0]
     doc = FreeCAD.ActiveDocument
@@ -424,7 +603,7 @@ def createSCADObject(title, createOption, objectName, filename):
             elif hasattr(obj, "executeFunc"):
                 obj.Proxy.executeFunction(obj)
         return obj
-
+"""
 class ViewSCADProvider:
     def __init__(self, obj):
         """Set this object to the proxy object of the actual view provider"""

@@ -1,0 +1,148 @@
+\begin_layout Standard
+Short answer: OpenSCAD does not return a \textbf{CGAL polyhedron} as a file format. From the command line you can only export files, and which geometry kernel is used (CSG preview vs CGAL solid) depends on how you invoke the export.
+\end_layout
+
+\begin_layout Standard
+\textbf{1. How OpenSCAD CLI output works}
+\end_layout
+\begin_layout Standard
+OpenSCAD CLI is essentially:
+\begin_layout Code
+openscad [options] -o output_file.ext input.scad
+\end_layout
+
+Two orthogonal concepts are involved:
+\begin_layout Itemize
+\item Geometry backend used internally (OpenCSG preview vs CGAL final solid)
+\item Export format (determined by the file extension)
+\end_layout
+\end_layout
+
+\begin_layout Standard
+\textbf{2. Export formats you can request}
+\end_layout
+
+\begin_layout Standard
+\textbf{2.1 CSG (textual CSG tree)}
+\end_layout
+\begin_layout Standard
+\begin_layout Code
+openscad -o model.csg model.scad
+\end_layout
+
+* Output: OpenSCAD CSG file
+* Boolean operations preserved
+* No CGAL evaluation
+* Useful for debugging or importing into other OpenSCAD workflows
+  \end_layout
+
+\begin_layout Standard
+\textbf{2.2 STL (most common)}
+\end_layout
+\begin_layout Standard
+\begin_layout Code
+openscad -o model.stl model.scad
+\end_layout
+
+* Forces full CGAL evaluation
+* Output is a triangulated mesh
+* Boolean operations resolved
+  \end_layout
+
+\begin_layout Standard
+\textbf{2.3 OFF (CGAL-native mesh)}
+\end_layout
+\begin_layout Standard
+\begin_layout Code
+openscad -o model.off model.scad
+\end_layout
+
+* Uses CGAL
+* OFF is closer to CGAL's internal polyhedron structure
+* Explicit vertices/faces
+  \end_layout
+
+\begin_layout Standard
+\textbf{2.4 AMF / 3MF}
+\end_layout
+\begin_layout Standard
+\begin_layout Code
+openscad -o model.amf model.scad
+openscad -o model.3mf model.scad
+\end_layout
+
+* CGAL-based mesh formats with metadata
+  \end_layout
+
+\begin_layout Standard
+\textbf{2.5 2D formats (DXF / SVG)}
+\end_layout
+\begin_layout Standard
+\begin_layout Code
+openscad -o drawing.dxf model.scad
+openscad -o drawing.svg model.scad
+\end_layout
+
+* Only valid for 2D geometry
+* Uses CGAL for 2D operations
+  \end_layout
+
+\begin_layout Standard
+\textbf{2.6 Image output (PNG)}
+\end_layout
+\begin_layout Standard
+\begin_layout Code
+openscad -o preview.png model.scad
+\end_layout
+
+* Rasterized image, not geometry
+  \end_layout
+
+\begin_layout Standard
+\textbf{3. Forcing CGAL vs CSG}
+\end_layout
+\begin_layout Standard
+
+* STL / OFF / AMF / 3MF automatically use CGAL
+* CSG files do not use CGAL
+* Explicitly force CGAL evaluation with:
+  \begin_layout Code
+  openscad --render -o model.stl model.scad
+  \end_layout
+  or in newer versions:
+  \begin_layout Code
+  openscad --backend=cgal -o model.stl model.scad
+  \end_layout
+  \end_layout
+
+\begin_layout Standard
+\textbf{4. About CGAL polyhedron specifically}
+\end_layout
+\begin_layout Standard
+
+* Internally OpenSCAD uses CGAL::Nef_polyhedron_3 → CGAL::Polyhedron_3 → triangulated mesh
+* No CLI option exports CGAL::Polyhedron_3 or Nef_polyhedron_3 directly
+* Closest practical export: OFF
+  \end_layout
+
+\begin_layout Standard
+\textbf{5. Practical recommendation for FreeCAD/OpenSCAD_Ext}
+\end_layout
+\begin_layout Standard
+
+| Goal                  | Best OpenSCAD Output |
+| --------------------- | -------------------- |
+| Preserve CSG logic    | .csg                 |
+| Robust boolean mesh   | .off                 |
+| Widely supported mesh | .stl                 |
+| \end_layout           |                      |
+
+\begin_layout Standard
+Summary:
+\begin_layout Itemize
+\item AST / semantic analysis: use *.csg
+\item Geometry for Part / Mesh conversion: use *.off
+\item Fallback / compatibility: use *.stl
+\end_layout
+\end_layout
+
