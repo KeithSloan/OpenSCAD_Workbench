@@ -1,0 +1,214 @@
+# -*- coding: utf-8 -*-
+"""
+parse_csg_file_to_AST_nodes.py
+
+Parse OpenSCAD CSG into semantic AST nodes.
+
+ARCHITECTURAL RULES
+-------------------
+* This module parses syntax and constructs AST nodes.
+* It MUST NOT:
+    - create FreeCAD geometry
+    - flatten nodes
+    - invoke OpenSCAD
+* Raw OpenSCAD parameters go into node.csg_params
+* Typed / processed values go into node.params
+"""
+
+import FreeCAD
+
+from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import (
+    AstNode,
+    Cube, Sphere, Cylinder, Polyhedron,
+    Union, Difference, Intersection, Hull, Minkowski, Group,
+    Translate, Rotate, Scale, MultMatrix,
+    LinearExtrude, RotateExtrude
+)
+
+# -------------------------------------------------
+# Utilities
+# -------------------------------------------------
+
+def _make_fc_matrix(matrix_4x4):
+    """
+    Convert a 4x4 Python list into a FreeCAD.Matrix.
+
+    OpenSCAD matrices are row-major:
+      [[a,b,c,d],
+       [e,f,g,h],
+       [i,j,k,l],
+       [m,n,o,p]]
+    """
+    if not matrix_4x4 or len(matrix_4x4) != 4:
+        raise ValueError("multmatrix requires a 4x4 matrix")
+
+    try:
+        return FreeCAD.Matrix(
+            matrix_4x4[0][0], matrix_4x4[0][1], matrix_4x4[0][2], matrix_4x4[0][3],
+            matrix_4x4[1][0], matrix_4x4[1][1], matrix_4x4[1][2], matrix_4x4[1][3],
+            matrix_4x4[2][0], matrix_4x4[2][1], matrix_4x4[2][2], matrix_4x4[2][3],
+            matrix_4x4[3][0], matrix_4x4[3][1], matrix_4x4[3][2], matrix_4x4[3][3],
+        )
+    except Exception as e:
+        raise ValueError(f"Invalid multmatrix value: {matrix_4x4}") from e
+
+
+# -------------------------------------------------
+# Core dispatcher
+# -------------------------------------------------
+
+def build_ast_node(node_name, args, kwargs, children):
+    """
+    Create an AST node from parsed OpenSCAD syntax.
+
+    Parameters
+    ----------
+    node_name : str
+        OpenSCAD function name (e.g. 'sphere', 'multmatrix')
+    args : list
+        Positional arguments
+    kwargs : dict
+        Keyword arguments
+    children : list[AstNode]
+        Child nodes
+    """
+
+    # ------------------------------
+    # PRIMITIVES
+    # ------------------------------
+
+    if node_name == "sphere":
+        r = kwargs.get("r", args[0] if args else None)
+        return Sphere(
+            r=r,
+            fn=kwargs.get("$fn"),
+            fa=kwargs.get("$fa"),
+            fs=kwargs.get("$fs"),
+            params={"r": r, "$fn": kwargs.get("$fn"), "$fa": kwargs.get("$fa"), "$fs": kwargs.get("$fs")},
+            csg_params=kwargs
+        )
+
+    if node_name == "cube":
+        size = kwargs.get("size", args[0] if args else None)
+        center = kwargs.get("center", False)
+        return Cube(
+            size=size,
+            center=center,
+            params={"size": size, "center": center},
+            csg_params=kwargs
+        )
+
+    # ------------------------------
+    # BOOLEAN / CSG
+    # ------------------------------
+
+    if node_name == "union":
+        return Union(children=children, csg_params=kwargs)
+
+    if node_name == "difference":
+        return Difference(children=children, csg_params=kwargs)
+
+    if node_name == "intersection":
+        return Intersection(children=children, csg_params=kwargs)
+
+    if node_name == "hull":
+        return Hull(children=children, csg_params=kwargs)
+
+    if node_name == "minkowski":
+        return Minkowski(children=children, csg_params=kwargs)
+
+    # ------------------------------
+    # TRANSFORMS
+    # ------------------------------
+
+    if node_name == "translate":
+        vec = args[0] if args else kwargs.get("v", [0, 0, 0])
+        return Translate(
+            vector=vec,
+            children=children,
+            params={"vector": vec},
+            csg_params={"v": vec}
+        )
+
+    if node_name == "rotate":
+        vec = kwargs.get("v")
+        angle = kwargs.get("a")
+        return Rotate(
+            vector=vec,
+            angle=angle,
+            children=children,
+            params={"vector": vec, "angle": angle},
+            csg_params=kwargs
+        )
+
+    if node_name == "scale":
+        vec = args[0] if args else kwargs.get("v", [1, 1, 1])
+        return Scale(
+            vector=vec,
+            children=children,
+            params={"vector": vec},
+            csg_params={"v": vec}
+        )
+
+    # -------------------------------------------------
+    # MULTMATRIX  (THIS IS THE FIX)
+    # -------------------------------------------------
+
+    if node_name == "multmatrix":
+        # ARCHITECTURAL RULE:
+        # multmatrix() takes EXACTLY ONE positional argument: a 4x4 matrix
+        # It must NEVER be split into keyword arguments.
+
+        if len(args) != 1:
+            raise ValueError("multmatrix() requires exactly one positional matrix argument")
+
+        matrix_raw = args[0]
+
+        # Store raw OpenSCAD value verbatim for flattening / fallback
+        csg_params = {"matrix": matrix_raw}
+
+        # Convert once into a FreeCAD.Matrix for native processing
+        matrix_fc = _make_fc_matrix(matrix_raw)
+
+        return MultMatrix(
+            matrix=matrix_fc,
+            children=children,
+            params={"matrix": matrix_fc},
+            csg_params=csg_params
+        )
+
+    # ------------------------------
+    # EXTRUSIONS
+    # ------------------------------
+
+    if node_name == "linear_extrude":
+        height = kwargs.get("height", args[0] if args else None)
+        return LinearExtrude(
+            height=height,
+            center=kwargs.get("center", False),
+            twist=kwargs.get("twist", 0),
+            scale=kwargs.get("scale", 1.0),
+            children=children,
+            csg_params=kwargs
+        )
+
+    if node_name == "rotate_extrude":
+        return RotateExtrude(
+            angle=kwargs.get("angle", 360),
+            convexity=kwargs.get("convexity"),
+            children=children,
+            csg_params=kwargs
+        )
+
+    # ------------------------------
+    # FALLBACK
+    # ------------------------------
+
+    # Unknown node: preserve structure so flattening still works
+    return AstNode(
+        node_type=node_name,
+        params={},
+        csg_params=kwargs,
+        children=children
+    )
+

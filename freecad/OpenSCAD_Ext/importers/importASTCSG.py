@@ -193,8 +193,8 @@ def processCSG(docSrc, filename, fnmax_param = None):
     ast_nodes = raw_ast_nodes
     #ast_nodes = normalize_ast(raw_ast_nodes)
     shapes = process_AST(ast_nodes, mode="multiple")
-    # write_log("AST",f"Shapes {shapes}")
-    #add_shapes_to_document(doc, name, shapes)
+    write_log("AST",f"Shapes {shapes}")
+    add_shapes_to_document(doc, name, shapes)
     FreeCADGui.SendMsgToActiveView("ViewFit")
     if printverbose:
         print ('ImportCSG Version 0.6a')

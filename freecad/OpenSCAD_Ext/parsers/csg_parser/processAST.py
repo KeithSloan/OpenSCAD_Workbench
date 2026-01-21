@@ -17,8 +17,9 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_helpers import get_tess, apply_transform
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import AstNode
 
-import Part
+import multiprocessing
 import Mesh
+import Part
 
 # -----------------------------
 # Utility functions
@@ -34,8 +35,52 @@ class OpenSCADError(BaseError):
     def __str__(self):
         return repr(self.value)
 
+import FreeCAD
+from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 
-def generate_stl_from_scad(scad_str, check_syntax=False, timeout=60):
+def generate_stl_from_scad(scad_str, timeout_sec=60):
+    """
+    Generate STL from a SCAD string using the Workbench-configured OpenSCAD executable.
+    Returns path to STL on success, None on error/timeout.
+    """
+    # Get OpenSCAD path from FreeCAD preferences
+    prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
+    openscad_exe = prefs.GetString("openscadexecutable", "")
+
+    if not openscad_exe or not os.path.isfile(openscad_exe):
+        write_log("OpenSCAD", f"OpenSCAD executable not configured or invalid: {openscad_exe}")
+        return None
+
+    # Create temp SCAD file
+    with tempfile.NamedTemporaryFile(suffix=".scad", delete=False) as scad_file:
+        scad_file_path = scad_file.name
+        scad_file.write(scad_str.encode("utf-8"))
+        scad_file.flush()
+
+    # STL output path
+    stl_path = scad_file_path.replace(".scad", ".stl")
+
+    # OpenSCAD CLI command
+    cmd = [openscad_exe, "-o", stl_path, scad_file_path]
+
+    write_log("OpenSCAD", f"Running: {' '.join(cmd)}")
+
+    try:
+        subprocess.run(cmd, timeout=timeout_sec, check=True)
+        write_log("OpenSCAD", f"Generated STL: {stl_path}")
+        return stl_path
+    except subprocess.TimeoutExpired:
+        write_log("OpenSCAD", f"Timeout after {timeout_sec}s")
+    except subprocess.CalledProcessError as e:
+        write_log("OpenSCAD", f"OpenSCAD error: {e}")
+
+    return None
+
+
+
+
+
+def saved_generate_stl_from_scad(scad_str, check_syntax=False, timeout=60):
     """
     Write SCAD to temp file, call OpenSCAD CLI, return STL path.
     Enforces timeout.
@@ -53,6 +98,7 @@ def generate_stl_from_scad(scad_str, check_syntax=False, timeout=60):
 
     with open(scad_file, "w", encoding="utf-8") as f:
         f.write(scad_str)
+        f.flush()
 
     cmd = [
         openscad_exe,
@@ -83,11 +129,6 @@ def generate_stl_from_scad(scad_str, check_syntax=False, timeout=60):
     return stl_file
 
 
-import multiprocessing
-import Mesh
-import Part
-import FreeCAD
-from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 
 def _mesh_to_shape_worker(stl_path, tolerance, queue):
     """Worker process to safely run makeShapeFromMesh with timeout"""
@@ -100,28 +141,36 @@ def _mesh_to_shape_worker(stl_path, tolerance, queue):
         queue.put(e)
 
 
-def stl_to_shape(stl_path, tolerance=1.0, timeout=30):
+def stl_to_shape(stl_path, tolerance=0.05,timeout=None):
     """
-    Import STL into FreeCAD and convert to Part.Shape safely with timeout.
+    Import STL into FreeCAD and convert to Part.Shape.
+    Returns a Part.Shape or None on failure.
     """
-    write_log("AST_Hull:Minkowski", f"Importing STL and converting to Part.Shape: {stl_path}")
-    queue = multiprocessing.Queue()
-    p = multiprocessing.Process(target=_mesh_to_shape_worker, args=(stl_path, tolerance, queue))
-    p.start()
-    p.join(timeout)
+    if not stl_path or not os.path.isfile(stl_path):
+        write_log("AST_Hull:Minkowski", f"STL file not found: {stl_path}")
+        return None
 
-    if p.is_alive():
-        p.terminate()
-        write_log("AST_Hull:Minkowski", f"STL to Shape conversion timed out after {timeout} seconds")
-        raise TimeoutError(f"STL to Shape conversion timed out after {timeout} seconds")
+    try:
+        write_log("AST_Hull:Minkowski", f"Importing STL and converting to Part.Shape: {stl_path}")
 
-    result = queue.get()
-    if isinstance(result, Exception):
-        write_log("AST_Hull:Minkowski", f"STL to Shape conversion failed: {result}")
-        raise result
+        # Load the STL as a Mesh
+        mesh_obj = Mesh.Mesh(stl_path)
 
-    write_log("AST_Hull:Minkowski", f"STL to Shape conversion complete: {result}")
-    return result
+        # Convert Mesh to Part.Shape
+        shape = Part.Shape()
+        shape.makeShapeFromMesh(mesh_obj.Topology, tolerance)
+
+        # Get number of points safely
+        n_points = getattr(mesh_obj, "CountPoints", None)
+        if n_points is None:
+            n_points = len(mesh_obj.Topology[0]) if isinstance(mesh_obj.Topology, tuple) else 0
+
+        write_log("AST_Hull:Minkowski", f"STL converted to Part.Shape with approx {n_points} points")
+        return shape
+
+    except Exception as e:
+        write_log("AST_Hull:Minkowski", f"Failed to convert STL to Shape: {e}")
+        return None
 
 
 def fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60):
@@ -145,6 +194,7 @@ def fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60)
 
     # Generate STL via OpenSCAD CLI
     stl_file = generate_stl_from_scad(scad_str)
+
 
     # Import STL safely with timeout and tolerance
     shape = stl_to_shape(stl_file, tolerance=tolerance, timeout=timeout)
@@ -208,7 +258,68 @@ def try_minkowski(node):
     return None
     """
 
+# ============================================================
+# SCAD flattening (Hull / Minkowski fallback)
+# ============================================================
 
+def flatten_hull_minkowski_node(node, indent=0):
+    pad = " " * indent
+    scad_lines = []
+
+    if node is None:
+        return ""  # ← always return string
+
+    write_log("FLATTEN", f"{pad}Flatten node: {node.node_type}, children={len(getattr(node, 'children', []))}, csg_params={getattr(node, 'csg_params', None)}")
+
+    # Transparent group
+    if node.node_type == "group":
+        for child in node.children:
+            scad_lines.append(flatten_hull_minkowski_node(child, indent))
+        return "\n".join(filter(None, scad_lines))  # filter out None
+
+    # Hull / Minkowski
+    if node.node_type in ("hull", "minkowski"):
+        scad_lines.append(f"{pad}{node.node_type}() {{")
+        for child in node.children:
+            scad_lines.append(flatten_hull_minkowski_node(child, indent + 4))
+        scad_lines.append(f"{pad}}}")
+        return "\n".join(filter(None, scad_lines))
+
+    # MultMatrix: raw string from csg_params
+    if node.node_type == "multmatrix":
+        matrix_str = ""
+        if isinstance(node.csg_params, str):
+            matrix_str = node.csg_params
+        elif isinstance(node.csg_params, dict) and "matrix" in node.csg_params:
+            matrix_str = node.csg_params["matrix"]
+        scad_lines.append(f"{pad}multmatrix({matrix_str}) {{")
+        for child in node.children:
+            scad_lines.append(flatten_hull_minkowski_node(child, indent + 4))
+        scad_lines.append(f"{pad}}}")
+        return "\n".join(filter(None, scad_lines))
+
+    # Other primitives (sphere, cube, etc.) — just use csg_params string
+    csg_str = ""
+    if hasattr(node, "csg_params") and isinstance(node.csg_params, str):
+        csg_str = node.csg_params
+    elif hasattr(node, "csg_params") and isinstance(node.csg_params, dict):
+        parts = []
+        for k, v in node.csg_params.items():
+            if v is not None:
+                try:
+                    float(v)
+                    parts.append(f"{k}={v}")
+                except (ValueError, TypeError):
+                    parts.append(f'{k}="{v}"')
+        csg_str = ", ".join(parts)
+
+    if csg_str:
+        scad_lines.append(f"{pad}{node.node_type}({csg_str});")
+
+    return "\n".join(filter(None, scad_lines))
+
+
+'''
 def flatten_hull_minkowski_node(node, indent=0):
     """
     Flatten any AST node for Hull/Minkowski fallback:
@@ -273,7 +384,7 @@ def apply_transform(node, shape):
         if a:
             shape.rotate(Vector(0,0,0), Vector(*v), a)
     return shape
-
+'''
 
 # -----------------------------
 # Hull / Minkowski native attempts
@@ -387,7 +498,7 @@ def process_AST(nodes, mode=None):
     """
     shapes = process_AST_node(nodes[0])
     write_log("AST", f"Processed Shapes: {shapes}")
-    return None
+    #return None
     return shapes
 
 
