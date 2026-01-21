@@ -1,0 +1,54 @@
+# File: freecad/OpenSCAD_Ext/core/ast_minkowski.py
+
+from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+from freecad.OpenSCAD_Ext.core.ast_utils import flatten_ast_node
+
+# -----------------------------
+# try_hull
+# -----------------------------
+def try_hull(node):
+    """
+    Process a Hull AST node directly.
+    Currently just logs node info and children.
+    Returns None to indicate fallback.
+    """
+    if node is None:
+        write_log("Hull", "try_hull: node is None")
+        return None
+
+    write_log("Hull", f">>> try_hull ENTERED for node_type: {getattr(node, 'node_type', 'Unknown')}")
+    write_log("Hull", f"Node params: {getattr(node, 'params', {})}")
+
+    if hasattr(node, "children") and node.children:
+        child_types = [getattr(c, "node_type", str(type(c))) for c in node.children]
+        write_log("Hull", f"Children node types: {child_types}")
+    else:
+        write_log("Hull", "No children for this hull node")
+
+    # Always return None for now — fallback will be used
+    return None
+
+
+# -----------------------------
+# try_minkowski
+# -----------------------------
+def try_minkowski(node):
+    """
+    Process a Minkowski AST node directly.
+    Currently just logs node info and children.
+    Returns None to indicate fallback.
+    """
+    if node is None:
+        write_log("Minkowski", "try_minkowski: node is None")
+        return None
+
+    write_log("Minkowski", f">>> try_minkowski ENTERED for node_type: {getattr(node, 'node_type', 'Unknown')}")
+    write_log("Minkowski", f"Node params: {getattr(node, 'params', {})}")
+
+    if hasattr(node, "children") and node.children:
+        child_types = [getattr(c, "node_type", str(type(c))) for c in node.children]
+        write_log("Minkowski", f"Children node types: {child_types}")
+    else:
+        write_log("Minkowski", "No children for this Minkowski node")
+
+    return None

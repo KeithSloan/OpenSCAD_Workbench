@@ -19,33 +19,33 @@ def write_log(level, msg):
             f.write(f"{_timestamp()} [{level}] {msg}\n")
 
     # Also send to FreeCAD Report View
-    if FreeCAD.GuiUp:
+    #if FreeCAD.GuiUp:
         if level in ("ERROR", "FC-ERR"):
             FreeCAD.Console.PrintError(f"[{level}] {msg}\n")
         else:
             FreeCAD.Console.PrintMessage(f"[{level}] {msg}\n")
 
 # --- Redirect Python print ---
-class PrintLogger:
-    def write(self, msg):
-        msg = msg.rstrip()
-        if msg:
-            write_log("PRINT", msg)
-    def flush(self):
-        pass
+#class PrintLogger:
+#    def write(self, msg):
+#        msg = msg.rstrip()
+#        if msg:
+#            write_log("PRINT", msg)
+#    def flush(self):
+#        pass
 
 # --- Redirect Python errors ---
-class ErrorLogger(PrintLogger):
-    def write(self, msg):
-        msg = msg.rstrip()
-        if msg:
-            write_log("ERROR", msg)
+#class ErrorLogger(PrintLogger):
+#    def write(self, msg):
+#        msg = msg.rstrip()
+#        if msg:
+#            write_log("ERROR", msg)
 
 # --- Initialize logger ---
 def init():
     """Install logging handlers and write confirmation."""
-    sys.stdout = PrintLogger()
-    sys.stderr = ErrorLogger()
+    #ys.stdout = PrintLogger()
+    #sys.stderr = ErrorLogger()
     write_log("INIT", "Logging started for OpenSCAD_Ext")
 
     # Also print a clear confirmation to Report View / console

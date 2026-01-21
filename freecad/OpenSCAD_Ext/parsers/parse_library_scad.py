@@ -127,7 +127,8 @@ def _parse_modules(lines):
 
 
 # --- Main parsing function ---
-def parse_scad_for_modules(filename):
+#def parse_scad_for_modules(filename):
+def parse_scad_meta(filename):
     write_log("Info", f"Parsing SCAD file: {filename}")
     meta = SCADMeta(filename)
     try:
@@ -157,5 +158,30 @@ def parse_scad_for_modules(filename):
     meta.modules = _parse_modules(lines)
     write_log("Info", f"Found modules: {[m.name for m in meta.modules]}")
 
+    # List Variables to Report View
+    list_scad_variables(meta)
+
     return meta
+
+# ----------------------------------------------------------------------
+# Function to list all variables (module arguments) to report view
+# ----------------------------------------------------------------------
+def list_scad_variables(meta):
+    """
+    List all variables (module arguments) found in the SCAD file
+    to the FreeCAD report view via write_log.
+    """
+    if not meta.modules:
+        write_log("Info", "No modules found in SCAD file.")
+        return
+
+    for mod in meta.modules:
+        if not mod.arguments:
+            write_log("Info", f"Module '{mod.name}' has no arguments.")
+            continue
+
+        write_log("Info", f"Module '{mod.name}' arguments:")
+        for arg in mod.arguments:
+            default_str = f" = {arg.default}" if arg.default is not None else ""
+            write_log("Info", f"  - {arg.name}{default_str}")
 

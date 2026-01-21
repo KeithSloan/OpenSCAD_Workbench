@@ -45,7 +45,8 @@ from PySide import QtGui, QtCore
 #       ViewSCADProvider
 
 from freecad.OpenSCAD_Ext.importers.importAltCSG import processCSG
-from freecad.OpenSCAD_Ext.objects.SCADObject import createSCADObject
+from freecad.OpenSCAD_Ext.core.create_scad_object_interactive import create_scad_object_interactive
+#from freecad.OpenSCAD_Ext.objects.SCADObject import createSCADObject
 
 params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
 printverbose = params.GetBool('printverbose',False)
@@ -65,13 +66,24 @@ def open(filename):
 
 def insert(filename, docName):
 	"called when freecad inserts a file."
-	doc = FreeCAD.getDocument(docName)
-	objectName  = os.path.splitext(os.path.basename(filename))[0]
-	obj = createSCADObject("FC OpenSCAD import Options",
-		False,
-		objectName,
-		filename,
-		)
+	doc = FreeCAD.ActiveDocument
+	if not doc:
+		open(filename)
+	try:
+		doc = FreeCAD.getDocument(docName)
+	except Exception:
+		doc = FreeCAD.newDocument(docName)
+	# objectName  = os.path.splitext(os.path.basename(filename))[0]
+	# The fpr newfile = False, scadName is created from stem of sourcefile
+	obj = create_scad_object_interactive(
+            title="Import OpenSCAD File Objects",
+            preset={
+                "newFile": False,
+				"sourceFile":filename,
+            }
+	)		
+	obj.Proxy.executeFunction(obj)
+
 	#FreeCAD.ActiveDocument.recompute()
 	#obj.recompute()
 	doc.recompute()
