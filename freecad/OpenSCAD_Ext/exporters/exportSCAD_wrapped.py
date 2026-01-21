@@ -52,7 +52,6 @@ PI = 3.1415926536
 params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
 fn = params.GetInt('exportFn', 0)
 fa = params.GetFloat('exportFa', 12.0)
-fa_rad = fa*PI/180.0
 fs = params.GetFloat('exportFs', 2.0)
 conv = params.GetInt('exportConvexity', 10)
 # TODO: parameters for SIGNIFICANT_DIGITS and other decisions (and fn?)
@@ -204,7 +203,7 @@ def placement(write, ob, x, y, z):
             did_something = True
         if not ob.Placement.Rotation.isNull():
             rx, ry, rz = ob.Placement.Rotation.Axis
-            angle = ob.Placement.Rotation.Angle * 180 / PI
+            angle = math.degrees(ob.Placement.Rotation.Angle)
             if not practically_equal(angle, 0):
                 if practically_equal(ry, 0) and practically_equal(rz, 0):
                     write(f"rotate([{fstr(angle)}, 0, 0])")
@@ -282,7 +281,7 @@ def process_object(write, ob):
         print(ob.Angle1)
         print(ob.Angle2)
         print(ob.Angle3)
-        r1 = ob.Radius1.Value  # radius of the donut hole
+        r1 = ob.Radius1.Value  # radius of the donut hole (+half rim thickness)
         r2 = ob.Radius2.Value  # half thickness of the donut rim
         a1 = ob.Angle1.Value  # start angle of the rim's circle segment
         a2 = ob.Angle2.Value  # end angle of the rim's circle segment
@@ -476,10 +475,13 @@ def process_object(write, ob):
                                     if practically_equal(majorRadius, minorRadius):
                                         write(f"circle({fstr(majorRadius)});\n")
                                     else:
-                                        local_x_axis = FreeCAD.Base.Vector(d_local(curve.XAxis))
-                                        # local_focus1 = FreeCAD.Base.Vector(d_local(curve.Focus1))
-                                        # local_focus2 = FreeCAD.Base.Vector(d_local(curve.Focus2))
-                                        angle = local_x_axis.getAngle(FreeCAD.Base.Vector([-1, 0, 0]))*180/PI
+                                        # Somehow swaps axis? Rolled my own -- local_x_axis0 = FreeCAD.Base.Vector(d_local(curve.XAxis))
+                                        local_focus1 = FreeCAD.Base.Vector(v_local(curve.Focus1))
+                                        local_focus2 = FreeCAD.Base.Vector(v_local(curve.Focus2))
+                                        local_x_axis = (local_focus2 - local_focus1).normalize()
+                                        # We cannot trust getAngle to provide the correct sign! -- angle = math.degrees(local_x_axis.getAngle(FreeCAD.Base.Vector([1, 0, 0])))
+                                        angle = math.degrees(math.atan2(local_x_axis[1], local_x_axis[0]))
+                                        # write(f"\n// {local_x_axis0=}\n// {local_x_axis=}\n// {angle0=} {angle=}\n")
                                         if not practically_equal(angle, 0) and not practically_equal(angle, 180) and not practically_equal(angle, 360):
                                             write(f"rotate(a=[0, 0, {fstr(angle)}]) ")
                                         write(f"resize([{fstr(2*majorRadius)}, {fstr(2*minorRadius)}]) ")
@@ -526,6 +528,7 @@ def process_object(write, ob):
                                     pt_angles = [math.degrees(math.atan2(b[1]-a[1], b[0]-a[0])) for a, b in zip([*pts2d[:-1], pts2d[-1]], [*pts2d[1:], pts2d[0]])]
                                     print(f"{pt_angles=}")
                                     # Note: a-b instead of b-a because otherwise, counterclockwise = neg angles (why?)
+                                    # TODO: doesn't the -180 change stuff we shouldn't change? I mean it flips it.
                                     corner_angles = [(360+a-b)%360-180 for a, b in zip([*pt_angles[:-1], pt_angles[-1]], [*pt_angles[1:], pt_angles[0]])]
                                     print(f"{corner_angles=}")
                                     rect_angle = pt_angles[0]
