@@ -9,9 +9,11 @@ Usage:
 """
 import FreeCAD
 import re
-from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import *
-from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 import ast
+from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import AstNode, Cube, Sphere, Cylinder, Union, Difference, Intersection
+from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import Group, Translate, Rotate, Scale, MultMatrix, Hull, Minkowski
+from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import LinearExtrude, RotateExtrude, Color
 
 # --- parse_scad_argument and parse_csg_params assumed defined here ---
 
@@ -186,16 +188,80 @@ def split_top_level_commas(s):
 # -------------------------------
 # Main recursive parser
 # -------------------------------
+
+# -*- coding: utf-8 -*-
+# Drop-in replacement for parse_csg_lines
+
+# -------------------------------
+# Main recursive parser
+# -------------------------------
+'''
+import re
+import ast
+import FreeCAD
+
+from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import AstNode, Cube, Sphere, Cylinder, Union, Difference, Intersection
+from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import Group, Translate, Rotate, Scale, MultMatrix, Hull, Minkowski
+from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import LinearExtrude, RotateExtrude, Color
+'''
+
+def parse_csg_params(param_str):
+    """
+    Parse OpenSCAD-style parameters like:
+        size = [8.5, 1, 1], center = true
+    Returns: dict
+    """
+    params = {}
+    if not param_str:
+        return params
+
+    # Split by commas not inside brackets
+    parts = re.split(r",(?![^\[\]]*\])", param_str)
+    for part in parts:
+        if '=' not in part:
+            continue
+        key, val = map(str.strip, part.split('=', 1))
+        # Convert OpenSCAD literals to Python
+        if val.lower() == 'true':
+            val = True
+        elif val.lower() == 'false':
+            val = False
+        else:
+            try:
+                val = ast.literal_eval(val)
+            except Exception:
+                pass  # leave as string if cannot eval
+        params[key] = val
+    return params
+
+# -*- coding: utf-8 -*-
+# Recursive CSG parser for FreeCAD AST
+# -------------------------------
+# Main recursive CSG parser
+# -------------------------------
+import re
+import ast
+import FreeCAD
+
+from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import (
+    AstNode, Cube, Sphere, Cylinder,
+    Union, Difference, Intersection,
+    Group, Translate, Rotate, Scale,
+    MultMatrix, Hull, Minkowski,
+    LinearExtrude, RotateExtrude, Color
+)
+
 def parse_csg_lines(lines, start=0):
     """
-    Recursively parse lines from a CSG file.
-    Returns: (list of AstNode, next_line_index)
+    Recursively parse CSG lines into AST nodes.
+    Returns: (list_of_nodes, next_line_index)
     """
     nodes = []
     i = start
 
     while i < len(lines):
         line = lines[i].strip()
+
         if not line:
             i += 1
             continue
@@ -203,7 +269,7 @@ def parse_csg_lines(lines, start=0):
         if line.startswith("}"):
             return nodes, i + 1
 
-        # Match node type and params
+        # Match: node(params) {?
         m = re.match(r"(\w+)\s*\((.*)\)\s*({)?", line)
         if not m:
             write_log("CSG_PARSE", f"Skipping unrecognized line: {line}")
@@ -214,122 +280,139 @@ def parse_csg_lines(lines, start=0):
         node_type = node_type.lower()
         csg_params = param_str.strip()
 
-        # --- Parse params ---
-        if node_type == "multmatrix":
-            try:
-                matrix = eval(csg_params)
-                params = {"matrix": matrix}
-            except Exception:
-                params = {"matrix": [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]}
-            has_children = True
-        else:
-            params = parse_csg_params(param_str)
-            has_children = bool(brace)
-
         # --- Determine class ---
         cls = {
-            "color": Color,
             "cube": Cube,
             "sphere": Sphere,
             "cylinder": Cylinder,
-            "polyhedron": Polyhedron,
-            "circle": Circle,
-            "square": Square,
-            "polygon": Polygon,
             "union": Union,
             "difference": Difference,
             "intersection": Intersection,
-            "hull": Hull,
-            "minkowski": Minkowski,
             "group": Group,
             "translate": Translate,
             "rotate": Rotate,
             "scale": Scale,
             "multmatrix": MultMatrix,
+            "hull": Hull,
+            "minkowski": Minkowski,
             "linear_extrude": LinearExtrude,
             "rotate_extrude": RotateExtrude,
+            "color": Color,
         }.get(node_type, AstNode)
 
         # --- Parse children ---
         children = []
-        if has_children:
+        if brace:
             children, i = parse_csg_lines(lines, i + 1)
         else:
             i += 1
 
-        # --- Instantiate node ---
-        try:
-            if node_type == "sphere":
-                r = params.get("r", 1)
-                fn = params.get("$fn")
-                fa = params.get("$fa")
-                fs = params.get("$fs")
-                node = cls(r=r, fn=fn, fa=fa, fs=fs, params=params, csg_params=csg_params)
+        # --- Parse parameters ---
+        params = {}
 
-            elif node_type == "cube":
-                try:
-                    # --- Normalize size ---
-                    raw_size = params.get("size", 1)
-                    size = normalizeScalarOrVector(raw_size, length=3, name="cube.size")
+        # =========================
+        # MULTMATRIX (special)
+        # =========================
+        if node_type == "multmatrix":
+            try:
+                matrix = ast.literal_eval(csg_params)
+                if (
+                    not isinstance(matrix, list)
+                    or len(matrix) != 4
+                    or any(len(row) != 4 for row in matrix)
+                ):
+                    raise ValueError("multmatrix is not 4x4")
+            except Exception as e:
+                write_log("CSG_PARSE", f"Failed to parse multmatrix: {e}")
+                matrix = [
+                    [1, 0, 0, 0],
+                    [0, 1, 0, 0],
+                    [0, 0, 1, 0],
+                    [0, 0, 0, 1],
+                ]
 
-                    # --- Normalize center ---
-                    center = normalizeBool(params.get("center", False))
+            params["matrix"] = matrix
 
-                    # --- Logging ---
-                    write_log(
-                        "AST",
-                        f"cube size={size} center={center} csg_params={csg_params}"
-                    )
+            node = MultMatrix(
+                matrix=matrix,
+                children=children,
+                params=params,
+                csg_params=csg_params,
+            )
 
-                    node = cls(
-                        size=size,
-                        center=center,
-                        params=params,
-                        csg_params=csg_params
-                    )
+            write_log(
+                "AST",
+                f"multmatrix csg_params={csg_params}, params['matrix']={matrix}",
+            )
 
-                except Exception as e:
-                    FreeCAD.Console.PrintError(f"[AST:cube] Failed to parse cube: {e}\n")
-                    node = AstNode(
-                        node_type="cube_failed",
-                        params=params,
-                        csg_params=csg_params
-                    )
+        # =========================
+        # PRIMITIVES (NO children)
+        # =========================
+        elif node_type == "cube":
+            params = parse_csg_params(param_str)
+            raw_size = params.get("size", 1)
+            size = normalizeScalarOrVector(raw_size, length=3, name="cube.size")
+            center = normalizeBool(params.get("center", False))
 
-            elif node_type == "cylinder":
-                h = params.get("h", 1)
-                r = params.get("r")
-                r1 = params.get("r1")
-                r2 = params.get("r2")
-                center = params.get("center", False)
-                fn = params.get("$fn")
-                fa = params.get("$fa")
-                fs = params.get("$fs")
-                node = cls(h=h, r=r, r1=r1, r2=r2, center=center, fn=fn, fa=fa, fs=fs, params=params, csg_params=csg_params)
+            node = Cube(
+                size=size,
+                center=center,
+                params=params,
+                csg_params=csg_params,
+            )
 
-            elif node_type == "multmatrix":
-                node = cls(matrix=params.get("matrix"), children=children, params=params, csg_params=csg_params)
+        elif node_type == "sphere":
+            params = parse_csg_params(param_str)
+            node = Sphere(
+                r=params.get("r"),
+                params=params,
+                csg_params=csg_params,
+            )
 
-            elif node_type in ("translate", "rotate", "scale"):
+        elif node_type == "cylinder":
+            params = parse_csg_params(param_str)
+            node = Cylinder(
+                r=params.get("r"),
+                h=params.get("h"),
+                center=params.get("center", False),
+                params=params,
+                csg_params=csg_params,
+            )
+
+        # =========================
+        # TRANSFORMS / CSG NODES
+        # =========================
+        else:
+            params = parse_csg_params(param_str)
+
+            if node_type in ("translate", "scale"):
                 node = cls(
                     vector=params.get("vector"),
-                    angle=params.get("angle") if node_type == "rotate" else None,
                     children=children,
                     params=params,
-                    csg_params=csg_params
+                    csg_params=csg_params,
+                )
+
+            elif node_type == "rotate":
+                node = Rotate(
+                    vector=params.get("vector"),
+                    angle=params.get("angle"),
+                    children=children,
+                    params=params,
+                    csg_params=csg_params,
                 )
 
             else:
-                # generic node or boolean operations
-                node = cls(children=children, params=params, csg_params=csg_params)
-
-        except Exception as e:
-            write_log("CSG_PARSE", f"Failed to instantiate node {node_type}: {e}")
-            node = AstNode(node_type, params=params, csg_params=csg_params, children=children)
+                node = cls(
+                    children=children,
+                    params=params,
+                    csg_params=csg_params,
+                )
 
         nodes.append(node)
 
     return nodes, i
+
 
 # -------------------------------------------------
 # Main parser
