@@ -228,6 +228,7 @@ def parse_csg_lines(lines, start=0):
 
         # --- Determine class ---
         cls = {
+            "color": Color,
             "cube": Cube,
             "sphere": Sphere,
             "cylinder": Cylinder,

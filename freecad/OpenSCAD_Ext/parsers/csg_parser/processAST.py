@@ -3,7 +3,7 @@
 #*   AST Processing for OpenSCAD CSG importer                               *
 #*   Converts AST nodes to FreeCAD Shapes or SCAD strings with fallbacks    *
 #*                                                                          *
-#*      Returns Shaoe                                                       *
+#*      Returns Shape                                                       *
 #****************************************************************************
 
 import os
@@ -278,7 +278,7 @@ def flatten_hull_minkowski_node(node, indent=0):
         return "\n".join(filter(None, scad_lines))  # filter out None
 
     # Hull / Minkowski
-    if node.node_type in ("hull", "minkowski"):
+    elif node.node_type in ("hull", "minkowski"):
         scad_lines.append(f"{pad}{node.node_type}() {{")
         for child in node.children:
             scad_lines.append(flatten_hull_minkowski_node(child, indent + 4))
@@ -286,7 +286,7 @@ def flatten_hull_minkowski_node(node, indent=0):
         return "\n".join(filter(None, scad_lines))
 
     # MultMatrix: raw string from csg_params
-    if node.node_type == "multmatrix":
+    elif node.node_type == "multmatrix":
         matrix_str = ""
         if isinstance(node.csg_params, str):
             matrix_str = node.csg_params
@@ -297,6 +297,20 @@ def flatten_hull_minkowski_node(node, indent=0):
             scad_lines.append(flatten_hull_minkowski_node(child, indent + 4))
         scad_lines.append(f"{pad}}}")
         return "\n".join(filter(None, scad_lines))
+
+    elif node.node_type == "linear_extrude":
+        write_log("AST",node.node_type)
+
+    elif node.node_type == "rotate_extrude":
+        write_log("AST",node.node_type)
+    
+    elif node.node_type == "text":
+    # Always fallback — FreeCAD has no native text solid
+    # This is in a hull/minkowski flatten
+    # Call OpenSCAD to return 2D Dxf
+        #shape = fallback_to_OpenSCAD(node, "Text")
+        return None
+
 
     # Other primitives (sphere, cube, etc.) — just use csg_params string
     csg_str = ""
@@ -364,7 +378,7 @@ def flatten_hull_minkowski_node(node, indent=0):
         scad_lines.append(f"{pad}{node.node_type}({params_str});")
 
     return "\n".join(scad_lines)
-
+'''
 def apply_transform(node, shape):
     """
     Apply a transform node to a FreeCAD Shape
@@ -384,7 +398,7 @@ def apply_transform(node, shape):
         if a:
             shape.rotate(Vector(0,0,0), Vector(*v), a)
     return shape
-'''
+
 
 # -----------------------------
 # Hull / Minkowski native attempts
@@ -432,8 +446,29 @@ def process_AST_node(node):
     node_type = node.node_type.lower()
     write_log(f"AST: {node_type}", f"Processing node: {node_type}, children={len(node.children)}")
 
+    if node.node_type == "group":
+        write_log("Group",f"children {len(node.children)}")
+        shapes = []
+        for child in node.children:
+            
+            child_shape = process_AST_node(child)
+            if child_shape:  # skip empty or None children
+                shapes.append(child_shape)
+
+        write_log("Group",shapes)
+
+        if not shapes:
+            write_log("AST_Group", "Empty group, returning None")
+            return None
+
+        compound = Part.makeCompound(shapes)
+        node._shape = compound  # cache
+        write_log("AST_Group", f"Created Part.Compound with {len(shapes)} children")
+        return compound
+
+
     # Hull / Minkowski
-    if node_type == "hull":
+    elif node_type == "hull":
 
         shape = try_hull(node)
         if shape is None:
@@ -443,7 +478,7 @@ def process_AST_node(node):
             logShapeState(solid,"Solid")
         return solid
 
-    if node_type == "minkowski":
+    elif node_type == "minkowski":
 
         shape = try_minkowski(node)
         if shape is None:
@@ -451,16 +486,26 @@ def process_AST_node(node):
         return shape
 
     # Transforms
-    if node_type in ("translate", "rotate", "scale", "multmatrix"):
+    elif node_type in ("translate", "rotate", "scale", "multmatrix"):
+        write_log("AST",f"{node_type} - children {len(node.children)}")
         if not node.children:
             return None
+        shapes = []
+        for c in node.children:
+            s = process_AST_node(c)
+            if s:
+                shapes.append(s)
+        if not shapes:
+            return None
+        
         child_shape = process_AST_node(node.children[0])
         if child_shape:
             return apply_transform(node, child_shape)
-        return None
+        
+        return shapes[0]
 
     # Booleans
-    if node_type in ("union", "difference", "intersection"):
+    elif node_type in ("union", "difference", "intersection"):
         write_log("Booleans",f"{node_type} Children {len(node.children)}")
         shapes = []
         for c in node.children:
@@ -483,10 +528,13 @@ def process_AST_node(node):
         return result
 
     # Primitives
-    if node_type in ("cube", "sphere", "cylinder", "polyhedron", "circle", "square", "polygon"):
+    elif node_type in ("cube", "sphere", "cylinder", "polyhedron", "circle", "square", "polygon"):
         shape = create_primitive(node)
         logShapeState(shape, node_type)
         return shape
+
+    elif node_type in ("color"):
+        return None
 
     # Unknown
     write_log("AST", f"Unknown node type '{node.node_type}', fallback to OpenSCAD")

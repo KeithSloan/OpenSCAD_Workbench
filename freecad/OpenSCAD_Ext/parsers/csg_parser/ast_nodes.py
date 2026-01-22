@@ -57,6 +57,17 @@ class Polyhedron(AstNode):
     def __init__(self, points=None, faces=None, params=None, csg_params=None):
         super().__init__("polyhedron", params or {"points": points or [], "faces": faces or []}, csg_params)
 
+
+# -------------------------------------------------
+# Color
+# -------------------------------------------------
+class Color(AstNode):
+    def __init__(self, rgb=None, alpha=1.0, children=None, params=None, csg_params=None):
+        super().__init__("color",
+                         params or {"rgb": rgb or [1,1,1], "alpha": alpha},
+                         csg_params,
+                         children)
+
 # -------------------------------------------------
 # Boolean / CSG operators
 # -------------------------------------------------
