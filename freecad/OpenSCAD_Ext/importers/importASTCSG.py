@@ -130,7 +130,7 @@ def insert(filename,docname):
         pathName = os.path.dirname(os.path.normpath(filename))
         processCSG(doc, filename)
 
-
+'''
 def add_shapes_to_document(doc, name, shapes):
     """
     Add one or more Part.Shape objects to the FreeCAD document.
@@ -171,7 +171,18 @@ def add_shapes_to_document(doc, name, shapes):
     obj.Shape = compound
     obj.recompute()
     return obj
+'''
 
+import FreeCAD as App
+import Part
+
+def add_shape_to_doc(doc, shape, placement, name="Part"):
+
+    obj = doc.addObject("Part::Feature", name)
+    obj.Shape = shape
+    obj.Placement = placement
+
+    return obj
 
 def processCSG(docSrc, filename, fnmax_param = None):
     global doc
@@ -192,9 +203,11 @@ def processCSG(docSrc, filename, fnmax_param = None):
     raw_ast_nodes = parse_csg_file_to_AST_nodes(filename)
     ast_nodes = raw_ast_nodes
     #ast_nodes = normalize_ast(raw_ast_nodes)
-    shapes = process_AST(ast_nodes, mode="multiple")
-    write_log("AST",f"Shapes {shapes}")
-    add_shapes_to_document(doc, name, shapes)
+    shapePlaceList = process_AST(ast_nodes, mode="multiple")
+    write_log("AST",f"shapePlaceList {shapePlaceList}")
+    for sp in shapePlaceList:
+        add_shape_to_doc(doc,sp[1],sp[2], sp[0])
+    #add_shapes_to_document(doc, name, shapes)
     FreeCADGui.SendMsgToActiveView("ViewFit")
     if printverbose:
         print ('ImportCSG Version 0.6a')

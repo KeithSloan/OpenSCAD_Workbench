@@ -17,6 +17,7 @@ import tempfile
 import FreeCAD
 import Part
 import Mesh
+'''
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_classes import (
     CubeFC,
     SphereFC,
@@ -26,6 +27,7 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_classes import (
     DifferenceFC,
     IntersectionFC
 )
+'''
 #from FreeCAD import Vector
 
 #from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
@@ -43,7 +45,7 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import (
     Color
 )
 
-'''
+
 
 # -----------------------------
 # Utility functions
@@ -100,7 +102,7 @@ def generate_stl_from_scad(scad_str, timeout_sec=60):
 
 
 
-
+'''
 
 def saved_generate_stl_from_scad(scad_str, check_syntax=False, timeout=60):
     """
@@ -150,7 +152,7 @@ def saved_generate_stl_from_scad(scad_str, check_syntax=False, timeout=60):
 
     return stl_file
 
-
+'''
 
 def _mesh_to_shape_worker(stl_path, tolerance, queue):
     """Worker process to safely run makeShapeFromMesh with timeout"""
@@ -227,29 +229,15 @@ def fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60)
 
     return shape
 
-# -*- coding: utf-8 -*-
-"""
-Process AST nodes into FreeCAD Shapes
-------------------------------------
-
-- Hull / Minkowski: try native BRep, fallback to OpenSCAD
-- Primitives: create Part.Shape
-- Booleans: union/difference/intersection recursively
-- Transforms: apply to child Shapes
-- Only Hull/Minkowski call OpenSCAD
-- Debug SCAD dumps written for inspection
-"""
-
-
 # -----------------------------
 # Hull / Minkowski native attempts
 # -----------------------------
-"""
+
 def try_hull(node):
     """
     #Attempt to generate a native FreeCAD hull from children shapes.
     #Returns Part.Shape or None if not possible.
-"""
+    """
     return None
 
     shapes = [process_AST_node(c) for c in node.children if process_AST_node(c)]
@@ -278,7 +266,7 @@ def try_minkowski(node):
     # Returning None for now to trigger OpenSCAD fallback
     write_log("AST_Minkowski", "Native Minkowski not implemented, falling back")
     return None
-    """
+'''
 
 # ============================================================
 # SCAD flattening (Hull / Minkowski fallback)
@@ -355,53 +343,6 @@ def flatten_hull_minkowski_node(node, indent=0):
     return "\n".join(filter(None, scad_lines))
 
 
-'''
-def flatten_hull_minkowski_node(node, indent=0):
-    """
-    Flatten any AST node for Hull/Minkowski fallback:
-    - Uses csg_params for primitives
-    - Recursively flattens all children including nested Hull/Minkowski
-    - Only groups are transparent
-    """
-    pad = " " * indent
-    scad_lines = []
-
-    if node is None:
-        return ""
-
-    write_log("FLATTEN", f"{pad}Flatten node: {node.node_type}, children={len(node.children)}, csg_params={getattr(node, 'csg_params', {})}")
-
-    # Transparent group
-    if node.node_type == "group":
-        for child in node.children:
-            scad_lines.append(flatten_hull_minkowski_node(child, indent))
-        return "\n".join(scad_lines)
-
-    # Build parameter string from csg_params
-    params_str = ""
-    if hasattr(node, "csg_params") and node.csg_params:
-        arg_list = []
-        for k, v in node.csg_params.items():
-            if v is None:
-                arg_list.append(k)
-            elif isinstance(v, (int, float, list, tuple)):
-                arg_list.append(f"{k}={v}")
-            elif isinstance(v, str):
-                arg_list.append(f'{k}="{v}"')
-        params_str = ", ".join(arg_list)
-
-    # Emit node
-    if node.children:
-        scad_lines.append(f"{pad}{node.node_type}({params_str}) {{")
-        for child in node.children:
-            scad_lines.append(flatten_hull_minkowski_node(child, indent + 4))
-        scad_lines.append(f"{pad}}}")
-    else:
-        scad_lines.append(f"{pad}{node.node_type}({params_str});")
-
-    return "\n".join(scad_lines)
-'''
-
 def apply_transform(node):
     p = node.params
     pl = FreeCAD.Placement()  # identity
@@ -436,37 +377,6 @@ def apply_scale(node, pl):
             return shape.scale(Vector(0,0,0), Vector(*v), pl)
 '''
 
-# -----------------------------
-# Hull / Minkowski native attempts
-# -----------------------------
-
-def try_hull(node):
-    return None
-    shapes = []
-    for c in node.children:
-        s = process_AST_node(c)
-        if s:
-            shapes.append(s)
-    if len(shapes) < 2:
-        return None
-    # TODO: native FreeCAD convex hull
-    write_log("AST_Hull", "Native hull not implemented, fallback")
-    return None
-
-
-def try_minkowski(node):
-    return None
-    shapes = []
-    for c in node.children:
-        s = process_AST_node(c)
-        if s:
-            shapes.append(s)
-    if len(shapes) != 2:
-        return None
-    # TODO: native FreeCAD Minkowski
-    write_log("AST_Minkowski", "Native Minkowski not implemented, fallback")
-    return None
-
 
 def normalize_results(result):
     if result is None:
@@ -493,76 +403,185 @@ def placement_from_matrix(matrix):
 #   (placement: FreeCAD.Placement, shape: Part.Shape | None)
 # ----------------------------------------------------------
 
-# processAST.py (partial)
-# -----------------------------
-# Import FreeCAD wrappers from full path
-# Mapping from ast_nodes type to FreeCAD wrapper
-AST_TO_FC = {
-    "Cube": CubeFC,
-    "Sphere": SphereFC,
-    "Cylinder": CylinderFC,
-    #"Torus": TorusFC,
-    "Union": UnionFC,
-    "Difference": DifferenceFC,
-    "Intersection": IntersectionFC,
-}
-
-def wrap_node_for_fc(node):
-    """Convert a plain AST node into its FreeCAD-enabled wrapper."""
-    node_type = type(node).__name__
-    wrapper_class = AST_TO_FC.get(node_type)
-    if wrapper_class is not None:
-        # Use __dict__ to pass all parameters from the original node
-        return wrapper_class(**node.__dict__)
-    else:
-        # For transform nodes (Translate, Rotate, MultMatrix) and unknown types
-        return node
 
 # -----------------------------
 # Recursive AST node processing
 # -----------------------------
+import FreeCAD as App
+import Part
+
+
+def _as_list(result):
+    """Normalize single or list return to list."""
+    if result is None:
+        return []
+    if isinstance(result, list):
+        return result
+    return [result]
+
+
 def process_AST_node(node, parent_placement=None):
-    """
-    Process a single AST node recursively.
-    Applies transformations and calls createShape() for primitives/booleans.
-    """
-    # Wrap node with FreeCAD class if available
-    fc_node = wrap_node_for_fc(node)
+    if parent_placement is None:
+        parent_placement = App.Placement()
 
+    node_type = getattr(node, "node_type", None)
+
+    # -----------------------------
+    # SOLIDS
+    # -----------------------------
+    if node_type == "cube":
+        params = node.params
+        size = params.get("size", 1)
+        center = params.get("center", False)
+
+        # normalize size
+        if hasattr(size, "__iter__"):
+            s = list(size)
+            while len(s) < 3:
+                s.append(s[-1])
+            sx, sy, sz = s[:3]
+        else:
+            sx = sy = sz = size
+
+        shape = Part.makeBox(sx, sy, sz)
+
+        if center:
+            shape.translate(App.Vector(-sx/2, -sy/2, -sz/2))
+
+        return (shape, App.Placement())
+
+    if node_type == "sphere":
+        r = node.params.get("r", 1)
+        shape = Part.makeSphere(r)
+        return (shape, App.Placement())
+
+    if node_type == "cylinder":
+        p = node.params
+        h = p.get("h", 1)
+        r1 = p.get("r1", p.get("r", 1))
+        r2 = p.get("r2", r1)
+        shape = Part.makeCylinder(r1, h, App.Vector(0,0,0), App.Vector(0,0,1), r2)
+        return (shape, App.Placement())
+
+    # -----------------------------
+    # GROUP
+    # -----------------------------
+    if node_type in ("group", "root"):
+        results = []
+        for child in node.children:
+            results.extend(_as_list(process_AST_node(child, parent_placement)))
+        return results
+
+    # -----------------------------
+    # TRANSFORMS
+    # -----------------------------
+    if node_type in ("translate", "rotate", "scale", "multmatrix"):
+        write_log("Transform",node_type)
+        local_pl = App.Placement()
+
+        if node_type == "translate":
+            v = node.params.get("v", [0,0,0])
+            local_pl.move(App.Vector(*v))
+
+        elif node_type == "rotate":
+            a = node.params.get("a", 0)
+            v = node.params.get("v", [0,0,1])
+            local_pl.Rotation = App.Rotation(App.Vector(*v), a)
+
+        elif node_type == "scale":
+            s = node.params.get("v", [1,1,1])
+            m = App.Matrix()
+            m.A11, m.A22, m.A33 = s
+            local_pl = App.Placement(m)
+
+        elif node_type == "multmatrix":
+            m = node.params.get("matrix")
+            mat = App.Matrix()
+            mat.A11, mat.A12, mat.A13, mat.A14 = m[0]
+            mat.A21, mat.A22, mat.A23, mat.A24 = m[1]
+            mat.A31, mat.A32, mat.A33, mat.A34 = m[2]
+            local_pl = App.Placement(mat)
+
+        combined_pl = parent_placement.multiply(local_pl)
+        write_log("Transform",f"Combined {combined_pl}")
+
+        results = []
+        for child in node.children:
+            for shape, pl in _as_list(process_AST_node(child, combined_pl)):
+                write_log("Transform",f"Child {pl*combined_pl}")
+                results.append((shape, pl*combined_pl))
+        return results
+
+    # -----------------------------
+    # BOOLEANS
+    # -----------------------------
+    if node_type in ("union", "difference", "intersection"):
+        shapes = []
+        for child in node.children:
+            for shape, pl in _as_list(process_AST_node(child, parent_placement)):
+                s = shape.copy()
+                s.Placement = pl
+                shapes.append(s)
+
+        if not shapes:
+            return []
+
+        result = shapes[0]
+        for s in shapes[1:]:
+            if node_type == "union":
+                result = result.fuse(s)
+            elif node_type == "difference":
+                result = result.cut(s)
+            elif node_type == "intersection":
+                result = result.common(s)
+
+        return (result, App.Placement())
+
+    # -----------------------------
+    # FALLBACK
+    # -----------------------------
     results = []
-
-    # If node has children (for booleans and transforms)
-    children = getattr(fc_node, "children", None)
-    if children:
-        for child in children:
-            results.extend(process_AST_node(child, parent_placement))
-
-    # If node has createShape(), generate shape
-    if hasattr(fc_node, "createShape"):
-        shape = fc_node.createShape()
-        # Apply parent placement if any
-        if shape and parent_placement:
-            shape.Placement = parent_placement.multiply(shape.Placement)
-        results.append(shape)
-
-    # Handle transform nodes (Translate, Rotate, MultMatrix)
-    elif hasattr(fc_node, "placement"):
-        # Assuming fc_node.placement is a FreeCAD.Placement object
-        composed = parent_placement.multiply(fc_node.placement) if parent_placement else fc_node.placement
-        child_nodes = getattr(fc_node, "children", [])
-        for child in child_nodes:
-            results.extend(process_AST_node(child, composed))
-
+    for child in getattr(node, "children", []):
+        results.extend(_as_list(process_AST_node(child, parent_placement)))
     return results
 
 
-'''
 
-def process_AST_node(node, parent_placement=None):
+def save_process_AST_node(node, parent_placement=None):
     """
-    Process an AST node.
-    Returns: list of (shape, placement)
+    Recursively process an AST node.
+
+    Returns:
+        Either:
+          - a single (shape, placement) tuple
+          - or a list of (shape, placement) tuples
+
+    Rules:
+
+    Solids:
+        - Create a FreeCAD Shape
+        - Return (shape, IdentityPlacement)
+        - Do NOT apply parent placement here
+
+    Group:
+        - Return flattened list of child results
+
+    Transforms (translate, rotate, scale, multmatrix):
+        - Compute a new Placement = parent ∘ local_transform
+        - Recurse into children
+        - Apply transform to each returned child's placement
+
+    Booleans (union, difference, intersection):
+        - Evaluate children into shapes
+        - Combine shapes into a single Boolean Shape
+        - Return (boolean_shape, IdentityPlacement)
+
+    Placement propagation:
+        - Placements are accumulated top-down
+        - Shapes are always created in local coordinates
+
     """
+
     if parent_placement is None:
         parent_placement = FreeCAD.Placement()
 
@@ -632,32 +651,17 @@ def process_AST_node(node, parent_placement=None):
     # HULL
     # -------------------------------------------------
     if isinstance(node, Hull):
-        child_results = []
-        for child in node.children:
-            child_results.extend(process_AST_node(child, parent_placement))
-
-        shapes = [s for (s, _) in child_results if s]
-        if not shapes:
-            return []
-
-        shape = try_hull(shapes)
-        shape.Placement = parent_placement
+        shape = try_hull(node)
+        if shape is None:
+            shape = fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60)
         return [(shape, parent_placement)]
-
     # -------------------------------------------------
     # MINKOWSKI
     # -------------------------------------------------
     if isinstance(node, Minkowski):
-        child_results = []
-        for child in node.children:
-            child_results.extend(process_AST_node(child, parent_placement))
-
-        shapes = [s for (s, _) in child_results if s]
-        if not shapes:
-            return []
-
         shape = try_minkowski(shapes)
-        shape.Placement = parent_placement
+        if shape is None:
+            shape = fallback_to_OpenSCAD(node, operation_type="Minkowski", tolerance=1.0, timeout=60)
         return [(shape, parent_placement)]
 
     # -------------------------------------------------
@@ -717,79 +721,42 @@ def process_AST_node(node, parent_placement=None):
         results.extend(process_AST_node(child, parent_placement))
 
     return results
-'''
 
-def process_AST(nodes, mode="single"):
-    if not nodes:
-        return None
+def process_AST(nodes, mode="multiple"):
+    """
+    Process a list of AST nodes.
 
-    pl = FreeCAD.Base.Placement()
+    Returns:
+        List of (name, shape, placement) tuples
+    """
+    results = []
+
+    for node in nodes:
+        node_name = type(node).__name__
+        processed = process_AST_node(node)
+
+        if not processed:
+            continue
+
+        # Normalize to list
+        if not isinstance(processed, list):
+            processed = [processed]
+
+        for shape, placement in processed:
+            results.append((node_name, shape, placement))
+
+        write_log(
+            "AST",
+            f"Processed {node_name} → {len(processed)} shape(s)"
+        )
 
     if mode == "single":
-        shape, pl = process_AST_node(nodes[0], pl)
-        return shape, pl
+        return results[0] if results else None
 
-    shapes = []
-    for node in nodes:
-        shape, pl = process_AST_node(node, pl)
-        if shape:
-            shape.Placement = pl
-            shapes.append(shape)
+    return results
 
-    if not shapes:
-        return None, pl
 
-    if len(shapes) == 1:
-        return shapes[0], pl
-
-    return Part.makeCompound(shapes), pl
-
-def logShapeState(shape, label="", indent=""):
-    """
-    Drop-in diagnostic helper for FreeCAD Part.Shapes.
-    Does NOT modify the shape.
-    Safe to call anywhere.
-
-    :param shape: Part.Shape or None
-    :param label: Optional label (node name, operation, filename, etc.)
-    :param indent: Optional indent string for nested logs
-    """
-
-    try:
-        if shape is None:
-            FreeCAD.Console.PrintMessage(
-                f"{indent}[Shape] {label}: None\n"
-            )
-            return
-
-        msg = f"{indent}[Shape] {label}: "
-
-        if shape.isNull():
-            msg += "NULL"
-        else:
-            msg += shape.ShapeType
-
-            if not shape.isValid():
-                msg += " (INVALID)"
-            else:
-                msg += " (valid)"
-
-            # Useful counts without touching geometry
-            msg += (
-                f" V:{len(shape.Vertexes)}"
-                f" E:{len(shape.Edges)}"
-                f" F:{len(shape.Faces)}"
-                f" S:{len(shape.Solids)}"
-            )
-
-        FreeCAD.Console.PrintMessage(msg + "\n")
-
-    except Exception as e:
-        FreeCAD.Console.PrintError(
-            f"{indent}[Shape] {label}: ERROR {e}\n"
-        )
 '''
-
 def create_primitive(node):
     """
     Create FreeCAD Part.Shape and Placement from node.params (typed)
@@ -881,4 +848,3 @@ def create_primitive(node):
         )
         return None, None
 '''
-
