@@ -37,10 +37,21 @@ class Polygon(AstNode):
 # -------------------------------------------------
 # 3D primitives
 # -------------------------------------------------
+'''
 class Cube(AstNode):
     def __init__(self, size, center=False, params=None, csg_params=None):
         super().__init__("cube", params or {"size": size, "center": center}, csg_params)
+'''
 
+class Cube(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__(
+            "cube",
+            params or {},
+            csg_params,
+            children
+        )
+        
 class Sphere(AstNode):
     def __init__(self, r, fn=None, fa=None, fs=None, params=None, csg_params=None):
         super().__init__("sphere", params or {"r": r, "$fn": fn, "$fa": fa, "$fs": fs}, csg_params)

@@ -284,10 +284,6 @@ def parse_csg_lines(lines, start=0):
     """
     Recursively parse CSG lines into AST nodes.
     Returns: (list_of_nodes, next_line_index)
-    
-    Rules:
-      - csg_params: raw string from CSG (for Hull/Minkowski fallback)
-      - params: normalized dict for FreeCAD B-Rep creation
     """
     nodes = []
     i = start
@@ -311,7 +307,7 @@ def parse_csg_lines(lines, start=0):
 
         node_type, param_str, brace = m.groups()
         node_type = node_type.lower()
-        raw_csg_params = param_str.strip()
+        csg_params = param_str.strip()
 
         # --- Determine class ---
         cls = {
@@ -348,7 +344,7 @@ def parse_csg_lines(lines, start=0):
         # =========================
         if node_type == "multmatrix":
             try:
-                matrix = ast.literal_eval(raw_csg_params)
+                matrix = ast.literal_eval(csg_params)
                 if (
                     not isinstance(matrix, list)
                     or len(matrix) != 4
@@ -370,100 +366,95 @@ def parse_csg_lines(lines, start=0):
                 matrix=matrix,
                 children=children,
                 params=params,
-                csg_params=raw_csg_params,
+                csg_params=csg_params,
             )
 
             write_log(
                 "AST",
-                f"multmatrix csg_params={raw_csg_params}, params['matrix']={matrix}",
+                f"multmatrix csg_params={csg_params}, params['matrix']={matrix}",
             )
-
-        # =========================
-        # CUBES
-        # =========================
         elif node_type == "cube":
-            parsed_params, _ = parse_csg_params(raw_csg_params)
-            if not isinstance(parsed_params, dict):
-                parsed_params = {}
+            # --- RAW for Hull/Minkowski fallback ---
+            csg_params = param_str.strip()
 
-            # Handle positional / default
-            if "size" not in parsed_params:
-                s = raw_csg_params.strip()
+            # --- PARSED for B-Rep ---
+            parsed = parse_csg_params(param_str)
+            if isinstance(parsed, tuple):
+                params = parsed[0]  # always dict
+            else:
+                params = parsed
+
+            if not isinstance(params, dict):
+                params = {}
+
+            # --- Positional / default handling ---
+            if "size" not in params:
+                s = param_str.strip()
                 if s:
                     try:
-                        parsed_params["size"] = ast.literal_eval(s)
+                        params["size"] = ast.literal_eval(s)
                     except Exception:
                         write_log("CSG_PARSE", f"Failed to eval cube size: {s}")
-                        parsed_params["size"] = 1
+                        params["size"] = 1
                 else:
-                    parsed_params["size"] = 1
+                    params["size"] = 1
 
-            parsed_params.setdefault("center", False)
+            params.setdefault("center", False)
 
+            # --- CREATE AST NODE ---
             node = Cube(
-                params=parsed_params,
-                csg_params=raw_csg_params,
-                children=[],
+                params=params,        # for FreeCAD B-Rep
+                csg_params=csg_params,  # RAW string ONLY
+                children=[]
             )
 
-        # =========================
-        # SPHERES
-        # =========================
         elif node_type == "sphere":
-            parsed_params, _ = parse_csg_params(raw_csg_params)
+            params = parse_csg_params(param_str)
             node = Sphere(
-                r=parsed_params.get("r"),
-                params=parsed_params,
-                csg_params=raw_csg_params,
+                r=params.get("r"),
+                params=params,
+                csg_params=csg_params,
             )
 
-        # =========================
-        # CYLINDERS
-        # =========================
         elif node_type == "cylinder":
-            parsed_params, _ = parse_csg_params(raw_csg_params)
+            params = parse_csg_params(param_str)
             node = Cylinder(
-                r=parsed_params.get("r"),
-                r1=parsed_params.get("r1"),
-                r2=parsed_params.get("r2"),
-                h=parsed_params.get("h"),
-                center=parsed_params.get("center", False),
-                params=parsed_params,
-                csg_params=raw_csg_params,
+                r=params.get("r"),
+                h=params.get("h"),
+                center=params.get("center", False),
+                params=params,
+                csg_params=csg_params,
             )
 
         # =========================
-        # TRANSFORMS
-        # =========================
-        elif node_type in ("translate", "scale"):
-            parsed_params, _ = parse_csg_params(raw_csg_params)
-            node = cls(
-                vector=parsed_params.get("vector"),
-                children=children,
-                params=parsed_params,
-                csg_params=raw_csg_params,
-            )
-
-        elif node_type == "rotate":
-            parsed_params, _ = parse_csg_params(raw_csg_params)
-            node = Rotate(
-                vector=parsed_params.get("vector"),
-                angle=parsed_params.get("angle"),
-                children=children,
-                params=parsed_params,
-                csg_params=raw_csg_params,
-            )
-
-        # =========================
-        # ALL OTHER NODES (Booleans, Hull/Minkowski, Group, Extrusions, Color)
+        # TRANSFORMS / CSG NODES
         # =========================
         else:
-            parsed_params, _ = parse_csg_params(raw_csg_params)
-            node = cls(
-                children=children,
-                params=parsed_params,
-                csg_params=raw_csg_params,
-            )
+            params = parse_csg_params(param_str)
+
+            if node_type in ("translate", "scale"):
+                node = cls(
+                    vector=params.get("vector"),
+                    children=children,
+                    params=params,
+                    csg_params=csg_params,
+                )
+
+            elif node_type == "rotate":
+                node = Rotate(
+                    vector=params.get("vector"),
+                    angle=params.get("angle"),
+                    children=children,
+                    params=params,
+                    csg_params=csg_params,
+                )
+
+            else:
+                node = cls(
+                    children=children,
+                    params=params,
+                    csg_params=csg_params,
+                )
 
         nodes.append(node)
 
