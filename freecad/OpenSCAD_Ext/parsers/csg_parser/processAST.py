@@ -238,6 +238,7 @@ def try_hull(node):
     #Attempt to generate a native FreeCAD hull from children shapes.
     #Returns Part.Shape or None if not possible.
     """
+    write_log("AST","Try Hull")
     return None
 
     shapes = [process_AST_node(c) for c in node.children if process_AST_node(c)]
@@ -251,11 +252,11 @@ def try_hull(node):
 
 
 def try_minkowski(node):
-    
+    """
     #Attempt to generate a native FreeCAD Minkowski sum.
     #Returns Part.Shape or None if not possible.
-    
-    
+    """
+    write_log(AST,"Try Minkowski")
     #return None
 
     shapes = [process_AST_node(c) for c in node.children if process_AST_node(c)]
@@ -266,7 +267,7 @@ def try_minkowski(node):
     # Returning None for now to trigger OpenSCAD fallback
     write_log("AST_Minkowski", "Native Minkowski not implemented, falling back")
     return None
-'''
+
 
 # ============================================================
 # SCAD flattening (Hull / Minkowski fallback)
@@ -341,7 +342,7 @@ def flatten_hull_minkowski_node(node, indent=0):
         scad_lines.append(f"{pad}{node.node_type}({csg_str});")
 
     return "\n".join(filter(None, scad_lines))
-
+'''
 
 def apply_transform(node):
     p = node.params
@@ -463,6 +464,23 @@ def process_AST_node(node, parent_placement=None):
         shape = Part.makeCylinder(r1, h, App.Vector(0,0,0), App.Vector(0,0,1), r2)
         return (shape, App.Placement())
 
+    # -----------------------------
+    # Hull Minkowski
+    # -----------------------------
+    if isinstance(node, Hull):
+        write_log("AST","Hull")
+        shape = try_hull(node)
+        if shape is None:
+            shape = fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60)
+        return [(shape, parent_placement)]
+    # -------------------------------------------------
+    # MINKOWSKI
+    # -------------------------------------------------
+    if isinstance(node, Minkowski):
+        shape = try_minkowski(node)
+        if shape is None:
+            shape = fallback_to_OpenSCAD(node, operation_type="Minkowski", tolerance=1.0, timeout=60)
+        return [(shape, parent_placement)]
     # -----------------------------
     # GROUP
     # -----------------------------
@@ -651,6 +669,7 @@ def save_process_AST_node(node, parent_placement=None):
     # HULL
     # -------------------------------------------------
     if isinstance(node, Hull):
+        write_log("AST","Hull")
         shape = try_hull(node)
         if shape is None:
             shape = fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60)
