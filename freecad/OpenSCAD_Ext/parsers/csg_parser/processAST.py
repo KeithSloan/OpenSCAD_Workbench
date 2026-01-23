@@ -28,7 +28,10 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_classes import (
     IntersectionFC
 )
 '''
+import FreeCAD as App
+
 #from FreeCAD import Vector
+
 
 #from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
@@ -165,35 +168,96 @@ def _mesh_to_shape_worker(stl_path, tolerance, queue):
         queue.put(e)
 
 
-def stl_to_shape(stl_path, tolerance=0.05,timeout=None):
+import os
+import Part
+import Mesh
+import FreeCAD as App
+
+def stl_to_shape(stl_path, tolerance=0.05, timeout=None):
     """
     Import STL into FreeCAD and convert to Part.Shape.
+    Always attempts to return a Solid.
     Returns a Part.Shape or None on failure.
     """
+
     if not stl_path or not os.path.isfile(stl_path):
         write_log("AST_Hull:Minkowski", f"STL file not found: {stl_path}")
         return None
 
     try:
-        write_log("AST_Hull:Minkowski", f"Importing STL and converting to Part.Shape: {stl_path}")
+        write_log(
+            "AST_Hull:Minkowski",
+            f"Importing STL and converting to Part.Shape: {stl_path}"
+        )
 
-        # Load the STL as a Mesh
-        mesh_obj = Mesh.Mesh(stl_path)
+        # Load STL
+        mesh = Mesh.Mesh(stl_path)
 
-        # Convert Mesh to Part.Shape
+        # Instrumentation (API-safe)
+        try:
+            is_closed = mesh.isSolid()
+        except Exception:
+            is_closed = False
+
+        facets = getattr(mesh, "CountFacets", 0)
+
+        write_log(
+            "AST_Hull:Minkowski",
+            f"Mesh facets={facets}, solid={is_closed}"
+        )
+
+        # Mesh → Shape (shell)
         shape = Part.Shape()
-        shape.makeShapeFromMesh(mesh_obj.Topology, tolerance)
+        shape.makeShapeFromMesh(mesh.Topology, tolerance)
+        shape = shape.removeSplitter()
 
-        # Get number of points safely
-        n_points = getattr(mesh_obj, "CountPoints", None)
-        if n_points is None:
-            n_points = len(mesh_obj.Topology[0]) if isinstance(mesh_obj.Topology, tuple) else 0
+        # Always attempt solid
+        if is_closed:
+            try:
+                solid = Part.makeSolid(shape)
+                solid = solid.removeSplitter()
 
-        write_log("AST_Hull:Minkowski", f"STL converted to Part.Shape with approx {n_points} points")
+                valid = solid.isValid()
+                write_log(
+                    "AST_Hull:Minkowski",
+                    f"Solid created, valid={valid}"
+                )
+
+                return solid
+
+            except Exception as e:
+                write_log(
+                    "AST_Hull:Minkowski",
+                    f"makeSolid failed, falling back to sewing: {e}"
+                )
+
+        # Fallback: sew faces → solid
+        try:
+            shell = Part.makeShell(shape.Faces)
+            solid = Part.makeSolid(shell)
+            solid = solid.removeSplitter()
+
+            valid = solid.isValid()
+            write_log(
+                "AST_Hull:Minkowski",
+                f"Sewing fallback solid valid={valid}"
+            )
+
+            return solid
+
+        except Exception as e:
+            write_log(
+                "AST_Hull:Minkowski",
+                f"Sewing fallback failed, returning shell: {e}"
+            )
+
         return shape
 
     except Exception as e:
-        write_log("AST_Hull:Minkowski", f"Failed to convert STL to Shape: {e}")
+        write_log(
+            "AST_Hull:Minkowski",
+            f"Failed to convert STL to Shape: {e}"
+        )
         return None
 
 
@@ -534,11 +598,13 @@ def process_AST_node(node, parent_placement=None):
     # BOOLEANS
     # -----------------------------
     if node_type in ("union", "difference", "intersection"):
+        write_log("Boolean",node_type)
         shapes = []
         for child in node.children:
             for shape, pl in _as_list(process_AST_node(child, parent_placement)):
                 s = shape.copy()
                 s.Placement = pl
+                write_log(node_type,f"Child {child} Placement {pl}")
                 shapes.append(s)
 
         if not shapes:
