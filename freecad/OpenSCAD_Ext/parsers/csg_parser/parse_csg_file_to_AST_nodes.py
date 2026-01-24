@@ -13,7 +13,7 @@ import ast
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import AstNode, Cube, Sphere, Cylinder, Union, Difference, Intersection
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import Group, Translate, Rotate, Scale, MultMatrix, Hull, Minkowski
-from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import LinearExtrude, RotateExtrude, Color
+from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import LinearExtrude, RotateExtrude, Color, UnknownNode
 
 # --- parse_scad_argument and parse_csg_params assumed defined here ---
 
@@ -185,28 +185,6 @@ def split_top_level_commas(s):
         parts.append(buf.strip())
     return parts
 
-
-# -------------------------------
-# Main recursive parser
-# -------------------------------
-
-# -*- coding: utf-8 -*-
-# Drop-in replacement for parse_csg_lines
-
-# -------------------------------
-# Main recursive parser
-# -------------------------------
-'''
-import re
-import ast
-import FreeCAD
-
-from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import AstNode, Cube, Sphere, Cylinder, Union, Difference, Intersection
-from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import Group, Translate, Rotate, Scale, MultMatrix, Hull, Minkowski
-from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import LinearExtrude, RotateExtrude, Color
-'''
-
-
 # -*- coding: utf-8 -*-
 # Recursive CSG parser for FreeCAD AST
 # -------------------------------
@@ -280,7 +258,148 @@ def parse_csg_params(param_str):
     return params, csg_params
 
 
+import re
+
+NODE_RE = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*(\((.*)\))?\s*(\{)?")
+
 def parse_csg_lines(lines, start=0):
+    """
+    Recursively parse CSG lines into AST nodes.
+    Returns: (list_of_nodes, next_line_index)
+    """
+    nodes = []
+    i = start
+
+    while i < len(lines):
+        line = lines[i].strip()
+
+        # -----------------------------
+        # End of current block
+        # -----------------------------
+        if line.startswith("}"):
+            return nodes, i + 1
+
+        # Skip empty / comment lines
+        if not line or line.startswith("//"):
+            i += 1
+            continue
+
+        # -----------------------------
+        # Parse node header inline
+        # -----------------------------
+        m = NODE_RE.match(line)
+        if not m:
+            write_log("CSG_PARSE", f"Skipping unrecognized line: {line}")
+            i += 1
+            continue
+
+        node_type = m.group(1).lower()
+        raw_csg_params = m.group(3)  # may be None
+        opens_block = m.group(4) is not None
+
+        # -----------------------------
+        # Parse children if block
+        # -----------------------------
+        children = []
+        if opens_block:
+            children, i = parse_csg_lines(lines, i + 1)
+
+        # -----------------------------
+        # Parse params (for B-Rep)
+        # -----------------------------
+        try:
+            params, _ = parse_csg_params(raw_csg_params)
+        except Exception as e:
+            write_log(
+                "CSG_PARSE",
+                f"Failed to parse params for '{node_type}': {e}"
+            )
+            params = {}
+
+        # -----------------------------
+        # Handle Cube defaults separately
+        # -----------------------------
+        if node_type == "cube":
+            # Positional / default handling
+            if "size" not in params:
+                s = raw_csg_params.strip() if raw_csg_params else ""
+                if s:
+                    try:
+                        params["size"] = ast.literal_eval(s)
+                    except Exception:
+                        write_log("CSG_PARSE", f"Failed to eval cube size: {s}")
+                        params["size"] = 1
+                else:
+                    params["size"] = 1
+            params.setdefault("center", False)
+
+        # -----------------------------
+        # Determine node class
+        # -----------------------------
+        NODE_CLASSES = {
+            "cube": Cube,
+            "sphere": Sphere,
+            "cylinder": Cylinder,
+            "union": Union,
+            "difference": Difference,
+            "intersection": Intersection,
+            "group": Group,
+            "translate": Translate,
+            "rotate": Rotate,
+            "scale": Scale,
+            "multmatrix": MultMatrix,
+            "hull": Hull,
+            "minkowski": Minkowski,
+            "linear_extrude": LinearExtrude,
+            "rotate_extrude": RotateExtrude,
+            "color": Color,
+        }
+
+        cls = NODE_CLASSES.get(node_type)
+
+        if cls is None:
+            write_log(
+                "CSG_PARSE",
+                f"Unknown node '{node_type}', preserving as UnknownNode"
+            )
+
+            node = UnknownNode(
+                node_type=node_type,
+                params=params,
+                csg_params=raw_csg_params,
+            )
+            node.children = children
+
+        else:
+            try:
+                node = cls(
+                    params=params,
+                    csg_params=raw_csg_params,
+                    children=children,
+                )
+            except TypeError:
+                write_log(
+                    "CSG_PARSE",
+                    f"Constructor mismatch for '{node_type}', using AstNode fallback"
+                )
+                node = AstNode(
+                    node_type=node_type,
+                    params=params,
+                    csg_params=raw_csg_params,
+                    children=children,
+                )
+
+        nodes.append(node)
+
+        # -----------------------------
+        # Always advance
+        # -----------------------------
+        i += 1
+
+    return nodes, i
+
+
+def saved_parse_csg_lines(lines, start=0):
     """
     Recursively parse CSG lines into AST nodes.
     Returns: (list_of_nodes, next_line_index)
@@ -313,8 +432,10 @@ def parse_csg_lines(lines, start=0):
         node_type = node_type.lower()
         raw_csg_params = param_str.strip()
 
+        children = []
+
         # --- Determine class ---
-        cls = {
+        NODE_CLASSES = {
             "cube": Cube,
             "sphere": Sphere,
             "cylinder": Cylinder,
@@ -331,7 +452,30 @@ def parse_csg_lines(lines, start=0):
             "linear_extrude": LinearExtrude,
             "rotate_extrude": RotateExtrude,
             "color": Color,
-        }.get(node_type, AstNode)
+        }
+
+        cls = NODE_CLASSES.get(node_type)
+
+        if cls is None:
+            write_log(
+                "CSG_PARSE",
+                f"Unknown node '{node_type}', preserving as UnknownNode"
+            )
+
+            params, _ = parse_csg_params(raw_csg_params)
+
+            node = UnknownNode(
+                node_type=node_type,
+                params=params,
+                csg_params=raw_csg_params,
+                )
+
+            # Preserve subtree — do NOT lose it
+            node.children = children
+
+            nodes.append(node)
+            continue
+
 
         # --- Parse children ---
         children = []
@@ -454,16 +598,74 @@ def parse_csg_lines(lines, start=0):
                 csg_params=raw_csg_params,
             )
 
+        elif node_type == "linear_extrude":
+            params, _ = parse_csg_params(raw_csg_params)
+
+            if "height" not in params:
+                write_log(
+                    "CSG_PARSE",
+                    "linear_extrude missing required 'height'"
+                )
+                node = UnknownNode(
+                    node_type=node_type,
+                    children=children,
+                    params=params,
+                    csg_params=raw_csg_params,
+                )
+            else:
+                node = LinearExtrude(
+                    height=params["height"],
+                    center=params.get("center", False),
+                    twist=params.get("twist", 0),
+                    scale=params.get("scale", 1.0),
+                    children=children,
+                    params=params,
+                    csg_params=raw_csg_params,
+                )
+
+        elif node_type == "rotate_extrude":
+            parsed_params, _ = parse_csg_params(raw_csg_params)
+
+            node = RotateExtrude(
+                angle=parsed_params.get("angle", 360),
+                convexity=parsed_params.get("convexity"),
+                children=children,
+                params=parsed_params,
+                csg_params=raw_csg_params,
+            )
+
+        elif node_type == "color":
+            parsed_params, _ = parse_csg_params(raw_csg_params)
+
+            node = Color(
+                rgb=parsed_params.get("rgb"),
+                alpha=parsed_params.get("alpha", 1.0),
+                children=children,
+                params=parsed_params,
+                csg_params=raw_csg_params,
+            )
+
+
         # =========================
         # ALL OTHER NODES (Booleans, Hull/Minkowski, Group, Extrusions, Color)
         # =========================
-        else:
+        elif cls is not None:
             parsed_params, _ = parse_csg_params(raw_csg_params)
             node = cls(
                 children=children,
                 params=parsed_params,
                 csg_params=raw_csg_params,
             )
+
+        else:
+            # ---- SAFE FALLBACK ----
+            parsed_params, _ = parse_csg_params(raw_csg_params)
+            node = AstNode(
+                node_type=node_type,
+                children=children,
+                params=parsed_params,
+                csg_params=raw_csg_params,
+                )
 
         nodes.append(node)
 

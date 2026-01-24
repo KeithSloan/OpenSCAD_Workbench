@@ -140,4 +140,16 @@ class LinearExtrude(AstNode):
 class RotateExtrude(AstNode):
     def __init__(self, angle=360, convexity=None, children=None, params=None, csg_params=None):
         super().__init__("rotate_extrude", params or {"angle": angle, "convexity": convexity}, csg_params, children)
+# -------------------------------------------------
+# Unknowns
+# -------------------------------------------------
 
+
+class UnknownNode(AstNode):
+    def __init__(self, node_type, children=None, params=None, csg_params=None):
+        super().__init__(
+            node_type=node_type,
+            children=children or [],
+            params=params or {},
+            csg_params=csg_params,
+        )
