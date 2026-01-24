@@ -204,3 +204,98 @@ def parse_csg_file_to_AST_nodes(filename):
     write_log("Info", f"AST nodes after normalize: {len(ast_nodes)}")
     return ast_nodes
 
+
+def dump_ast_compact(node, indent=0, _seen=None):
+    if _seen is None:
+        _seen = set()
+
+    prefix = "  " * indent
+    if id(node) in _seen:
+        print(prefix + f"{node.node_type} <CYCLE>")
+        return
+
+    _seen.add(id(node))
+    print(prefix + f"{node.node_type}  children={len(node.children)}")
+
+    for c in node.children:
+        dump_ast_compact(c, indent + 1, _seen)
+
+def dump_ast_node(node, indent=0):
+    """
+    Dump a single AST node (no recursion).
+    Safe to call anywhere.
+    """
+    prefix = "  " * indent
+
+    if node is None:
+        print(prefix + "<None>")
+        return
+
+    print(prefix + f"{node.node_type}  ({node.__class__.__name__})")
+
+    # Params (FreeCAD / B-Rep)
+    params = getattr(node, "params", None)
+    if params:
+        print(prefix + "  params:")
+        for k, v in params.items():
+            print(prefix + f"    {k}: {v!r}")
+    else:
+        print(prefix + "  params: {}")
+
+    # Raw CSG params (OpenSCAD)
+    csg_params = getattr(node, "csg_params", None)
+    if csg_params:
+        print(prefix + "  csg_params:")
+        if isinstance(csg_params, dict):
+            for k, v in csg_params.items():
+                print(prefix + f"    {k}: {v!r}")
+        else:
+            print(prefix + f"    {csg_params!r}")
+    else:
+        print(prefix + "  csg_params: {}")
+
+    # Children summary only
+    children = getattr(node, "children", None)
+    if children is None:
+        print(prefix + "  children: <missing>")
+    else:
+        print(prefix + f"  children: {len(children)}")
+
+
+def dump_ast_tree(node, indent=0, max_depth=50, _seen=None):
+    """
+    Recursive AST dump using dump_ast_node().
+    """
+
+    if _seen is None:
+        _seen = set()
+
+    if node is None:
+        print("  " * indent + "<None>")
+        return
+
+    node_id = id(node)
+    if node_id in _seen:
+        print("  " * indent + f"<CYCLE {node.node_type}>")
+        return
+
+    if indent > max_depth:
+        print("  " * indent + "<MAX DEPTH REACHED>")
+        return
+
+    _seen.add(node_id)
+
+    # Dump THIS node only
+    dump_ast_node(node, indent)
+
+    # Recurse
+    children = getattr(node, "children", []) or []
+    for child in children:
+        dump_ast_tree(
+            child,
+            indent=indent + 1,
+            max_depth=max_depth,
+            _seen=_seen,
+        )
+
+

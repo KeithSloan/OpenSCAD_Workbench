@@ -37,6 +37,8 @@ import FreeCAD as App
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 #from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_helpers import get_tess, apply_transform
 
+from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_utils import dump_ast_node
+
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import (
     AstNode,
     Cube, Sphere, Cylinder,
@@ -320,7 +322,7 @@ def try_minkowski(node):
     #Attempt to generate a native FreeCAD Minkowski sum.
     #Returns Part.Shape or None if not possible.
     """
-    write_log(AST,"Try Minkowski")
+    write_log("AST","Try Minkowski")
     #return None
 
     shapes = [process_AST_node(c) for c in node.children if process_AST_node(c)]
@@ -577,6 +579,7 @@ def process_AST_node(node, parent_placement=None):
             local_pl = App.Placement(m)
 
         elif node_type == "multmatrix":
+            dump_ast_node(node)
             m = node.params.get("matrix")
             mat = App.Matrix()
             mat.A11, mat.A12, mat.A13, mat.A14 = m[0]
