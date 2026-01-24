@@ -181,7 +181,6 @@ def add_shape_to_doc(doc, shape, placement, name="Part"):
     obj = doc.addObject("Part::Feature", name)
     obj.Shape = shape
     obj.Placement = placement
-
     return obj
 
 def processCSG(docSrc, filename, fnmax_param = None):
@@ -206,7 +205,10 @@ def processCSG(docSrc, filename, fnmax_param = None):
     shapePlaceList = process_AST(ast_nodes, mode="multiple")
     write_log("AST",f"shapePlaceList {shapePlaceList}")
     for sp in shapePlaceList:
-        add_shape_to_doc(doc,sp[1],sp[2], sp[0])
+        write_log("Import",f"{sp}")
+        obj=add_shape_to_doc(doc,sp[1],sp[2], sp[0])
+        obj.recompute()
+
     #add_shapes_to_document(doc, name, shapes)
     FreeCADGui.SendMsgToActiveView("ViewFit")
     if printverbose:

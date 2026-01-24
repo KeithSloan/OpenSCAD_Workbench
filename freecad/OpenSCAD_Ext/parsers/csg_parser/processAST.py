@@ -487,6 +487,13 @@ def _as_list(result):
     return [result]
 
 
+def debug_dump_cylinder_node(node, prefix=""):
+    write_log("CYL_DEBUG", f"{prefix}Cylinder node")
+    write_log("CYL_DEBUG", f"{prefix}  params = {node.params}")
+    write_log("CYL_DEBUG", f"{prefix}  csg_params = {node.csg_params!r}")
+    write_log("CYL_DEBUG", f"{prefix}  children = {len(node.children)}")
+
+
 def process_AST_node(node, parent_placement=None):
     if parent_placement is None:
         parent_placement = App.Placement()
@@ -527,7 +534,15 @@ def process_AST_node(node, parent_placement=None):
         h = p.get("h", 1)
         r1 = p.get("r1", p.get("r", 1))
         r2 = p.get("r2", r1)
-        shape = Part.makeCylinder(r1, h, App.Vector(0,0,0), App.Vector(0,0,1), r2)
+
+        if r1 == r2:
+            shape = Part.makeCylinder(r1, h)
+        elif r1 == 0 or r2 == 0:
+            shape = Part.makeCone(r1, r2, h)  # true cone
+        else:
+            shape = Part.makeCone(r1, r2, h)
+        pl = App.Placement()
+
         return (shape, App.Placement())
 
     # -----------------------------
