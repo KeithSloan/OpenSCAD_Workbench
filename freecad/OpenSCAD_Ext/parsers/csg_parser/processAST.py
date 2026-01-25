@@ -602,14 +602,14 @@ def process_AST_node(node, parent_placement=None):
             mat.A31, mat.A32, mat.A33, mat.A34 = m[2]
             local_pl = App.Placement(mat)
 
+
         combined_pl = parent_placement.multiply(local_pl)
-        write_log("Transform",f"Combined {combined_pl}")
+        write_log("Transform", f"Combined {combined_pl}")
 
         results = []
         for child in node.children:
             for shape, pl in _as_list(process_AST_node(child, combined_pl)):
-                write_log("Transform",f"Child {pl*combined_pl}")
-                results.append((shape, pl*combined_pl))
+                results.append((shape, pl))
         return results
 
     # -----------------------------
