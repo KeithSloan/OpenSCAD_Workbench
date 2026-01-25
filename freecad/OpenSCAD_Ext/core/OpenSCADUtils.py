@@ -150,6 +150,7 @@ def newtempfilename():
         count+=1
         yield formatstr % (os.getpid(),int(time.time()*100) % 1000000,count)
 
+tempfilenamegen=newtempfilename()
 
 def errorDialog(msg):
     # Create a simple dialog QMessageBox
