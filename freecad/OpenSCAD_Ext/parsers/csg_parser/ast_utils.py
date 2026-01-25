@@ -297,5 +297,4 @@ def dump_ast_tree(node, indent=0, max_depth=50, _seen=None):
             max_depth=max_depth,
             _seen=_seen,
         )
-
-
+    
