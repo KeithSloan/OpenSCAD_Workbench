@@ -494,162 +494,8 @@ def debug_dump_cylinder_node(node, prefix=""):
     write_log("CYL_DEBUG", f"{prefix}  children = {len(node.children)}")
 
 
-def process_AST_node(node, parent_placement=None):
-    if parent_placement is None:
-        parent_placement = App.Placement()
+def process_AST_node(node):
 
-    node_type = getattr(node, "node_type", None)
-
-    # -----------------------------
-    # SOLIDS
-    # -----------------------------
-    if node_type == "cube":
-        params = node.params
-        size = params.get("size", 1)
-        center = params.get("center", False)
-
-        # normalize size
-        if hasattr(size, "__iter__"):
-            s = list(size)
-            while len(s) < 3:
-                s.append(s[-1])
-            sx, sy, sz = s[:3]
-        else:
-            sx = sy = sz = size
-
-        shape = Part.makeBox(sx, sy, sz)
-
-        if center:
-            shape.translate(App.Vector(-sx/2, -sy/2, -sz/2))
-
-        return (shape, App.Placement())
-
-    if node_type == "sphere":
-        r = node.params.get("r", 1)
-        shape = Part.makeSphere(r)
-        return (shape, App.Placement())
-
-    if node_type == "cylinder":
-        p = node.params
-        h = p.get("h", 1)
-        r1 = p.get("r1", p.get("r", 1))
-        r2 = p.get("r2", r1)
-
-        if r1 == r2:
-            shape = Part.makeCylinder(r1, h)
-        elif r1 == 0 or r2 == 0:
-            shape = Part.makeCone(r1, r2, h)  # true cone
-        else:
-            shape = Part.makeCone(r1, r2, h)
-        pl = App.Placement()
-
-        return (shape, App.Placement())
-
-    # -----------------------------
-    # Hull Minkowski
-    # -----------------------------
-    if isinstance(node, Hull):
-        write_log("AST","Hull")
-        shape = try_hull(node)
-        if shape is None:
-            shape = fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60)
-        return [(shape, parent_placement)]
-    # -------------------------------------------------
-    # MINKOWSKI
-    # -------------------------------------------------
-    if isinstance(node, Minkowski):
-        shape = try_minkowski(node)
-        if shape is None:
-            shape = fallback_to_OpenSCAD(node, operation_type="Minkowski", tolerance=1.0, timeout=60)
-        return [(shape, parent_placement)]
-    # -----------------------------
-    # GROUP
-    # -----------------------------
-    if node_type in ("group", "root"):
-        results = []
-        for child in node.children:
-            results.extend(_as_list(process_AST_node(child, parent_placement)))
-        return results
-
-    # -----------------------------
-    # TRANSFORMS
-    # -----------------------------
-    if node_type in ("translate", "rotate", "scale", "multmatrix"):
-        write_log("Transform",node_type)
-        local_pl = App.Placement()
-
-        if node_type == "translate":
-            v = node.params.get("v", [0,0,0])
-            local_pl.move(App.Vector(*v))
-
-        elif node_type == "rotate":
-            a = node.params.get("a", 0)
-            v = node.params.get("v", [0,0,1])
-            local_pl.Rotation = App.Rotation(App.Vector(*v), a)
-
-        elif node_type == "scale":
-            s = node.params.get("v", [1,1,1])
-            m = App.Matrix()
-            m.A11, m.A22, m.A33 = s
-            local_pl = App.Placement(m)
-
-        elif node_type == "multmatrix":
-            dump_ast_node(node)
-            m = node.params.get("matrix")
-            mat = App.Matrix()
-            mat.A11, mat.A12, mat.A13, mat.A14 = m[0]
-            mat.A21, mat.A22, mat.A23, mat.A24 = m[1]
-            mat.A31, mat.A32, mat.A33, mat.A34 = m[2]
-            local_pl = App.Placement(mat)
-
-
-        combined_pl = parent_placement.multiply(local_pl)
-        write_log("Transform", f"Combined {combined_pl}")
-
-        results = []
-        for child in node.children:
-            for shape, pl in _as_list(process_AST_node(child, combined_pl)):
-                results.append((shape, pl))
-        return results
-
-    # -----------------------------
-    # BOOLEANS
-    # -----------------------------
-    if node_type in ("union", "difference", "intersection"):
-        write_log("Boolean",node_type)
-        shapes = []
-        for child in node.children:
-            for shape, pl in _as_list(process_AST_node(child, parent_placement)):
-                s = shape.copy()
-                s.Placement = pl
-                write_log(node_type,f"Child {child} Placement {pl}")
-                shapes.append(s)
-
-        if not shapes:
-            return []
-
-        result = shapes[0]
-        for s in shapes[1:]:
-            if node_type == "union":
-                result = result.fuse(s)
-            elif node_type == "difference":
-                result = result.cut(s)
-            elif node_type == "intersection":
-                result = result.common(s)
-
-        return (result, App.Placement())
-
-    # -----------------------------
-    # FALLBACK
-    # -----------------------------
-    results = []
-    for child in getattr(node, "children", []):
-        results.extend(_as_list(process_AST_node(child, parent_placement)))
-    return results
-
-
-
-def save_process_AST_node(node, parent_placement=None):
     """
     Recursively process an AST node.
 
@@ -684,146 +530,156 @@ def save_process_AST_node(node, parent_placement=None):
 
     """
 
-    if parent_placement is None:
-        parent_placement = FreeCAD.Placement()
-
     results = []
+    local_pl = App.Placement()
 
-    # -------------------------------------------------
-    # MULTMATRIX
-    # -------------------------------------------------
-    if isinstance(node, MultMatrix):
-        matrix = node.params.get("matrix")
-        if matrix:
-            local_pl = placement_from_matrix(matrix)
-            composed = parent_placement.multiply(local_pl)
+    node_type = getattr(node, "node_type", None)
+
+    # -----------------------------
+    # SOLIDS
+    # -----------------------------
+    if node_type == "cube":
+        params = node.params
+        size = params.get("size", 1)
+        center = params.get("center", False)
+
+        # normalize size
+        if hasattr(size, "__iter__"):
+            s = list(size)
+            while len(s) < 3:
+                s.append(s[-1])
+            sx, sy, sz = s[:3]
         else:
-            composed = parent_placement
+            sx = sy = sz = size
 
-        for child in node.children:
-            results.extend(process_AST_node(child, composed))
+        shape = Part.makeBox(sx, sy, sz)
 
-        return results
+        if center:
+            shape.translate(App.Vector(-sx/2, -sy/2, -sz/2))
 
-    # -------------------------------------------------
-    # TRANSFORMS
-    # -------------------------------------------------
-    if isinstance(node, (Translate, Rotate, Scale)):
-        local_pl = node.getPlacement()
-        composed = parent_placement.multiply(local_pl)
+        return (shape, local_pl)
 
-        for child in node.children:
-            results.extend(process_AST_node(child, composed))
+    if node_type == "sphere":
+        r = node.params.get("r", 1)
+        shape = Part.makeSphere(r)
+        return (shape, local_pl)
 
-        return results
+    if node_type == "cylinder":
+        p = node.params
+        h = p.get("h", 1)
+        r1 = p.get("r1", p.get("r", 1))
+        r2 = p.get("r2", r1)
 
-    # -------------------------------------------------
-    # GROUP (structure only)
-    # -------------------------------------------------
-    if isinstance(node, Group):
-        for child in node.children:
-            results.extend(process_AST_node(child, parent_placement))
-        return results
+        if r1 == r2:
+            shape = Part.makeCylinder(r1, h)
+        elif r1 == 0 or r2 == 0:
+            shape = Part.makeCone(r1, r2, h)  # true cone
+        else:
+            shape = Part.makeCone(r1, r2, h)
 
-    # -------------------------------------------------
-    # PRIMITIVES
-    # -------------------------------------------------
-    if isinstance(node, (Cube, Sphere, Cylinder)):
-        shape = node.createShape()
-        shape.Placement = parent_placement
-        return [(shape, parent_placement)]
+        return (shape, local_pl)
 
-    # -------------------------------------------------
-    # LINEAR / ROTATE EXTRUDE
-    # -------------------------------------------------
-    if isinstance(node, (LinearExtrude, RotateExtrude)):
-        child_results = []
-        for child in node.children:
-            child_results.extend(process_AST_node(child, parent_placement))
-
-        shapes = [s for (s, _) in child_results if s]
-        if not shapes:
-            return []
-
-        shape = node.createShape(shapes)
-        shape.Placement = parent_placement
-        return [(shape, parent_placement)]
-
-    # -------------------------------------------------
-    # HULL
-    # -------------------------------------------------
+    # -----------------------------
+    # Hull Minkowski
+    # -----------------------------
     if isinstance(node, Hull):
         write_log("AST","Hull")
         shape = try_hull(node)
         if shape is None:
             shape = fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60)
-        return [(shape, parent_placement)]
+        return [(shape, local_pl)]
     # -------------------------------------------------
     # MINKOWSKI
     # -------------------------------------------------
     if isinstance(node, Minkowski):
-        shape = try_minkowski(shapes)
+        shape = try_minkowski(node)
         if shape is None:
             shape = fallback_to_OpenSCAD(node, operation_type="Minkowski", tolerance=1.0, timeout=60)
-        return [(shape, parent_placement)]
-
-    # -------------------------------------------------
-    # BOOLEAN OPERATIONS
-    # -------------------------------------------------
-    if isinstance(node, Union):
-        child_results = []
+        return [(shape, local_pl)]
+    # -----------------------------
+    # GROUP
+    # -----------------------------
+    if node_type in ("group", "root"):
+        results = []
         for child in node.children:
-            child_results.extend(process_AST_node(child, parent_placement))
-
-        shapes = [s for (s, _) in child_results if s]
-        if not shapes:
-            return []
-
-        shape = node.applyBoolean(shapes)
-        shape.Placement = parent_placement
-        return [(shape, parent_placement)]
-
-    if isinstance(node, Difference):
-        child_results = []
-        for child in node.children:
-            child_results.extend(process_AST_node(child, parent_placement))
-
-        shapes = [s for (s, _) in child_results if s]
-        if not shapes:
-            return []
-
-        shape = node.applyBoolean(shapes)
-        shape.Placement = parent_placement
-        return [(shape, parent_placement)]
-
-    if isinstance(node, Intersection):
-        child_results = []
-        for child in node.children:
-            child_results.extend(process_AST_node(child, parent_placement))
-
-        shapes = [s for (s, _) in child_results if s]
-        if not shapes:
-            return []
-
-        shape = node.applyBoolean(shapes)
-        shape.Placement = parent_placement
-        return [(shape, parent_placement)]
-
-    # -------------------------------------------------
-    # COLOR (pass-through for now)
-    # -------------------------------------------------
-    if isinstance(node, Color):
-        for child in node.children:
-            results.extend(process_AST_node(child, parent_placement))
+            results.extend(_as_list(process_AST_node(child)))
         return results
 
-    # -------------------------------------------------
-    # FALLBACK
-    # -------------------------------------------------
-    for child in getattr(node, "children", []):
-        results.extend(process_AST_node(child, parent_placement))
+    # -----------------------------
+    # TRANSFORMS
+    # -----------------------------
+    if node_type in ("translate", "rotate", "scale", "multmatrix"):
+        write_log("Transform",node_type)
 
+        if node_type == "translate":
+            v = node.params.get("v", [0,0,0])
+            trans_pl = local_pl.move(App.Vector(*v))
+
+        elif node_type == "rotate":
+            a = node.params.get("a", 0)
+            v = node.params.get("v", [0,0,1])
+            local_pl.Rotation = App.Rotation(App.Vector(*v), a)
+
+        elif node_type == "scale":
+            s = node.params.get("v", [1,1,1])
+            m = App.Matrix()
+            m.A11, m.A22, m.A33 = s
+            local_pl = App.Placement(m)
+
+        elif node_type == "multmatrix":
+            dump_ast_node(node)
+            m = node.params.get("matrix")
+            mat = App.Matrix()
+            mat.A11, mat.A12, mat.A13, mat.A14 = m[0]
+            mat.A21, mat.A22, mat.A23, mat.A24 = m[1]
+            mat.A31, mat.A32, mat.A33, mat.A34 = m[2]
+            trans_pl = App.Placement(mat)
+
+        results = []
+        write_log("Transform",f"trans_pl {trans_pl}")
+        for child in node.children:
+            for shape, pl in _as_list(process_AST_node(child)):
+                return_pl = trans_pl.multiply(pl)
+                write_log("Transform",f"Return_pl {return_pl}")
+                results.append((shape, return_pl))
+        return results
+
+    # -----------------------------
+    # BOOLEANS
+    # -----------------------------
+    if node_type in ("union", "difference", "intersection"):
+        write_log("Boolean",node_type)
+        shapes = []
+        for child in node.children:
+            for shape, pl in _as_list(process_AST_node(child)):
+                s = shape.copy()
+                s.Placement = pl
+                write_log(node_type,f"Child {child} Placement {pl}")
+                shapes.append(s)
+
+        if not shapes:
+            return []
+
+        result = shapes[0]
+        for s in shapes[1:]:
+            if node_type == "union":
+                result = result.fuse(s)
+            elif node_type == "difference":
+                result = result.cut(s)
+            elif node_type == "intersection":
+                result = result.common(s)
+
+        # ???? placement
+        return (result, local_pl)
+
+    # -----------------------------
+    # FALLBACK
+    # -----------------------------
+    results = []
+    for child in getattr(node, "children", []):
+        results.extend(_as_list(process_AST_node(child)))
     return results
+
 
 def process_AST(nodes, mode="multiple"):
     """

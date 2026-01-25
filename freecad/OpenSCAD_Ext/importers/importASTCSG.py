@@ -177,6 +177,7 @@ import FreeCAD as App
 import Part
 
 def add_shape_to_doc(doc, shape, placement, name="Part"):
+    write_log("Add Object",f"Name {name} Shape {shape} Placement{placement}")
 
     obj = doc.addObject("Part::Feature", name)
     obj.Shape = shape
@@ -206,7 +207,7 @@ def processCSG(docSrc, filename, fnmax_param = None):
     write_log("AST",f"shapePlaceList {shapePlaceList}")
     for sp in shapePlaceList:
         write_log("Import",f"{sp}")
-        obj=add_shape_to_doc(doc,sp[1],sp[2], sp[0])
+        obj=add_shape_to_doc(doc,sp[1],sp[2],sp[0])
         obj.recompute()
 
     #add_shapes_to_document(doc, name, shapes)
