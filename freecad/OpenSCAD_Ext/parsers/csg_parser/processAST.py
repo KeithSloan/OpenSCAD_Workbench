@@ -47,8 +47,11 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import (
     Translate, Rotate, Scale, MultMatrix,
     Hull, Minkowski,
     LinearExtrude, RotateExtrude,
-    Color
+    Color,
+    Polyhedron,
 )
+
+from freecad.OpenSCAD_Ext.parsers.csg_parser.process_polyhedron import process_polyhedron 
 
 
 
@@ -579,6 +582,10 @@ def process_AST_node(node):
 
         return (shape, local_pl)
 
+    elif node.node_type == "polyhedron":
+        write_log("AST", f"Processing Polyhedron: points={node.points}, faces={node.faces}")
+        return (process_polyhedron(node), local_pl)
+
     # -----------------------------
     # Hull Minkowski
     # -----------------------------
@@ -587,6 +594,7 @@ def process_AST_node(node):
         shape = try_hull(node)
         if shape is None:
             shape = fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60)
+        # """" Return shape, local_pl
         return [(shape, local_pl)]
     # -------------------------------------------------
     # MINKOWSKI
@@ -634,6 +642,7 @@ def process_AST_node(node):
             mat.A21, mat.A22, mat.A23, mat.A24 = m[1]
             mat.A31, mat.A32, mat.A33, mat.A34 = m[2]
             trans_pl = App.Placement(mat)
+
 
         results = []
         write_log("Transform",f"trans_pl {trans_pl}")

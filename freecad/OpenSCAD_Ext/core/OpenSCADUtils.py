@@ -24,10 +24,9 @@ __title__="FreeCAD OpenSCAD Workbench - Utility Functions"
 __author__ = "Sebastian Hoogen"
 __url__ = ["https://www.freecadweb.org"]
 
-'''
-This Script includes various python helper functions that are shared across
-the module
-'''
+#
+# This Script includes various python helper functions that are shared across
+# the module
 
 import os
 import tempfile
@@ -153,7 +152,6 @@ def newtempfilename():
         yield formatstr % (os.getpid(),int(time.time()*100) % 1000000,count)
 
 tempfilenamegen=newtempfilename()
-
 
 def errorDialog(msg):
     # Create a simple dialog QMessageBox

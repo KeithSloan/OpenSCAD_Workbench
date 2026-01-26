@@ -13,7 +13,9 @@ import ast
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import AstNode, Cube, Sphere, Cylinder, Union, Difference, Intersection
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import Group, Translate, Rotate, Scale, MultMatrix, Hull, Minkowski
-from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import LinearExtrude, RotateExtrude, Text, Color, UnknownNode
+from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import LinearExtrude, RotateExtrude, Text, Color, Polyhedron, UnknownNode
+
+from freecad.OpenSCAD_Ext.parsers.csg_parser.process_polyhedron import process_polyhedron
 
 # --- parse_scad_argument and parse_csg_params assumed defined here ---
 
@@ -167,32 +169,41 @@ def normalizeScalarOrVector(value, length=3, name="size"):
 # Recursive parser
 # -------------------------------------------------
 # --- Split top-level commas, ignoring commas in brackets
-def split_top_level_commas(s):
-    parts = []
-    buf = ""
-    level = 0
-    for c in s:
-        if c == "[":
-            level += 1
-        elif c == "]":
-            level -= 1
-        if c == "," and level == 0:
-            parts.append(buf.strip())
-            buf = ""
-        else:
-            buf += c
-    if buf:
-        parts.append(buf.strip())
-    return parts
-
 # -*- coding: utf-8 -*-
 # Recursive CSG parser for FreeCAD AST
 # -------------------------------
 # Main recursive CSG parser
 # -------------------------------
+def split_top_level_commas(s):
+    parts = []
+    buf = []
+    depth = 0
 
-import re
-import ast
+    pairs = {
+        "[": "]",
+        "(": ")",
+        "{": "}",
+    }
+
+    opens = set(pairs.keys())
+    closes = set(pairs.values())
+
+    for c in s:
+        if c in opens:
+            depth += 1
+        elif c in closes:
+            depth -= 1
+
+        if c == "," and depth == 0:
+            parts.append("".join(buf).strip())
+            buf = []
+        else:
+            buf.append(c)
+
+    if buf:
+        parts.append("".join(buf).strip())
+
+    return parts
 
 def parse_csg_params(param_str):
     """
@@ -262,6 +273,15 @@ import re
 NODE_HEADER_RE = re.compile(
     r"""
     ^\s*
+    (?P<name>[a-zA-Z_][a-zA-Z0-9_]*)
+    """,
+    re.VERBOSE,
+)
+
+'''
+NODE_HEADER_RE = re.compile(
+    r"""
+    ^\s*
     (?P<name>[a-zA-Z_][a-zA-Z0-9_]*)   # node name
     \s*
     (?:\((?P<params>[^)]*)\))?        # optional ( ... )
@@ -270,7 +290,36 @@ NODE_HEADER_RE = re.compile(
     """,
     re.VERBOSE,
 )
+'''
 
+def parse_csg_node_header(line):
+    m = NODE_HEADER_RE.match(line)
+    if not m:
+        return None, None, False
+
+    node_type = m.group("name")
+
+    raw_csg_params = None
+    opens_block = "{" in line
+
+    # --- extract (...) safely
+    start = line.find("(")
+    if start != -1:
+        level = 0
+        buf = []
+        for c in line[start + 1:]:
+            if c == "(":
+                level += 1
+            elif c == ")":
+                if level == 0:
+                    break
+                level -= 1
+            buf.append(c)
+        raw_csg_params = "".join(buf).strip()
+
+    return node_type, raw_csg_params, opens_block
+
+'''
 def parse_csg_node_header(line):
     """
     Parse a single OpenSCAD CSG node header line.
@@ -289,11 +338,17 @@ def parse_csg_node_header(line):
     opens_block = bool(m.group("brace"))
 
     return node_type, raw_csg_params, opens_block
+'''
 
 def parse_csg_lines(lines, start=0, indent=0):
     """
     Recursively parse CSG lines into AST nodes.
-    Fully handles all nodes from ast_nodes.py.
+
+    Parsing happens first (params, children).
+    AST nodes are constructed in ONE place using NODE_CLASSES.
+
+    "Special" constructors are used only when the AST class
+    requires extracted or transformed parameters.
     """
     nodes = []
     i = start
@@ -316,21 +371,22 @@ def parse_csg_lines(lines, start=0, indent=0):
         "rotate_extrude": RotateExtrude,
         "text": Text,
         "color": Color,
+        "polyhedron": Polyhedron,
     }
 
     while i < len(lines):
         line = lines[i].strip()
 
-        # End of block
+        # ---- End of block
         if line.startswith("}") or line.startswith(");"):
             return nodes, i + 1
 
-        # Skip empty / comment
+        # ---- Skip empty / comment
         if not line or line.startswith("//"):
             i += 1
             continue
 
-        # Parse node header
+        # ---- Parse node header
         node_type, raw_csg_params, opens_block = parse_csg_node_header(line)
         if node_type is None:
             write_log("CSG_PARSE", f"Skipping unrecognized line: {line}")
@@ -341,11 +397,11 @@ def parse_csg_lines(lines, start=0, indent=0):
         children = []
         next_i = i + 1
 
-        # Parse children if block
+        # ---- Parse children if block
         if opens_block:
             children, next_i = parse_csg_lines(lines, i + 1, indent + 1)
 
-        # Parse parameters
+        # ---- Parse parameters
         try:
             params, csg_positional = parse_csg_params(raw_csg_params)
         except Exception as e:
@@ -353,258 +409,111 @@ def parse_csg_lines(lines, start=0, indent=0):
             params = {}
             csg_positional = None
 
-        # Special handling: cube positional size
+        # ---- Special handling: cube positional size
         if node_type == "cube":
             if "size" not in params:
-                if csg_positional is not None:
-                    params["size"] = csg_positional
-                else:
-                    params["size"] = 1
+                params["size"] = csg_positional if csg_positional is not None else 1
             params.setdefault("center", False)
 
-        # Determine class
+        # ---- Determine AST class
         cls = NODE_CLASSES.get(node_type)
 
         if cls is None:
             write_log("CSG_PARSE", f"Unknown node '{node_type}', preserving as UnknownNode")
-            node = UnknownNode(node_type=node_type, params=params, csg_params=raw_csg_params, children=children)
-        else:
-            try:
-                # Special constructors for vector/angle nodes
-                if node_type in ("translate", "scale", "rotate"):
-                    node = cls(vector=params.get("vector"), angle=params.get("angle"), children=children, params=params, csg_params=raw_csg_params)
-                elif node_type in ("linear_extrude", "rotate_extrude"):
-                    node = cls(children=children, params=params, csg_params=raw_csg_params)
-                elif node_type == "multmatrix":
-                    # matrix = csg_positional or params.get("matrix")
-                    # --- Special handling for multmatrix ---
-                    # raw_csg_params might be a string like '[[1,0,0,0],[0,1,0,0],[0,0,1,140],[0,0,0,1]]'
-                    try:
-                        matrix = ast.literal_eval(raw_csg_params)
-                        params["matrix"] = matrix
-                    except Exception as e:
-                        write_log("CSG_PARSE", f"Failed to evaluate multmatrix params: {raw_csg_params} -> {e}")
-                        params["matrix"] = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]  # default identity
-                    # Pass matrix inside params, do not use keyword argument 'matrix'
-                    node = cls(params=params, csg_params=raw_csg_params, children=children)    
-                    #node = cls(matrix=matrix, children=children, params=params, csg_params=raw_csg_params)
-                elif node_type == "cube":
-                    node = cls(params=params, csg_params=raw_csg_params, children=children)
-                else:
-                    node = cls(params=params, csg_params=raw_csg_params, children=children)
-            except TypeError as e:
-                write_log("CSG_PARSE", f"Constructor mismatch for '{node_type}', using AstNode fallback: {e}")
-                node = AstNode(node_type=node_type, params=params, csg_params=raw_csg_params, children=children)
-
-        nodes.append(node)
-        i = next_i
-
-    return nodes, i
-
-
-
-def saved_parse_csg_lines(lines, start=0, indent=0):
-    """
-    Parse a block of CSG lines into AST nodes.
-    Returns (nodes, next_index)
-    """
-
-    nodes = []
-    i = start
-
-    while i < len(lines):
-        line = lines[i].strip()
-
-        # --- End of this block ---
-        if line == "}" or line == ");":
-            return nodes, i + 1
-
-        # --- Skip empty / comment ---
-        if not line or line.startswith("//"):
-            i += 1
-            continue
-
-        # --- Parse node header ---
-        try:
-            node_type, raw_csg_params, opens_block = parse_csg_node_header(line)
-        except Exception:
-            write_log("CSG_PARSE", f"Failed to parse line: {line}")
-            i += 1
-            continue
-
-        # --- Parse params for B-Rep ONLY ---
-        params, _ = parse_csg_params(raw_csg_params)
-
-        # --- Parse children if block ---
-        children = []
-        next_i = i + 1
-
-        if opens_block:
-            children, next_i = parse_csg_lines(lines, i + 1, indent + 1)
-
-        # --- Determine class ---
-        NODE_CLASSES = {
-            "cube": Cube,
-            "sphere": Sphere,
-            "cylinder": Cylinder,
-            "union": Union,
-            "difference": Difference,
-            "intersection": Intersection,
-            "group": Group,
-            "translate": Translate,
-            "rotate": Rotate,
-            "scale": Scale,
-            "multmatrix": MultMatrix,
-            "hull": Hull,
-            "minkowski": Minkowski,
-            "linear_extrude": LinearExtrude,
-            "rotate_extrude": RotateExtrude,
-            "text": Text,
-            "color": Color,
-        }
-
-        cls = NODE_CLASSES.get(node_type)
-
-        # --- Unknown node ---
-        if cls is None:
-            write_log(
-                "CSG_PARSE",
-                f"Unknown node '{node_type}', preserving as UnknownNode"
-            )
-
             node = UnknownNode(
                 node_type=node_type,
                 params=params,
                 csg_params=raw_csg_params,
+                children=children
             )
-            node.children = children
-            nodes.append(node)
-            i = next_i
-            continue
+        else:
+            try:
+                # ---- Special constructors (signature differs)
 
-        # --- Known node, attempt construction ---
-        try:
-            node = cls(
-                params=params,
-                csg_params=raw_csg_params,
-                children=children,
-            )
-        except TypeError as e:
-            write_log(
-                "CSG_PARSE",
-                f"Constructor mismatch for '{node_type}', using AstNode fallback"
-            )
+                if node_type in ("translate", "scale", "rotate"):
+                    node = cls(
+                        vector=params.get("vector"),
+                        angle=params.get("angle"),
+                        children=children,
+                        params=params,
+                        csg_params=raw_csg_params
+                    )
 
-            node = AstNode(
-                node_type=node_type,
-                params=params,
-                csg_params=raw_csg_params,
-                children=children,
-            )
+                elif node_type in ("linear_extrude", "rotate_extrude"):
+                    node = cls(
+                        children=children,
+                        params=params,
+                        csg_params=raw_csg_params
+                    )
+
+                elif node_type == "multmatrix":
+                    try:
+                        params["matrix"] = ast.literal_eval(raw_csg_params)
+                    except Exception as e:
+                        write_log(
+                            "CSG_PARSE",
+                            f"Failed to evaluate multmatrix params: {raw_csg_params} -> {e}"
+                        )
+                        params["matrix"] = [
+                            [1, 0, 0, 0],
+                            [0, 1, 0, 0],
+                            [0, 0, 1, 0],
+                            [0, 0, 0, 1],
+                        ]
+                    node = cls(
+                        children=children,
+                        params=params,
+                        csg_params=raw_csg_params
+                    )
+
+                elif node_type == "polyhedron":
+                    # split top-level commas safely
+                    poly_params = {}
+                    parts = split_top_level_commas(raw_csg_params)
+                    for p in parts:
+                        if "=" not in p:
+                            continue
+                        key, val = p.split("=", 1)
+                        key = key.strip()
+                        val = val.strip()
+                        try:
+                            parsed_val = ast.literal_eval(val)
+                        except Exception as e:
+                            write_log("CSG_PARSE", f"Failed to eval polyhedron param {p}: {e}")
+                            parsed_val = val
+                        poly_params[key] = parsed_val
+
+                    # add structured attributes inside params
+                    params["points"] = poly_params.get("points", [])
+                    params["faces"] = poly_params.get("faces", [])
+                    params["convexity"] = poly_params.get("convexity")
+
+                    node = cls(children=children, params=params, csg_params=raw_csg_params)
+
+                # ---- Normal constructor path
+                else:
+                    node = cls(
+                        params=params,
+                        csg_params=raw_csg_params,
+                        children=children
+                    )
+
+            except TypeError as e:
+                write_log(
+                    "CSG_PARSE",
+                    f"Constructor mismatch for '{node_type}', using AstNode fallback: {e}"
+                )
+                node = AstNode(
+                    node_type=node_type,
+                    params=params,
+                    csg_params=raw_csg_params,
+                    children=children
+                )
 
         nodes.append(node)
         i = next_i
 
     return nodes, i
-
-'''
-Moved to ast_utils.py
-
-def dump_ast_compact(node, indent=0, _seen=None):
-    if _seen is None:
-        _seen = set()
-
-    prefix = "  " * indent
-    if id(node) in _seen:
-        print(prefix + f"{node.node_type} <CYCLE>")
-        return
-
-    _seen.add(id(node))
-    print(prefix + f"{node.node_type}  children={len(node.children)}")
-
-    for c in node.children:
-        dump_ast_compact(c, indent + 1, _seen)
-
-def dump_ast_node(node, indent=0):
-    """
-    Dump a single AST node (no recursion).
-    Safe to call anywhere.
-    """
-    prefix = "  " * indent
-
-    if node is None:
-        print(prefix + "<None>")
-        return
-
-    print(prefix + f"{node.node_type}  ({node.__class__.__name__})")
-
-    # Params (FreeCAD / B-Rep)
-    params = getattr(node, "params", None)
-    if params:
-        print(prefix + "  params:")
-        for k, v in params.items():
-            print(prefix + f"    {k}: {v!r}")
-    else:
-        print(prefix + "  params: {}")
-
-    # Raw CSG params (OpenSCAD)
-    csg_params = getattr(node, "csg_params", None)
-    if csg_params:
-        print(prefix + "  csg_params:")
-        if isinstance(csg_params, dict):
-            for k, v in csg_params.items():
-                print(prefix + f"    {k}: {v!r}")
-        else:
-            print(prefix + f"    {csg_params!r}")
-    else:
-        print(prefix + "  csg_params: {}")
-
-    # Children summary only
-    children = getattr(node, "children", None)
-    if children is None:
-        print(prefix + "  children: <missing>")
-    else:
-        print(prefix + f"  children: {len(children)}")
-
-
-def dump_ast_tree(node, indent=0, max_depth=50, _seen=None):
-    """
-    Recursive AST dump using dump_ast_node().
-    """
-
-    if _seen is None:
-        _seen = set()
-
-    if node is None:
-        print("  " * indent + "<None>")
-        return
-
-    node_id = id(node)
-    if node_id in _seen:
-        print("  " * indent + f"<CYCLE {node.node_type}>")
-        return
-
-    if indent > max_depth:
-        print("  " * indent + "<MAX DEPTH REACHED>")
-        return
-
-    _seen.add(node_id)
-
-    # Dump THIS node only
-    dump_ast_node(node, indent)
-
-    # Recurse
-    children = getattr(node, "children", []) or []
-    for child in children:
-        dump_ast_tree(
-            child,
-            indent=indent + 1,
-            max_depth=max_depth,
-            _seen=_seen,
-        )
-
-
-'''
 
 
 # -------------------------------------------------
@@ -624,4 +533,3 @@ def parse_csg_file_to_AST_nodes(filename):
     # dump_ast_tree(nodes[0])
 
     return nodes
-

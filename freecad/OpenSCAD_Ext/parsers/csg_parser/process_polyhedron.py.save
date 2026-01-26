@@ -1,0 +1,80 @@
+import numpy as np
+import Part
+from OCC.Core.TopoDS import TopoDS_Shape
+
+from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+
+def topo_to_part_shape(solid: TopoDS_Shape):
+    """
+    Convert an OCC TopoDS_Shape to FreeCAD Part.Shape
+    """
+    fc_shape = Part.Shape()
+    fc_shape._TopoDS_Shape = solid  # low-level assignment
+    return fc_shape
+
+    # return topo_to_part_shape(solid)
+import Part
+from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_Sewing, BRepBuilderAPI_MakeFace, BRepBuilderAPI_MakePolygon
+from OCC.Core.gp import gp_Pnt
+import numpy as np
+
+def process_polyhedron(node):
+    """
+    Convert a Polyhedron AST node into a FreeCAD Part.Shape.
+    """
+    points = node.points
+    faces = node.faces
+
+    if not points or not faces:
+        return None
+
+    # ---- centroid
+    cx = sum(p[0] for p in points) / len(points)
+    cy = sum(p[1] for p in points) / len(points)
+    cz = sum(p[2] for p in points) / len(points)
+    poly_center = (cx, cy, cz)
+
+    # ---- build shell
+    sewer = BRepBuilderAPI_Sewing(1e-6)
+    for face_indices in faces:
+        poly = BRepBuilderAPI_MakePolygon()
+        for idx in face_indices:
+            x, y, z = points[idx]
+            poly.Add(gp_Pnt(x, y, z))
+        poly.Close()
+        wire = poly.Wire()
+        face = BRepBuilderAPI_MakeFace(wire).Face()
+        sewer.Add(face)
+    sewer.Perform()
+    shell = sewer.SewedShape()
+
+    # ---- convert shell directly to FreeCAD Part.Shape
+    fc_shape = Part.Shape()
+    fc_shape.makeShapeFromMesh(shell, 0.01)  # <--- use small tolerance to create a shape
+
+    write_log("Polyhedron", f"centroid: {poly_center}, points={len(points)}, faces={len(faces)}")
+
+    return fc_shape
+
+
+def should_reverse(face_pts, poly_center):
+    """
+    Return True if face orientation is inward relative to centroid.
+    """
+    p0, p1, p2 = map(np.array, face_pts[:3])
+    normal = np.cross(p1 - p0, p2 - p0)
+    fc = sum(np.array(p) for p in face_pts) / len(face_pts)
+    return normal.dot(fc - np.array(poly_center)) < 0
+
+
+def should_reverse(face_pts, poly_center):
+    import numpy as np
+    p0, p1, p2 = map(np.array, face_pts[:3])
+    normal = np.cross(p1 - p0, p2 - p0)
+    fc = sum(np.array(p) for p in face_pts) / len(face_pts)
+    return normal.dot(fc - np.array(poly_center)) < 0
+
+"""
+if should_reverse(face_pts, poly_center):
+    face_indices = list(reversed(face_indices))
+"""

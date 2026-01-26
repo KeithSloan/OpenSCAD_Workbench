@@ -152,20 +152,12 @@ class Text(AstNode):
         )
 
 class Polyhedron(AstNode):
-    def __init__(self, params=None, csg_params=None, children=None):
-        super().__init__("polyhedron", params or {}, csg_params, children)
+    def __init__(self, points=None, faces=None, convexity=None):
+        super().__init__("polyhedron")
+        self.points = points or []
+        self.faces = faces or []
+        self.convexity = convexity
 
-    @property
-    def points(self):
-        return self.params.get("points", [])
-
-    @property
-    def faces(self):
-        return self.params.get("faces", [])
-
-    @property
-    def convexity(self):
-        return self.params.get("convexity")
 
 # -------------------------------------------------
 # Unknown / unsupported nodes

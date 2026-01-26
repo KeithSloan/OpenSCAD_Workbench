@@ -36,7 +36,7 @@ from pathlib import Path
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.parsers.csg_parser.processAST import process_AST
 from freecad.OpenSCAD_Ext.parsers.csg_parser.parse_csg_file_to_AST_nodes import parse_csg_file_to_AST_nodes
-from freecad.OpenSCAD_Ext.parsers.csg_parser.parse_csg_file_to_AST_nodes import normalize_ast
+#from freecad.OpenSCAD_Ext.parsers.csg_parser.parse_csg_file_to_AST_nodes import normalize_ast
 
 #
 # For SCAD files first process via OpenSCAD to creae CSG file then import
@@ -130,7 +130,7 @@ def insert(filename,docname):
         pathName = os.path.dirname(os.path.normpath(filename))
         processCSG(doc, filename)
 
-
+'''
 def add_shapes_to_document(doc, name, shapes):
     """
     Add one or more Part.Shape objects to the FreeCAD document.
@@ -171,7 +171,18 @@ def add_shapes_to_document(doc, name, shapes):
     obj.Shape = compound
     obj.recompute()
     return obj
+'''
 
+import FreeCAD as App
+import Part
+
+def add_shape_to_doc(doc, shape, placement, name="Part"):
+    write_log("Add Object",f"Name {name} Shape {shape} Placement{placement}")
+
+    obj = doc.addObject("Part::Feature", name)
+    obj.Shape = shape
+    obj.Placement = placement
+    return obj
 
 def processCSG(docSrc, filename, fnmax_param = None):
     global doc
@@ -190,10 +201,16 @@ def processCSG(docSrc, filename, fnmax_param = None):
     if printverbose: 
         print ('ImportCSG Version 0.6a')
     raw_ast_nodes = parse_csg_file_to_AST_nodes(filename)
-    ast_nodes = normalize_ast(raw_ast_nodes)
-    shapes = process_AST(ast_nodes, mode="multiple")
-    write_log("AST",f"Shapes {shapes}")
-    add_shapes_to_document(doc, name, shapes)
+    ast_nodes = raw_ast_nodes
+    #ast_nodes = normalize_ast(raw_ast_nodes)
+    shapePlaceList = process_AST(ast_nodes, mode="multiple")
+    write_log("AST",f"shapePlaceList {shapePlaceList}")
+    for sp in shapePlaceList:
+        write_log("Import",f"{sp}")
+        obj=add_shape_to_doc(doc,sp[1],sp[2],sp[0])
+        obj.recompute()
+
+    #add_shapes_to_document(doc, name, shapes)
     FreeCADGui.SendMsgToActiveView("ViewFit")
     if printverbose:
         print ('ImportCSG Version 0.6a')
