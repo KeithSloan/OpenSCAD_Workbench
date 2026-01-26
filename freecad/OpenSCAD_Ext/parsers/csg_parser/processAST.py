@@ -52,6 +52,7 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import (
 )
 
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_polyhedron import process_polyhedron 
+from freecad.OpenSCAD_Ext.parsers.csg_parser.process_multi_hull import multi_hull
 
 
 
@@ -298,6 +299,8 @@ def fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60)
 
     return shape
 
+
+
 # -----------------------------
 # Hull / Minkowski native attempts
 # -----------------------------
@@ -307,7 +310,11 @@ def try_hull(node):
     #Attempt to generate a native FreeCAD hull from children shapes.
     #Returns Part.Shape or None if not possible.
     """
-    write_log("AST","Try Hull")
+    num_children = len(node.children)
+    write_log("AST",f"Try Hull - Number of children {num_children}")
+
+    if num_children > 3:
+        multi_hull(node)
     return None
 
     shapes = [process_AST_node(c) for c in node.children if process_AST_node(c)]
@@ -634,14 +641,6 @@ def process_AST_node(node):
             m.A11, m.A22, m.A33 = s
             local_pl = App.Placement(m)
 
-        elif node_type == "multmatrix":
-            dump_ast_node(node)
-            m = node.params.get("matrix")
-            mat = App.Matrix()
-            mat.A11, mat.A12, mat.A13, mat.A14 = m[0]
-            mat.A21, mat.A22, mat.A23, mat.A24 = m[1]
-            mat.A31, mat.A32, mat.A33, mat.A34 = m[2]
-            trans_pl = App.Placement(mat)
 
 
         results = []
