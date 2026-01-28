@@ -183,6 +183,12 @@ def hullTwoEqCircles(obj1, obj2, flag2D):
     wire = Part.Wire([l1, l2, l3, l4])
     face = Part.makeFace(wire)
 
+    #
+    # test fix
+    #
+
+    return Part.makeCompound([obj1.Shape, obj2.Shape, face])
+    
     if flag2D:
         # Combine shapes efficiently using Compound instead of fuse
         return Part.makeCompound([obj1.Shape, obj2.Shape, face])
@@ -255,6 +261,8 @@ def hullTwoCircles(obj1, obj2, flag2D):
 
     if flag2D:
         # Fuse with original circle shapes for 2D
+        obj1.recompute()
+        obj2.recompute()
         return obj1.Shape.fuse(face.fuse(obj2.Shape))
     else:
         # Create small 3D circles for fusion

@@ -1,0 +1,19 @@
+// Simple tetrahedron polyhedron test
+// Should produce ONE solid, no groups, no transforms
+
+polyhedron(
+    points = [
+        [0, 0, 0],
+        [20, 0, 0],
+        [0, 20, 0],
+        [0, 0, 20]
+    ],
+    faces = [
+        [0, 1, 2],
+        [0, 1, 3],
+        [1, 2, 3],
+        [2, 0, 3]
+    ],
+    convexity = 10
+);
+

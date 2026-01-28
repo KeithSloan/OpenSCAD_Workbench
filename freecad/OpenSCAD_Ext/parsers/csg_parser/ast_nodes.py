@@ -1,135 +1,176 @@
 # ast_nodes.py
-from typing import List, Optional, Dict, Any
+from typing import Optional, Any
 
-
-class Node:
-    """Base AST node"""
-    def __init__(self, node_type: str, params: Dict[str, Any] = None, children=None):
+# -------------------------------------------------
+# Base AST Node
+# -------------------------------------------------
+class AstNode:
+    """
+    Base AST node storing:
+      - node_type: OpenSCAD keyword
+      - params: typed parameters (for FreeCAD BRep creation)
+      - csg_params: raw parameters (for flattening / OpenSCAD fallback)
+      - children: child AST nodes
+    """
+    def __init__(
+        self,
+        node_type: str,
+        params: Optional[Any] = None,
+        csg_params: Optional[Any] = None,
+        children=None
+    ):
         self.node_type = node_type
         self.params = params or {}
+        self.csg_params = csg_params
         self.children = children or []
 
     def __repr__(self):
-        return f"<{self.node_type} children={len(self.children)} params={self.params}>"
+        return (
+            f"<{self.node_type} "
+            f"children={len(self.children)} "
+            f"params={self.params} "
+            f"csg_params={self.csg_params}>"
+        )
 
-# ----------------------------
+
+# -------------------------------------------------
 # 2D primitives
-# ----------------------------
+# -------------------------------------------------
+class Circle(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("circle", params or {}, csg_params, children)
 
-class Circle(Node):
-    def __init__(self, r, fn=None, fa=None, fs=None):
-        super().__init__("circle", {"r": r, "$fn": fn, "$fa": fa, "$fs": fs})
+class Square(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("square", params or {}, csg_params, children)
 
-class Square(Node):
-    def __init__(self, size, center=False):
-        super().__init__("square", {"size": size, "center": center})
+class Polygon(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("polygon", params or {}, csg_params, children)
 
-class Polygon(Node):
-    def __init__(self, points=None, paths=None):
-        super().__init__("polygon", {"points": points or [], "paths": paths or []})
 
-# ----------------------------
+# -------------------------------------------------
 # 3D primitives
-# ----------------------------
+# -------------------------------------------------
+class Cube(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("cube", params or {}, csg_params, children)
 
-class Cube(Node):
-    def __init__(self, size, center=False):
-        super().__init__("cube", {"size": size, "center": center})
+class Sphere(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("sphere", params or {}, csg_params, children)
 
-class Sphere(Node):
-    def __init__(self, r, fn=None, fa=None, fs=None):
-        super().__init__("sphere", {"r": r, "$fn": fn, "$fa": fa, "$fs": fs})
+class Cylinder(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("cylinder", params or {}, csg_params, children)
 
-class Cylinder(Node):
-    def __init__(self, h, r=None, r1=None, r2=None, center=False, fn=None, fa=None, fs=None):
-        super().__init__(
-            "cylinder",
-            {
-                "h": h,
-                "r": r,
-                "r1": r1,
-                "r2": r2,
-                "center": center,
-                "$fn": fn,
-                "$fa": fa,
-                "$fs": fs,
-            },
-        )
+class Polyhedron(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("polyhedron", params or {}, csg_params, children)
 
-class Polyhedron(Node):
-    def __init__(self, points=None, faces=None):
-        super().__init__("polyhedron", {"points": points or [], "faces": faces or []})
 
-# ----------------------------
+# -------------------------------------------------
+# Color
+# -------------------------------------------------
+class Color(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("color", params or {}, csg_params, children)
+
+
+# -------------------------------------------------
 # Boolean / CSG operators
-# ----------------------------
+# -------------------------------------------------
+class Union(AstNode):
+    def __init__(self, children=None, params=None, csg_params=None):
+        super().__init__("union", params or {}, csg_params, children)
 
-class Union(Node):
-    def __init__(self, children=None):
-        super().__init__("union", children=children or [])
+class Difference(AstNode):
+    def __init__(self, children=None, params=None, csg_params=None):
+        super().__init__("difference", params or {}, csg_params, children)
 
-class Difference(Node):
-    def __init__(self, children=None):
-        super().__init__("difference", children=children or [])
+class Intersection(AstNode):
+    def __init__(self, children=None, params=None, csg_params=None):
+        super().__init__("intersection", params or {}, csg_params, children)
 
-class Intersection(Node):
-    def __init__(self, children=None):
-        super().__init__("intersection", children=children or [])
+class Hull(AstNode):
+    def __init__(self, children=None, params=None, csg_params=None):
+        super().__init__("hull", params or {}, csg_params, children)
 
-class Hull(Node):
-    def __init__(self, children=None):
-        super().__init__("hull", children=children or [])
+class Minkowski(AstNode):
+    def __init__(self, children=None, params=None, csg_params=None):
+        super().__init__("minkowski", params or {}, csg_params, children)
 
-class Minkowski(Node):
-    def __init__(self, children=None):
-        super().__init__("minkowski", children=children or [])
+class Group(AstNode):
+    def __init__(self, children=None, params=None, csg_params=None):
+        super().__init__("group", params or {}, csg_params, children)
 
-class Group(Node):
-    def __init__(self, children=None):
-        super().__init__("group", children=children or [])
 
-# ----------------------------
+# -------------------------------------------------
 # Transforms
-# ----------------------------
+# -------------------------------------------------
+class Translate(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("translate", params or {}, csg_params, children)
 
-class Translate(Node):
-    def __init__(self, vector=None, children=None):
-        super().__init__("translate", {"vector": vector or [0, 0, 0]}, children or [])
+class Rotate(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("rotate", params or {}, csg_params, children)
 
-class Rotate(Node):
-    def __init__(self, vector=None, angle=None, children=None):
-        super().__init__("rotate", {"vector": vector, "angle": angle}, children or [])
+class Scale(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("scale", params or {}, csg_params, children)
 
-class Scale(Node):
-    def __init__(self, vector=None, children=None):
-        super().__init__("scale", {"vector": vector or [1, 1, 1]}, children or [])
+class MultMatrix(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("multmatrix", params or {}, csg_params, children)
 
-class MultMatrix(Node):
-    def __init__(self, matrix=None, children=None):
-        super().__init__("multmatrix", {"matrix": matrix}, children or [])
 
-# ----------------------------
+# -------------------------------------------------
 # Extrusions
-# ----------------------------
+# -------------------------------------------------
+class LinearExtrude(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("linear_extrude", params or {}, csg_params, children)
 
-class LinearExtrude(Node):
-    def __init__(self, height, center=False, twist=0, scale=1.0, children=None):
+class RotateExtrude(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("rotate_extrude", params or {}, csg_params, children)
+
+# -------------------------------------------------
+# Unknown / Text 
+# -------------------------------------------------
+
+# ToDo Needs additional params
+
+class Text(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
         super().__init__(
-            "linear_extrude",
-            {
-                "height": height,
-                "center": center,
-                "twist": twist,
-                "scale": scale,
-            },
-            children or [],
+            "text",
+            params or {},
+            csg_params,
+            children
         )
 
-class RotateExtrude(Node):
-    def __init__(self, angle=360, convexity=None, children=None):
-        super().__init__(
-            "rotate_extrude",
-            {"angle": angle, "convexity": convexity},
-            children or [],
-        )
+class Polyhedron(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("polyhedron", params or {}, csg_params, children)
+
+    @property
+    def points(self):
+        return self.params.get("points", [])
+
+    @property
+    def faces(self):
+        return self.params.get("faces", [])
+
+    @property
+    def convexity(self):
+        return self.params.get("convexity")
+
+# -------------------------------------------------
+# Unknown / unsupported nodes
+# -------------------------------------------------
+class UnknownNode(AstNode):
+    def __init__(self, node_type, params=None, csg_params=None, children=None):
+        super().__init__(node_type, params or {}, csg_params, children)
 

@@ -1,0 +1,6 @@
+group() {      
+    cube(size = [12, 9.4, 6], center = false);
+    multmatrix([[1, 0, 0, 9.4], [0, 1, 0, 9.4], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+        cylinder($fn = 90, $fa = 12, $fs = 2, h = 6, r1 = 2.6, r2 = 2.6, center = false);
+    }
+}			

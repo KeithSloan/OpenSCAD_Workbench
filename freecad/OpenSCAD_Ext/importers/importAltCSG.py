@@ -907,7 +907,7 @@ def p_linear_extrude_with_transform(p):
     h = float(p[3]['height'])
     s = 1.0
     t = 0.0
-    if printverbose: write_log("INFO","Twist : ",p[3])
+    if printverbose: write_log("INFO",f"Twist : {p[3]}")
     if 'scale' in p[3]:
         if isinstance(p[3]['scale'], str):
             s = [float(p[3]['scale']), float(p[3]['scale'])]

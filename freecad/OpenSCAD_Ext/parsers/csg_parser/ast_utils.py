@@ -1,102 +1,6 @@
-"""
-OpenSCAD CSG Import Pipeline for FreeCAD
-----------------------------------------
-
-This module implements the parsing and processing of OpenSCAD CSG (.csg) files
-into FreeCAD Part objects. The pipeline consists of several stages, each handled
-by specific functions across different modules.  
-
-Pipeline Steps:
-
-1. Read CSG File
-----------------
-Module: importASTCSG.py
-Function: processCSG(doc, filename)
-Purpose:
-    - Opens the .csg file
-    - Reads lines, strips whitespace and comments
-Notes:
-    - Produces a list of cleaned lines for parsing
-    - Does not interpret or validate content
-
-2. Parse Block Lines
--------------------
-Module: parse_csg_file_to_AST_nodes.py
-Function: parse_block(idx)
-Purpose:
-    - Recursively parses lines into AST nodes
-    - Detects primitives (cube, sphere, cylinder, etc.)
-    - Detects 2D shapes (circle, square, polygon)
-    - Detects CSG blocks (union, difference, intersection, hull, minkowski, group)
-    - Detects transforms (translate, rotate, scale, multmatrix)
-Notes:
-    - Recursion handles nested blocks
-    - Returns a list of AST node objects and next line index
-
-3. Regex Parameter Extraction
------------------------------
-Module: parse_csg_file_to_AST_nodes.py
-Location: inside parse_block()
-Purpose:
-    - Extracts numeric or vector parameters from lines
-      e.g., cube(size=[7,17,1]) -> [7,17,1]
-    - Handles $fn, r, h, points, faces, etc.
-Notes:
-    - Regex failures can result in missing parameters (None)
-    - Missing or malformed parameters will trigger TypeError downstream
-
-4. Build AST Nodes
------------------
-Module: parse_csg_file_to_AST_nodes.py
-Location: inside parse_block()
-Purpose:
-    - Instantiates AST node objects (Cube, Sphere, Cylinder, Hull, Translate, etc.)
-    - Assigns extracted parameters and child nodes
-    - Creates tree structure representing the CSG model
-
-5. Normalize AST
-----------------
-Module: parse_csg_file_to_AST_nodes.py
-Function: normalize_ast(node)
-Purpose:
-    - Simplifies AST by:
-        - Dropping empty transparent nodes (Group, Translate, Rotate, Scale)
-        - Collapsing single-child transparent nodes
-    - Ensures tree is minimal for easier processing
-Notes:
-    - Does not fix missing primitive parameters
-    - Useful for reducing unnecessary nesting
-
-6. Process AST Nodes to FreeCAD Shapes
---------------------------------------
-Module: processAST.py
-Function: process_AST_node(doc, node)
-Purpose:
-    - Converts AST nodes into FreeCAD Part shapes
-    - Handles primitives, booleans, hulls/minkowski, and transforms
-    - Fallback to OpenSCAD if native BRep fails for hull/minkowski
-Key functions:
-    - create_primitive(node)  → Converts Cube, Sphere, Cylinder, etc. to Part.Shape
-    - create_boolean(node)    → Performs Union, Difference, Intersection
-    - process_hull(node)      → Tries native BRep hull, fallback to OpenSCAD
-    - process_minkowski(node) → Tries native BRep Minkowski, fallback to OpenSCAD
-
-7. Combine and Output FreeCAD Objects
--------------------------------------
-Module: processAST.py
-Function: process_AST(doc, ast_nodes, mode)
-Purpose:
-    - Combines all processed shapes into a single Part::Feature
-    - Or returns multiple objects if mode="objects" or "multiple"
-Notes:
-    - Final FreeCAD objects are inserted into the active document
-    - Shape may be a BRep or imported from OpenSCAD fallback
-"""
-
-
-# csg_to_ast_utils.py
+# parse_csg_file_to_AST_nodes.py
 import re
-import ast
+import ast as py_ast
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 
 # ----------------------------
@@ -120,13 +24,13 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import (
 # ----------------------------
 def parse_vector(text):
     try:
-        return ast.literal_eval(text)
+        return py_ast.literal_eval(text)
     except Exception:
         return None
 
 def parse_matrix(text):
     try:
-        return ast.literal_eval(text)
+        return py_ast.literal_eval(text)
     except Exception:
         return None
 
@@ -143,8 +47,9 @@ def normalize_ast(node):
     children = []
     for c in node.children:
         nn = normalize_ast(c)
-        if nn:
-            children.append(nn)
+        if nn is None:
+            continue
+        children.append(nn)
     node.children = children
 
     if isinstance(node, TRANSPARENT_NODES) and not node.children:
@@ -152,10 +57,7 @@ def normalize_ast(node):
         return None
 
     if isinstance(node, TRANSPARENT_NODES) and len(node.children) == 1:
-        write_log(
-            "Info",
-            f"Collapsing {node.node_type} → {node.children[0].node_type}"
-        )
+        write_log("Info", f"Collapsing {node.node_type} → {node.children[0].node_type}")
         return node.children[0]
 
     return node
@@ -300,3 +202,97 @@ def parse_csg_file_to_AST_nodes(filename):
     write_log("Info", f"AST nodes after normalize: {len(ast_nodes)}")
     return ast_nodes
 
+
+def dump_ast_compact(node, indent=0, _seen=None):
+    if _seen is None:
+        _seen = set()
+
+    prefix = "  " * indent
+    if id(node) in _seen:
+        print(prefix + f"{node.node_type} <CYCLE>")
+        return
+
+    _seen.add(id(node))
+    print(prefix + f"{node.node_type}  children={len(node.children)}")
+
+    for c in node.children:
+        dump_ast_compact(c, indent + 1, _seen)
+
+def dump_ast_node(node, indent=0):
+    """
+    Dump a single AST node (no recursion).
+    Safe to call anywhere.
+    """
+    prefix = "  " * indent
+
+    if node is None:
+        print(prefix + "<None>")
+        return
+
+    print(prefix + f"{node.node_type}  ({node.__class__.__name__})")
+
+    # Params (FreeCAD / B-Rep)
+    params = getattr(node, "params", None)
+    if params:
+        print(prefix + "  params:")
+        for k, v in params.items():
+            print(prefix + f"    {k}: {v!r}")
+    else:
+        print(prefix + "  params: {}")
+
+    # Raw CSG params (OpenSCAD)
+    csg_params = getattr(node, "csg_params", None)
+    if csg_params:
+        print(prefix + "  csg_params:")
+        if isinstance(csg_params, dict):
+            for k, v in csg_params.items():
+                print(prefix + f"    {k}: {v!r}")
+        else:
+            print(prefix + f"    {csg_params!r}")
+    else:
+        print(prefix + "  csg_params: {}")
+
+    # Children summary only
+    children = getattr(node, "children", None)
+    if children is None:
+        print(prefix + "  children: <missing>")
+    else:
+        print(prefix + f"  children: {len(children)}")
+
+
+def dump_ast_tree(node, indent=0, max_depth=50, _seen=None):
+    """
+    Recursive AST dump using dump_ast_node().
+    """
+
+    if _seen is None:
+        _seen = set()
+
+    if node is None:
+        print("  " * indent + "<None>")
+        return
+
+    node_id = id(node)
+    if node_id in _seen:
+        print("  " * indent + f"<CYCLE {node.node_type}>")
+        return
+
+    if indent > max_depth:
+        print("  " * indent + "<MAX DEPTH REACHED>")
+        return
+
+    _seen.add(node_id)
+
+    # Dump THIS node only
+    dump_ast_node(node, indent)
+
+    # Recurse
+    children = getattr(node, "children", []) or []
+    for child in children:
+        dump_ast_tree(
+            child,
+            indent=indent + 1,
+            max_depth=max_depth,
+            _seen=_seen,
+        )
+    
