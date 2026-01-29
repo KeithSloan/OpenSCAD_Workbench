@@ -98,7 +98,12 @@ def generate_stl_from_scad(scad_str, timeout_sec=60):
     write_log("OpenSCAD", f"Running: {' '.join(cmd)}")
 
     try:
-        subprocess.run(cmd, timeout=timeout_sec, check=True)
+        subprocess.run(cmd,
+                        timeout=timeout_sec,
+                        check=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        )
         write_log("OpenSCAD", f"Generated STL: {stl_path}")
         return stl_path
     except subprocess.TimeoutExpired:
