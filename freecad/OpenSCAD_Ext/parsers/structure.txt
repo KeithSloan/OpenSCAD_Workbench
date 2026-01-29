@@ -1,0 +1,14 @@
+analysis/
+├── csg/
+│   └── csg_parser/
+├── scad/
+│   └── scad_ast/   (if you ever add one)
+│
+metadata/
+├── scadmeta/
+├── csgmeta/
+│
+library/
+├── scan_scad_library.py
+├── library_scad_loader.py
+
