@@ -17,21 +17,7 @@ import tempfile
 import FreeCAD
 import Part
 import Mesh
-'''
-from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_classes import (
-    CubeFC,
-    SphereFC,
-    CylinderFC,
-    #TorusFC,
-    UnionFC,
-    DifferenceFC,
-    IntersectionFC
-)
-'''
 import FreeCAD as App
-
-#from FreeCAD import Vector
-
 
 #from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
@@ -40,20 +26,10 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_utils import dump_ast_node
 
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import (
-    AstNode,
-    Cube, Sphere, Cylinder,
-    Union, Difference, Intersection,
-    Group,
-    Translate, Rotate, Scale, MultMatrix,
     Hull, Minkowski,
-    LinearExtrude, RotateExtrude,
-    Color,
-    Polyhedron,
-)
+    )
 
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_polyhedron import process_polyhedron 
-
-
 
 # -----------------------------
 # Utility functions
@@ -114,59 +90,6 @@ def generate_stl_from_scad(scad_str, timeout_sec=60):
     return None
 
 
-
-'''
-
-def saved_generate_stl_from_scad(scad_str, check_syntax=False, timeout=60):
-    """
-    Write SCAD to temp file, call OpenSCAD CLI, return STL path.
-    Enforces timeout.
-    """
-    tmpdir = tempfile.mkdtemp(prefix="openscad_")
-    tmpdir = "/tmp/call_to_scad"
-    scad_file = os.path.join(tmpdir, "fallback.scad")
-    stl_file  = os.path.join(tmpdir, "fallback.stl")
-
-    prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
-    openscad_exe = prefs.GetString("openscadexecutable", "")
-
-    if not openscad_exe or not os.path.isfile(openscad_exe):
-        raise FileNotFoundError("OpenSCAD executable not configured")
-
-    with open(scad_file, "w", encoding="utf-8") as f:
-        f.write(scad_str)
-        f.flush()
-
-    cmd = [
-        openscad_exe,
-        "-o", stl_file,
-        scad_file
-    ]
-
-    write_log("OpenSCAD", f"Running: {' '.join(cmd)} (timeout={timeout}s)")
-
-    try:
-        subprocess.run(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=timeout,
-            # check=True,
-        )
-    except subprocess.TimeoutExpired:
-        raise RuntimeError(f"OpenSCAD timed out after {timeout} seconds")
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(
-            "OpenSCAD failed:\n" + e.stderr.decode(errors="ignore")
-        )
-
-    if not os.path.isfile(stl_file):
-        raise RuntimeError("OpenSCAD did not produce STL")
-
-    return stl_file
-
-'''
-
 def _mesh_to_shape_worker(stl_path, tolerance, queue):
     """Worker process to safely run makeShapeFromMesh with timeout"""
     try:
@@ -177,12 +100,32 @@ def _mesh_to_shape_worker(stl_path, tolerance, queue):
     except Exception as e:
         queue.put(e)
 
+    # See also stl_to_shape
+def shape_from_scad(scad_str, refine=True):
+    stl_path = generate_stl_from_scad(scad_str)
+    if not stl_path:
+        return None
 
-import os
-import Part
-import Mesh
-import FreeCAD as App
+    # Import STL into FreeCAD Part.Shape
+    mesh_obj = Mesh.Mesh(stl_path)
+    shape = Part.Shape()
+    shape.makeShapeFromMesh(mesh_obj.Topology, 0.0001)
 
+    if refine:
+        try:
+            return_shape = shape.copy().refineShape()
+            if return_shape.isNull() or return_shape.isEmpty():
+                write_log("STL", "RefineShape returned empty shape, falling back to original")
+                return_shape = shape
+        except Exception as e:
+            write_log("STL", f"RefineShape failed: {e}, using original shape")
+            return_shape = shape
+    else:
+        return_shape = shape
+        
+
+
+    # See also shape_from_scad - uses refine, no so much checking
 def stl_to_shape(stl_path, tolerance=0.05, timeout=None):
     """
     Import STL into FreeCAD and convert to Part.Shape.
