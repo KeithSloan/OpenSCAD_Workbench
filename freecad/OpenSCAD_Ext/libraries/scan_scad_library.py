@@ -53,6 +53,8 @@ def scan_scad_library(file_paths: list[str] = None) -> list[dict]:
         write_log("Error", f"OPENSCADPATH does not exist: {library_path}")
         return []
 
+    write_log("WAIT","Needs TinyDB - await FreeCAD")
+
     # TinyDB database in library folder
     db_path = os.path.join(library_path, ".scadmeta_db.json")
     db = TinyDB(db_path)

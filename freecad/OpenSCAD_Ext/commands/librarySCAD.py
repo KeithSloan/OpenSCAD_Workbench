@@ -8,6 +8,8 @@ from freecad.OpenSCAD_Ext.gui.OpenSCADLibraryBrowser \
      import OpenSCADLibraryBrowser
 #from freecad.OpenSCAD_Ext.objects.SCADObject import SCADfileBase
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
+from freecad.OpenSCAD_Ext.libraries.ensure_openSCADPATH import ensure_openSCADPATH
+from freecad.OpenSCAD_Ext.libraries.scan_scad_library import scan_scad_library
 #from freecad.OpenSCAD_Ext.parses.parse_scad_for_modules import scan_for_modules
 
 class LibrarySCAD_Class(BaseParams):
@@ -26,6 +28,12 @@ class LibrarySCAD_Class(BaseParams):
         #write_log("Info",doc.Label)
         #if not doc:
         #    return
+
+        # Scan library or wait for gui to scan??
+        libPath = ensure_openSCADPATH()
+        scan_scad_library(libPath)
+
+        #
         browser = OpenSCADLibraryBrowser()
         browser.exec_()
 

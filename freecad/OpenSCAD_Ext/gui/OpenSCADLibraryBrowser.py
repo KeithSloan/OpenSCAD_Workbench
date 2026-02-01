@@ -12,7 +12,7 @@ from freecad.OpenSCAD_Ext.core.create_scad_object_interactive import create_scad
 
 
 # parse_library_scad for dialog SCADLibraryBrowser - BSOL2 etc
-from freecad.OpenSCAD_Ext.parsers.parse_library_scad  import parse_scad_meta
+from freecad.OpenSCAD_Ext.libraries.scan_scad_library import parse_scad_meta
 
 from freecad.OpenSCAD_Ext.parsers.scadmeta.scadmeta_parse_scad_file  import create_scad_vars_spreadsheet
 from freecad.OpenSCAD_Ext.gui.SCAD_Module_Dialog import SCAD_Module_Dialog
