@@ -13,63 +13,92 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
 
-      <!-- OpenSCAD executable -->
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <!-- OpenSCAD executable -->
         <item>
-         <widget class="QLabel" name="fclabel">
-          <property name="text">
-           <string>OpenSCAD executable</string>
-          </property>
-         </widget>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+            <widget class="QLabel" name="fclabel">
+            <property name="text">
+            <string>OpenSCAD executable</string>
+            </property>
+            </widget>
+            </item>
+            <item>
+            <widget class="Gui::PrefFileChooser" name="gui::preffilechooser" native="true">
+            <property name="minimumSize">
+            <size><width>300</width><height>0</height></size>
+            </property>
+            <property name="toolTip">
+            <string>The path to the OpenSCAD executable</string>
+            </property>
+            <property name="prefEntry" stdset="0">
+            <cstring>openscadexecutable</cstring>
+            </property>
+            <property name="prefPath" stdset="0">
+            <cstring>Mod/OpenSCAD</cstring>
+            </property>
+            </widget>
+            </item>
+        </layout>
         </item>
-        <item>
-         <widget class="Gui::PrefFileChooser" name="gui::preffilechooser" native="true">
-          <property name="minimumSize">
-           <size><width>300</width><height>0</height></size>
-          </property>
-          <property name="toolTip">
-           <string>The path to the OpenSCAD executable</string>
-          </property>
-          <property name="prefEntry" stdset="0">
-           <cstring>openscadexecutable</cstring>
-          </property>
-          <property name="prefPath" stdset="0">
-           <cstring>Mod/OpenSCAD</cstring>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
 
-      <!-- External Editor -->
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_externaleditor">
+        <!-- External Editor -->
         <item>
-         <widget class="QLabel" name="label_external_editor">
-          <property name="text">
-           <string>External Editor</string>
-          </property>
-         </widget>
+        <layout class="QHBoxLayout" name="horizontalLayout_externaleditor">
+            <item>
+            <widget class="QLabel" name="label_external_editor">
+            <property name="text">
+            <string>External Editor</string>
+            </property>
+            </widget>
+            </item>
+            <item>
+            <widget class="Gui::PrefFileChooser" name="gui_pref_external_editor" native="true">
+            <property name="minimumSize">
+            <size><width>300</width><height>0</height></size>
+            </property>
+            <property name="toolTip">
+            <string>Path to preferred external editor executable</string>
+            </property>
+            <property name="prefEntry" stdset="0">
+            <cstring>externalEditor</cstring>
+            </property>
+            <property name="prefPath" stdset="0">
+            <cstring>Mod/OpenSCAD</cstring>
+            </property>
+            </widget>
+            </item>
+        </layout>
         </item>
+
+        <!-- OpenSCAD studio  -->
         <item>
-         <widget class="Gui::PrefFileChooser" name="gui_pref_external_editor" native="true">
-          <property name="minimumSize">
-           <size><width>300</width><height>0</height></size>
-          </property>
-          <property name="toolTip">
-           <string>Path to preferred external editor executable</string>
-          </property>
-          <property name="prefEntry" stdset="0">
-           <cstring>externalEditor</cstring>
-          </property>
-          <property name="prefPath" stdset="0">
-           <cstring>Mod/OpenSCAD</cstring>
-          </property>
-         </widget>
+        <layout class="QHBoxLayout" name="horizontalLayout_openscad_studio">
+            <item>
+            <widget class="QLabel" name="label_openscad_studio">
+            <property name="text">
+            <string>openscad_studio</string>
+            </property>
+            </widget>
+            </item>
+            <item>
+            <widget class="Gui::PrefFileChooser" name="gui_pref_openscad_studio" native="true">
+            <property name="minimumSize">
+            <size><width>300</width><height>0</height></size>
+            </property>
+            <property name="toolTip">
+            <string>Path to openscad_studio executable</string>
+            </property>
+            <property name="prefEntry" stdset="0">
+            <cstring>openscad_studio</cstring>
+            </property>
+            <property name="prefPath" stdset="0">
+            <cstring>Mod/OpenSCAD</cstring>
+            </property>
+            </widget>
+            </item>
+        </layout>
         </item>
-       </layout>
-      </item>
 
       <!-- Default directory for source -->
       <item>

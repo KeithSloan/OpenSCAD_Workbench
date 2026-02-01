@@ -2,8 +2,10 @@ import FreeCAD as App
 import FreeCADGui as Gui
 import sys
 
+from FreeCAD import Qt
+
 # Register logger - Must be in Gui and outside of Workbench
-from .logger.Workbench_logger import init as init_logging
+from freecad.OpenSCAD_Ext.logger.Workbench_logger import init as init_logging
 #from freecad.OpenSCAD_Ext.logger.Workbench_logger import init as init_logging
 
 init_logging()
@@ -45,15 +47,17 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
         # must use addPreferencePageProvider in preferences.py
         # (If missing, FreeCAD shows the “not a preference page” errors)
 
-        from .commands import newSCAD
-        from .commands import editSCAD
-        from .commands import renderSCAD
-        from .commands import varsSCAD
-        from .commands import librarySCAD
+        from freecad.OpenSCAD_Ext.commands import newSCAD
+        from freecad.OpenSCAD_Ext.commands import editSCAD
+        from freecad.OpenSCAD_Ext.commands import openSCADstudio
+        from freecad.OpenSCAD_Ext.commands import renderSCAD
+        from freecad.OpenSCAD_Ext.commands import varsSCAD
+        from freecad.OpenSCAD_Ext.commands import librarySCAD
  
         commands = [
             "NewSCADFileObject_CMD",
             "EditSCADFileObject_CMD",
+            "EditStudioSCADFileObject_CMD",
             "RenderSCADFileObject_CMD",
             "VarsSCADFileObject_CMD",
             "LibrarySCAD_CMD",
@@ -137,12 +141,12 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
             # We are using the Python temp-directory creation function
             if "snap" in openscadfilename:
                 App.Console.PrintMessage(
-                    translate(
+                    Qt.translate(
                         "OpenSCAD",
                         "It looks like you may be using a Snap version of OpenSCAD.",
                     )
                     + " "
-                    + translate(
+                    + Qt.translate(
                         "OpenSCAD",
                         "If OpenSCAD execution fails to load the temporary file, use FreeCAD's OpenSCAD Workbench Preferences to change the transfer mechanism.",
                     )
@@ -150,12 +154,12 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
                 )
             elif sys.executable.startswith("/tmp/"):  # Heuristic for AppImages
                 App.Console.PrintMessage(
-                    translate(
+                    Qt.translate(
                         "OpenSCAD",
                         "It looks like you may be using a sandboxed version of FreeCAD.",
                     )
                     + " "
-                    + translate(
+                    + Qt.translate(
                         "OpenSCAD",
                         "If OpenSCAD execution fails to load the temporary file, use FreeCAD's OpenSCAD Workbench Preferences to change the transfer mechanism.",
                     )

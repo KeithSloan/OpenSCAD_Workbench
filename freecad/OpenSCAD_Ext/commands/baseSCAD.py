@@ -26,6 +26,19 @@ class BaseParams:
         return path
 
     @staticmethod
+    def studioPathName():
+        params = BaseParams._params()
+        path = params.GetString('openscad_studio')
+
+        write_log("Info", f"Path to external openscad_studio {path}")
+
+        if not BaseParams.isValidFilePath(path):
+            FreeCAD.Console.PrintError(
+                "External editor path is not set or invalid\n"
+            )
+        return path
+
+    @staticmethod
     def getScadSourcePath():
         import os
         params = FreeCAD.ParamGet(
@@ -90,3 +103,21 @@ class BaseParams:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
+    
+    def openscad_studio(self, name, scadPath):
+        import subprocess
+
+        openscad_studio = BaseParams.studioPathName()   # ✅ CALL IT
+        if not openscad_studio:
+            FreeCAD.Console.PrintError("No openscad_studio configured\n")
+            return
+
+        write_log("Info", f"Launching openscad studio for {name}: {scadPath}")
+
+        subprocess.Popen(
+            [openscad_studio, scadPath],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+

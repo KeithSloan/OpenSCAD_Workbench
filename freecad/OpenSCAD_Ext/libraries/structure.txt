@@ -1,0 +1,11 @@
+OpenSCAD_Ext/
+├── parsers/
+│   ├── scadmeta_annotations.py
+│   ├── scadmeta_classifier.py
+│   └── ... (AST / metadata parsers)
+└── libraries/
+    ├── ensure_openSCADPATH.py
+    ├── libPreview.py
+    ├── scan_scad_library.py   ← orchestration + TinyDB
+    └── SCADLibraryWatcher.py  ← file system watcher
+
