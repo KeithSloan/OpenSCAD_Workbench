@@ -589,6 +589,127 @@ def process_AST_node(node):
         return results
 
     # -----------------------------
+    # EXTRUSIONS
+    # -----------------------------
+    if node_type in ("linear_extrude", "rotate_extrude"):
+        write_log("Extrusion",node_type)
+        if node_type == "linear_extrude":
+            write_log("Extrusion", node_type)
+            p = node.params
+            height = p.get("height", 1)
+            center = p.get("center", False)
+            twist = p.get("twist", 0)      # degrees
+
+            solids = []
+
+            for child in node.children:
+                for shape, pl in _as_list(process_AST_node(child)):
+                    s = shape.copy()
+                    s.Placement = pl  # children already have transforms applied
+
+                    # Expect Wire or Face
+                    if isinstance(s, Part.Wire):
+                        face = Part.Face(s)
+                    elif isinstance(s, Part.Face):
+                        face = s
+                    else:
+                        write_log("Extrusion", f"Skipping non-face/wire child: {s}")
+                        continue
+
+                    # ---- Fast path: no twist
+                    if twist == 0:
+                        solid = face.extrude(App.Vector(0, 0, height))
+                    else:
+                        # ---- Slow path: twist present -> use loft along segments
+                        segments = max(int(abs(twist) / 5), 1)  # 5° per step
+                        layers = []
+                        for i in range(segments + 1):
+                            z = height * i / segments
+                            angle = twist * i / segments
+                            # rotate face for twist
+                            rotated_face = face.copy()
+                            rotated_face.rotate(App.Vector(0, 0, 0), App.Vector(0, 0, 1), angle)
+                            # translate along Z
+                            rotated_face.translate(App.Vector(0, 0, z))
+                            layers.append(rotated_face)
+
+                        # loft through layers
+                        solid = Part.makeLoft(layers, True, True)
+
+                    # ---- Center after extrusion using bounding box
+                    if center:
+                        bb = solid.BoundBox
+                        dz = (bb.ZMin + bb.ZMax) / 2
+                        solid.translate(App.Vector(0, 0, -dz))
+
+                    solids.append(solid)
+
+            if not solids:
+                return []
+
+            # fuse all child extrusions
+            result = solids[0]
+            for s in solids[1:]:
+                result = result.fuse(s)
+
+            return (result, local_pl)
+
+        if node_type == "rotate_extrude":
+            write_log("Extrusion", node_type)
+            p = node.params
+            angle = p.get("angle", 360)     # degrees
+            center = p.get("center", False)
+            segments = max(int(abs(angle) / 5), 8)  # 5° per segment, min 8
+
+            solids = []
+
+            for child in node.children:
+                for shape, pl in _as_list(process_AST_node(child)):
+                    s = shape.copy()
+                    s.Placement = pl  # transforms already applied
+
+                    # Expect Wire or Face
+                    if isinstance(s, Part.Wire):
+                        face = Part.Face(s)
+                    elif isinstance(s, Part.Face):
+                        face = s
+                    else:
+                        write_log("Extrusion", f"Skipping non-face/wire child: {s}")
+                        continue
+
+                    # ---- Fast path: full rotation with single segment
+                    if angle == 360:
+                        solid = face.revolve(App.Vector(0,0,0), App.Vector(0,0,1), angle)
+                    else:
+                        # ---- Slow path: partial rotation or segments
+                        step_angle = angle / segments
+                        layers = [face]
+                        for i in range(1, segments + 1):
+                            rotated = face.copy()
+                            rotated.rotate(App.Vector(0,0,0), App.Vector(0,0,1), step_angle * i)
+                            layers.append(rotated)
+
+                        solid = Part.makeLoft(layers, True, True)
+
+                    # ---- Center after extrusion using bounding box
+                    if center:
+                        bb = solid.BoundBox
+                        dz = (bb.ZMin + bb.ZMax) / 2
+                        solid.translate(App.Vector(0, 0, -dz))
+
+                    solids.append(solid)
+
+            if not solids:
+                return []
+
+            # fuse all child extrusions
+            result = solids[0]
+            for s in solids[1:]:
+                result = result.fuse(s)
+
+            return (result, local_pl)
+
+    # -----------------------------
     # BOOLEANS
     # -----------------------------
     if node_type in ("union", "difference", "intersection"):
