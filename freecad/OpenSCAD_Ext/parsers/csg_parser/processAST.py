@@ -31,6 +31,8 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import (
 
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_utils import call_openscad_scad_string#
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_polyhedron import process_polyhedron
+from freecad.OpenSCAD_Ext.parsers.csg_parser.processHull import try_hull
+
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_text import process_text 
 
 
@@ -194,11 +196,10 @@ def fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60)
     write_log(operation_type, f"{operation_type} fallback completed, shape cached")
 
     return shape
-
+''' Now imported !!!!
 # -----------------------------
 # Hull / Minkowski native attempts
 # -----------------------------
-
 def try_hull(node):
     """
     #Attempt to generate a native FreeCAD hull from children shapes.
@@ -206,6 +207,11 @@ def try_hull(node):
     """
     write_log("AST","Try Hull")
     return None
+
+    hull_shape = try_hull(node)
+    if hull_shape:
+        # fast native hull handled
+        return hull_shape
 
     shapes = [process_AST_node(c) for c in node.children if process_AST_node(c)]
     if len(shapes) < 2:
@@ -215,7 +221,7 @@ def try_hull(node):
     # Returning None for now to trigger OpenSCAD fallback
     write_log("AST_Hull", "Native hull not implemented, falling back")
     return None
-
+'''
 
 def try_minkowski(node):
     """
@@ -402,14 +408,6 @@ def placement_from_matrix(matrix):
 # Returns : List of
 #   (placement: FreeCAD.Placement, shape: Part.Shape | None)
 # ----------------------------------------------------------
-
-
-# -----------------------------
-# Recursive AST node processing
-# -----------------------------
-import FreeCAD as App
-import Part
-
 
 def _as_list(result):
     """Normalize single or list return to list."""

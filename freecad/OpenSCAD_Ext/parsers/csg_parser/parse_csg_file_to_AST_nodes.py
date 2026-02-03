@@ -7,9 +7,9 @@ Usage:
     from ast_nodes import AstNode, Sphere, Hull, MultMatrix, ...
     nodes = parse_csg_file_to_AST_nodes(filename)
 """
-#import FreeCAD
 import re
 import ast
+from FreeCAD import Matrix
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import AstNode, Cube, Sphere, Cylinder, Union, Difference, Intersection
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import Group, Translate, Rotate, Scale, MultMatrix, Hull, Minkowski
@@ -446,25 +446,39 @@ def parse_csg_lines(lines, start=0, indent=0):
                         csg_params=raw_csg_params
                     )
 
+
                 elif node_type == "multmatrix":
                     try:
-                        params["matrix"] = ast.literal_eval(raw_csg_params)
+                        mat_list = ast.literal_eval(raw_csg_params)
+                        if len(mat_list) != 4 or any(len(row) != 4 for row in mat_list):
+                            raise ValueError("Invalid 4x4 matrix")
                     except Exception as e:
                         write_log(
                             "CSG_PARSE",
                             f"Failed to evaluate multmatrix params: {raw_csg_params} -> {e}"
                         )
-                        params["matrix"] = [
+                        mat_list = [
                             [1, 0, 0, 0],
                             [0, 1, 0, 0],
                             [0, 0, 1, 0],
                             [0, 0, 0, 1],
                         ]
+
+                    # Create FreeCAD.Matrix properly
+                    fm = Matrix()
+                    fm.A11, fm.A12, fm.A13, fm.A14 = mat_list[0]
+                    fm.A21, fm.A22, fm.A23, fm.A24 = mat_list[1]
+                    fm.A31, fm.A32, fm.A33, fm.A34 = mat_list[2]
+                    # fm.A41..A44 are not used in FreeCAD's affine matrix
+
+                    # Store for convenience
+                    params["matrix"] = fm
                     node = cls(
                         children=children,
                         params=params,
                         csg_params=raw_csg_params
                     )
+                    node.matrix = fm
 
                 elif node_type == "polyhedron":
                     # split top-level commas safely
