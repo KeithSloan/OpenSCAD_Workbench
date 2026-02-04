@@ -1,4 +1,4 @@
-from FreeCAD import Base, Vector, Matrix
+from FreeCAD import Vector, Matrix
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 import Part
 
@@ -120,6 +120,7 @@ def hull_spheres(spheres):
         return None
 
     r = spheres[0]["r"]
+    write_log("Spheres",f" Radius {r} Type {type(r)}")
 
     if is_collinear(centers):
         return make_capsule(centers[0], centers[-1], r)
@@ -127,9 +128,86 @@ def hull_spheres(spheres):
 
     grid = detect_grid(centers)
     if grid:
-        return rounded_bbox(centers, r)
+        return try_hull_spheres(centers, r)
     write_log("Spheres","Not Grid")
     return None
+
+def try_hull_spheres(centers, r, min_thickness=1e-3):
+    """
+    Create a rounded hull for a set of spheres.
+    Automatically handles:
+      - Flat 2D grids (Z nearly zero)
+      - Full 3D arrangements
+    centers: list of Vector
+    r: sphere radius / rounding radius
+    """
+    if not centers:
+        return None
+
+    min_pt = Vector(
+        min(c.x for c in centers),
+        min(c.y for c in centers),
+        min(c.z for c in centers)
+    )
+    max_pt = Vector(
+        max(c.x for c in centers),
+        max(c.y for c in centers),
+        max(c.z for c in centers)
+    )
+
+    size = max_pt - min_pt
+
+    # Determine if flat in Z
+    is_flat = size.z < 1e-6 or size.z < r
+
+    if not is_flat:
+        # Full 3D → fillet all edges
+        box_size = Vector(
+            max(size.x + 2*r, min_thickness),
+            max(size.y + 2*r, min_thickness),
+            max(size.z + 2*r, min_thickness)
+        )
+        placement = min_pt - Vector(r, r, r)
+        box = Part.makeBox(box_size.x, box_size.y, box_size.z, placement)
+        fillet_radius = min(r, box_size.x/2, box_size.y/2, box_size.z/2)
+        try:
+            rounded_box = box.makeFillet(fillet_radius, box.Edges)
+        except Exception:
+            rounded_box = box
+        return rounded_box
+
+    else:
+        # Flat grid → thin box + corner spheres + XY edge cylinders
+        thickness = max(size.z + 2*r, min_thickness)
+        box = Part.makeBox(size.x + 2*r, size.y + 2*r, thickness,
+                           min_pt - Vector(r, r, r))
+        shapes = [box]
+
+        # Corners
+        corners = [
+            Vector(min_pt.x - r, min_pt.y - r, min_pt.z),
+            Vector(max_pt.x + r, min_pt.y - r, min_pt.z),
+            Vector(min_pt.x - r, max_pt.y + r, min_pt.z),
+            Vector(max_pt.x + r, max_pt.y + r, min_pt.z)
+        ]
+        for c in corners:
+            shapes.append(Part.makeSphere(r, c))
+
+        # XY edge cylinders
+        # along X edges
+        shapes.append(Part.makeCylinder(r, size.x + 2*r, corners[0], Vector(1,0,0)))
+        shapes.append(Part.makeCylinder(r, size.x + 2*r, corners[2], Vector(1,0,0)))
+        # along Y edges
+        shapes.append(Part.makeCylinder(r, size.y + 2*r, corners[0], Vector(0,1,0)))
+        shapes.append(Part.makeCylinder(r, size.y + 2*r, corners[1], Vector(0,1,0)))
+
+        # Fuse all
+        rounded_box = shapes[0]
+        for s in shapes[1:]:
+            rounded_box = rounded_box.fuse(s)
+
+        return rounded_box
+
 
 def hull_cubes(cubes):
     centers = [c["center"] for c in cubes]
@@ -138,8 +216,6 @@ def hull_cubes(cubes):
     if any(s != sizes[0] for s in sizes):
         return None
 
-#        return None
-#
 
     min_pt, max_pt = bbox(centers)
     return Part.makeBox(
@@ -188,16 +264,43 @@ def bbox(points):
     zs = [p.z for p in points]
     return Vector(min(xs), min(ys), min(zs)), Vector(max(xs), max(ys), max(zs))
 
-def rounded_bbox(points, r):
-    min_pt, max_pt = bbox(points)
-    box = Part.makeBox(
-        max_pt.x - min_pt.x,
-        max_pt.y - min_pt.y,
-        max_pt.z - min_pt.z,
-        min_pt
-    )
-    return box.makeMinkowskiSum(Part.makeSphere(r))
+'''
+def safe_offset(shape, r):
+    try:
+        offset = shape.makeOffsetShape(
+            r,              # offset distance
+            1e-6,           # tolerance
+            join=Part.JoinType.Arc,
+            fill=False,
+            openResult=False,
+            intersection=False
+        )
+        if offset and not offset.isNull():
+            return offset
+    except Exception:
+        pass
+    return shape  # fallback to original
 
+def rounded_bbox(points, r):
+    min_pt = Vector(min(p.x for p in points),
+                    min(p.y for p in points),
+                    min(p.z for p in points))
+    max_pt = Vector(max(p.x for p in points),
+                    max(p.y for p in points),
+                    max(p.z for p in points))
+
+    size = max_pt - min_pt
+
+    # create the core box
+    box = Part.makeBox(size.x, size.y, size.z, min_pt)
+
+    # apply fillet to all edges
+    edges = box.Edges
+    rounded_box = box.makeFillet(r, edges)
+
+    return rounded_box
+'''
+    
 def make_capsule(p0, p1, r):
     axis = p1 - p0
     L = axis.Length
