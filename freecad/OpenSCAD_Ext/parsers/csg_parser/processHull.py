@@ -1,4 +1,4 @@
-from FreeCAD import Vector, Matrix
+from FreeCAD import Vector, Matrix, Placement, Rotation
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 import Part
 
@@ -215,95 +215,65 @@ def try_hull_spheres(centers, r, min_thickness=1e-3):
         return rounded_box
 
 
-def make_tangent_frustum(x1, r1, x2, r2):
+def make_tangent_frustum(c1, r1, c2, r2):
     """
-    Exact external tangent frustum between two spheres
-    using a revolved X–R profile.
+    Create a tangent frustum between spheres at c1,r1 and c2,r2.
+    Works along any axis vector.
     """
+    delta = c2 - c1
+    length = delta.Length
+    if length < 1e-9:
+        raise ValueError("Sphere centers coincide")
 
-    assert x2 > x1, "Non-monotonic sphere centers (OpenSCAD order)"
+    axis = delta.normalize()
 
-    # profile in X–R plane
-    p1 = Vector(x1, 0, 0)
-    p2 = Vector(x1, r1, 0)
-    p3 = Vector(x2, r2, 0)
-    p4 = Vector(x2, 0, 0)
-
-    wire = Part.makePolygon([p1, p2, p3, p4, p1])
-    face = Part.Face(wire)
-
-    # revolve around X axis
-    return face.revolve(
-        Vector(0, 0, 0),
-        Vector(1, 0, 0),
-        360
-    )
+    # FreeCAD Part.makeCone takes base radius, top radius, height, base point, axis
+    cone = Part.makeCone(r1, r2, length, c1, axis)
+    return cone
 
 
 def make_colinear_sphere_hull(spheres):
-    """
-    OpenSCAD-faithful hull() for colinear spheres.
-
-    spheres: list of dicts in AST order:
-      { 'center': FreeCAD.Vector, 'r': float }
-
-    Builds:
-      sphere(0)
-      frustum(0→1)
-      frustum(1→2)
-      ...
-      sphere(n)
-    """
-
-    assert len(spheres) >= 2, "Hull requires at least two spheres"
-
     parts = []
 
-    # first sphere
-    s0 = spheres[0]
-    parts.append(
-        Part.makeSphere(s0['r'], s0['center'])
-    )
+    for s in spheres:
+        sphere = Part.makeSphere(s['r'], s['center'])
+        parts.append(sphere)
 
-    # adjacent tangent frusta
-    for i in range(len(spheres) - 1):
+    # tangent frusta / cylinders
+    for i in range(len(spheres)-1):
         a = spheres[i]
-        b = spheres[i + 1]
+        b = spheres[i+1]
 
-        x1 = a['center'].x
+        p1 = a['center']
         r1 = a['r']
-        x2 = b['center'].x
+        p2 = b['center']
         r2 = b['r']
 
-        d = x2 - x1
-        assert d > 0, "Sphere centers not increasing in AST order"
+        axis = p2.sub(p1)
+        d = axis.Length
+        if d <= 1e-9:
+            continue
+        axis_norm = axis.normalize()
 
-        # equal radii → cylinder
         if abs(r2 - r1) < 1e-9:
-            parts.append(
-                Part.makeCylinder(
-                    r1, d,
-                    Vector(x1, 0, 0),
-                    Vector(1, 0, 0)
-                )
-            )
+            cyl = Part.makeCylinder(r1, d, p1, axis_norm)
+            parts.append(cyl)
         else:
-            parts.append(
-                make_tangent_frustum(x1, r1, x2, r2)
-            )
+            frustum = make_tangent_frustum(p1, r1, p2, r2)
+            parts.append(frustum)
 
-    # last sphere
-    sn = spheres[-1]
-    parts.append(
-        Part.makeSphere(sn['r'], sn['center'])
-    )
+    # Fuse all parts, no FeaturePython, safe refine
+    compound = parts[0]
+    for shp in parts[1:]:
+        compound = compound.fuse(shp)
 
-    # fuse everything
-    shape = parts[0]
-    for p in parts[1:]:
-        shape = shape.fuse(p)
+    # Optional refine
+    try:
+        compound = compound.removeSplitter()
+    except Exception:
+        pass
 
-    return shape
+    return compound
 
 
 def hull_cubes(cubes):

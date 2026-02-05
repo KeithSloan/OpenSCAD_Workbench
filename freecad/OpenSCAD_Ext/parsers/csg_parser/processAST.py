@@ -364,15 +364,24 @@ def apply_transform(node):
         if a:
             pl.Rotation = FreeCAD.Rotation(FreeCAD.Vector(*v), float(a))
 
-    elif node.node_type == "multmatrix":
-        m = p.get("m")
-        if m:
-            # row-major → column-major flatten
-            fm = [m[row][col] for col in range(4) for row in range(4)]
-            mat = FreeCAD.Matrix(*fm)
-            pl = FreeCAD.Placement(mat)
 
-    return pl
+    elif node.node_type == "multmatrix":
+        m = p.get("matrix")
+        if isinstance(m, FreeCAD.Matrix):
+            pl = FreeCAD.Placement(m)
+        elif m is not None:
+            raise TypeError(f"multmatrix param is not Matrix: {type(m)}")
+
+    ### Matrix should have been handled by parsing to AST
+    #elif node.node_type == "multmatrix":
+    #    m = p.get("m")
+    #    if m:
+    #        # row-major → column-major flatten
+    #        fm = [m[row][col] for col in range(4) for row in range(4)]
+    #        mat = FreeCAD.Matrix(*fm)
+    #        pl = FreeCAD.Placement(mat)
+
+    #return pl
 
 '''
 def apply_scale(node, pl):
@@ -423,6 +432,13 @@ def debug_dump_cylinder_node(node, prefix=""):
     write_log("CYL_DEBUG", f"{prefix}  params = {node.params}")
     write_log("CYL_DEBUG", f"{prefix}  csg_params = {node.csg_params!r}")
     write_log("CYL_DEBUG", f"{prefix}  children = {len(node.children)}")
+
+
+def log_empty_groups(node, depth=0):
+    if node.node_type == "group" and not node.children:
+        write_log("AST", f"{'  '*depth}EMPTY GROUP at depth {depth}")
+    for child in getattr(node, "children", []):
+        log_empty_groups(child, depth+1)
 
 
 def process_AST_node(node):
@@ -522,13 +538,23 @@ def process_AST_node(node):
     # -----------------------------
     # Hull Minkowski
     # -----------------------------
+
     if isinstance(node, Hull):
-        write_log("AST","Hull")
+        write_log("AST", f"Hull node detected, children={len(node.children or [])}")
+        
+        # Optional: log if degenerate
+        if len(node.children or []) == 1:
+            write_log("AST", "Degenerate hull (single child)")
+
+        # Call the usual hull processor
         shape = try_hull(node)
+
         if shape is None:
+            write_log("AST", "try_hull failed, falling back to OpenSCAD")
             shape = fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60)
-        # """" Return shape, local_pl
+
         return [(shape, local_pl)]
+
     # -------------------------------------------------
     # MINKOWSKI
     # -------------------------------------------------
@@ -537,12 +563,19 @@ def process_AST_node(node):
         if shape is None:
             shape = fallback_to_OpenSCAD(node, operation_type="Minkowski", tolerance=1.0, timeout=60)
         return [(shape, local_pl)]
+        
     # -----------------------------
     # GROUP
     # -----------------------------
     if node_type in ("group", "root"):
+        # Instrumentation
+        n_children = len(node.children or [])
+        write_log("AST", f"Group node_type={node_type}, children={n_children}")
+        if n_children == 0:
+            write_log("AST", "EMPTY GROUP detected")
+
         results = []
-        for child in node.children:
+        for child in node.children or []:
             results.extend(_as_list(process_AST_node(child)))
         return results
 
@@ -567,15 +600,26 @@ def process_AST_node(node):
             m.A11, m.A22, m.A33 = s
             local_pl = App.Placement(m)
 
+
+        # PARSING SHOULD NOW HAVE CREATED MAtrix
+        # elif node_type == "multmatrix":
+        #    dump_ast_node(node)
+        #    m = node.params.get("matrix")
+        #    mat = App.Matrix()
+        #    mat.A11, mat.A12, mat.A13, mat.A14 = m[0]
+        #    mat.A21, mat.A22, mat.A23, mat.A24 = m[1]
+        #    mat.A31, mat.A32, mat.A33, mat.A34 = m[2]
+        #    trans_pl = App.Placement(mat)
+
+
         elif node_type == "multmatrix":
             dump_ast_node(node)
-            m = node.params.get("matrix")
-            mat = App.Matrix()
-            mat.A11, mat.A12, mat.A13, mat.A14 = m[0]
-            mat.A21, mat.A22, mat.A23, mat.A24 = m[1]
-            mat.A31, mat.A32, mat.A33, mat.A34 = m[2]
-            trans_pl = App.Placement(mat)
 
+            m = node.params.get("matrix")
+            if not isinstance(m, App.Matrix):
+                raise TypeError(f"multmatrix param is not Matrix: {type(m)}")
+
+            trans_pl = App.Placement(m)
 
         results = []
         write_log("Transform",f"trans_pl {trans_pl}")
