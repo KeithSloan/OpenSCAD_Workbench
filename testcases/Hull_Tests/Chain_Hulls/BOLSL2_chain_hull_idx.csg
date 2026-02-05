@@ -1,0 +1,783 @@
+group() {
+	group() {
+		group();
+	}
+	group() {
+		group() {
+			group() {
+				multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+					group() {
+						group() {
+							group() {
+								group() {
+									group() {
+										group() {
+											group() {
+												group() {
+													group() {
+														group() {
+															group() {
+																group() {
+																	group() {
+																		group() {
+																			group() {
+																				group() {
+																					hull() {
+																						group() {
+																							group() {
+																								group() {
+																									group() {
+																										group();
+																									}
+																									group() {
+																										group() {
+																											group() {
+																												group() {
+																													group();
+																												}
+																												group() {
+																													group() {
+																														group() {
+																															multmatrix([[1, 0, 0, 100], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																group() {
+																																	group() {
+																																		group() {
+																																			group() {
+																																				group() {
+																																					group() {
+																																						group() {
+																																							group() {
+																																								multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																									group() {
+																																										group() {
+																																											group() {
+																																												group() {
+																																													group() {
+																																														group() {
+																																															group() {
+																																																group() {
+																																																	group() {
+																																																		group() {
+																																																			group() {
+																																																				group() {
+																																																					group() {
+																																																						group() {
+																																																							group() {
+																																																								cube(size = [8, 8, 8], center = true);
+																																																							}
+																																																						}
+																																																					}
+																																																				}
+																																																			}
+																																																		}
+																																																	}
+																																																}
+																																															}
+																																														}
+																																													}
+																																												}
+																																											}
+																																											group() {
+																																												group() {
+																																													group();
+																																												}
+																																											}
+																																										}
+																																									}
+																																								}
+																																							}
+																																						}
+																																					}
+																																				}
+																																			}
+																																		}
+																																	}
+																																}
+																															}
+																														}
+																													}
+																												}
+																											}
+																										}
+																									}
+																								}
+																							}
+																						}
+																						group() {
+																							group() {
+																								group() {
+																									group() {
+																										group();
+																									}
+																									group() {
+																										group() {
+																											group() {
+																												group() {
+																													multmatrix([[0.707107, -0.707107, 0, 0], [0.707107, 0.707107, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																														group() {
+																															group() {
+																																group() {
+																																	group() {
+																																		group() {
+																																			group();
+																																		}
+																																		group() {
+																																			group() {
+																																				group() {
+																																					multmatrix([[1, 0, 0, 100], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																						group() {
+																																							group() {
+																																								group() {
+																																									group() {
+																																										group() {
+																																											group() {
+																																												group() {
+																																													group() {
+																																														multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																															group() {
+																																																group() {
+																																																	group() {
+																																																		group() {
+																																																			group() {
+																																																				group() {
+																																																					group() {
+																																																						group() {
+																																																							group() {
+																																																								group() {
+																																																									group() {
+																																																										group() {
+																																																											group() {
+																																																												group() {
+																																																													group() {
+																																																														sphere($fn = 0, $fa = 12, $fs = 2, r = 13);
+																																																													}
+																																																												}
+																																																											}
+																																																										}
+																																																									}
+																																																								}
+																																																							}
+																																																						}
+																																																					}
+																																																				}
+																																																			}
+																																																		}
+																																																	}
+																																																	group() {
+																																																		group() {
+																																																			group();
+																																																		}
+																																																	}
+																																																}
+																																															}
+																																														}
+																																													}
+																																												}
+																																											}
+																																										}
+																																									}
+																																								}
+																																							}
+																																						}
+																																					}
+																																				}
+																																			}
+																																		}
+																																	}
+																																}
+																															}
+																														}
+																													}
+																												}
+																											}
+																										}
+																									}
+																								}
+																							}
+																						}
+																					}
+																					hull() {
+																						group() {
+																							group() {
+																								group() {
+																									group() {
+																										group();
+																									}
+																									group() {
+																										group() {
+																											group() {
+																												group() {
+																													multmatrix([[0.707107, -0.707107, 0, 0], [0.707107, 0.707107, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																														group() {
+																															group() {
+																																group() {
+																																	group() {
+																																		group() {
+																																			group();
+																																		}
+																																		group() {
+																																			group() {
+																																				group() {
+																																					multmatrix([[1, 0, 0, 100], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																						group() {
+																																							group() {
+																																								group() {
+																																									group() {
+																																										group() {
+																																											group() {
+																																												group() {
+																																													group() {
+																																														multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																															group() {
+																																																group() {
+																																																	group() {
+																																																		group() {
+																																																			group() {
+																																																				group() {
+																																																					group() {
+																																																						group() {
+																																																							group() {
+																																																								group() {
+																																																									group() {
+																																																										group() {
+																																																											group() {
+																																																												group() {
+																																																													group() {
+																																																														cube(size = [11, 11, 11], center = true);
+																																																													}
+																																																												}
+																																																											}
+																																																										}
+																																																									}
+																																																								}
+																																																							}
+																																																						}
+																																																					}
+																																																				}
+																																																			}
+																																																		}
+																																																	}
+																																																	group() {
+																																																		group() {
+																																																			group();
+																																																		}
+																																																	}
+																																																}
+																																															}
+																																														}
+																																													}
+																																												}
+																																											}
+																																										}
+																																									}
+																																								}
+																																							}
+																																						}
+																																					}
+																																				}
+																																			}
+																																		}
+																																	}
+																																}
+																															}
+																														}
+																													}
+																												}
+																											}
+																										}
+																									}
+																								}
+																							}
+																						}
+																						group() {
+																							group() {
+																								group() {
+																									group() {
+																										group();
+																									}
+																									group() {
+																										group() {
+																											group() {
+																												group() {
+																													multmatrix([[0, -1, 0, 0], [1, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																														group() {
+																															group() {
+																																group() {
+																																	group() {
+																																		group() {
+																																			group();
+																																		}
+																																		group() {
+																																			group() {
+																																				group() {
+																																					multmatrix([[1, 0, 0, 100], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																						group() {
+																																							group() {
+																																								group() {
+																																									group() {
+																																										group() {
+																																											group() {
+																																												group() {
+																																													group() {
+																																														multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																															group() {
+																																																group() {
+																																																	group() {
+																																																		group() {
+																																																			group() {
+																																																				group() {
+																																																					group() {
+																																																						group() {
+																																																							group() {
+																																																								group() {
+																																																									group() {
+																																																										group() {
+																																																											group() {
+																																																												group() {
+																																																													group() {
+																																																														sphere($fn = 0, $fa = 12, $fs = 2, r = 16);
+																																																													}
+																																																												}
+																																																											}
+																																																										}
+																																																									}
+																																																								}
+																																																							}
+																																																						}
+																																																					}
+																																																				}
+																																																			}
+																																																		}
+																																																	}
+																																																	group() {
+																																																		group() {
+																																																			group();
+																																																		}
+																																																	}
+																																																}
+																																															}
+																																														}
+																																													}
+																																												}
+																																											}
+																																										}
+																																									}
+																																								}
+																																							}
+																																						}
+																																					}
+																																				}
+																																			}
+																																		}
+																																	}
+																																}
+																															}
+																														}
+																													}
+																												}
+																											}
+																										}
+																									}
+																								}
+																							}
+																						}
+																					}
+																					hull() {
+																						group() {
+																							group() {
+																								group() {
+																									group() {
+																										group();
+																									}
+																									group() {
+																										group() {
+																											group() {
+																												group() {
+																													multmatrix([[0, -1, 0, 0], [1, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																														group() {
+																															group() {
+																																group() {
+																																	group() {
+																																		group() {
+																																			group();
+																																		}
+																																		group() {
+																																			group() {
+																																				group() {
+																																					multmatrix([[1, 0, 0, 100], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																						group() {
+																																							group() {
+																																								group() {
+																																									group() {
+																																										group() {
+																																											group() {
+																																												group() {
+																																													group() {
+																																														multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																															group() {
+																																																group() {
+																																																	group() {
+																																																		group() {
+																																																			group() {
+																																																				group() {
+																																																					group() {
+																																																						group() {
+																																																							group() {
+																																																								group() {
+																																																									group() {
+																																																										group() {
+																																																											group() {
+																																																												group() {
+																																																													group() {
+																																																														cube(size = [14, 14, 14], center = true);
+																																																													}
+																																																												}
+																																																											}
+																																																										}
+																																																									}
+																																																								}
+																																																							}
+																																																						}
+																																																					}
+																																																				}
+																																																			}
+																																																		}
+																																																	}
+																																																	group() {
+																																																		group() {
+																																																			group();
+																																																		}
+																																																	}
+																																																}
+																																															}
+																																														}
+																																													}
+																																												}
+																																											}
+																																										}
+																																									}
+																																								}
+																																							}
+																																						}
+																																					}
+																																				}
+																																			}
+																																		}
+																																	}
+																																}
+																															}
+																														}
+																													}
+																												}
+																											}
+																										}
+																									}
+																								}
+																							}
+																						}
+																						group() {
+																							group() {
+																								group() {
+																									group() {
+																										group();
+																									}
+																									group() {
+																										group() {
+																											group() {
+																												group() {
+																													multmatrix([[-0.707107, -0.707107, 0, 0], [0.707107, -0.707107, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																														group() {
+																															group() {
+																																group() {
+																																	group() {
+																																		group() {
+																																			group();
+																																		}
+																																		group() {
+																																			group() {
+																																				group() {
+																																					multmatrix([[1, 0, 0, 100], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																						group() {
+																																							group() {
+																																								group() {
+																																									group() {
+																																										group() {
+																																											group() {
+																																												group() {
+																																													group() {
+																																														multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																															group() {
+																																																group() {
+																																																	group() {
+																																																		group() {
+																																																			group() {
+																																																				group() {
+																																																					group() {
+																																																						group() {
+																																																							group() {
+																																																								group() {
+																																																									group() {
+																																																										group() {
+																																																											group() {
+																																																												group() {
+																																																													group() {
+																																																														sphere($fn = 0, $fa = 12, $fs = 2, r = 19);
+																																																													}
+																																																												}
+																																																											}
+																																																										}
+																																																									}
+																																																								}
+																																																							}
+																																																						}
+																																																					}
+																																																				}
+																																																			}
+																																																		}
+																																																	}
+																																																	group() {
+																																																		group() {
+																																																			group();
+																																																		}
+																																																	}
+																																																}
+																																															}
+																																														}
+																																													}
+																																												}
+																																											}
+																																										}
+																																									}
+																																								}
+																																							}
+																																						}
+																																					}
+																																				}
+																																			}
+																																		}
+																																	}
+																																}
+																															}
+																														}
+																													}
+																												}
+																											}
+																										}
+																									}
+																								}
+																							}
+																						}
+																					}
+																					hull() {
+																						group() {
+																							group() {
+																								group() {
+																									group() {
+																										group();
+																									}
+																									group() {
+																										group() {
+																											group() {
+																												group() {
+																													multmatrix([[-0.707107, -0.707107, 0, 0], [0.707107, -0.707107, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																														group() {
+																															group() {
+																																group() {
+																																	group() {
+																																		group() {
+																																			group();
+																																		}
+																																		group() {
+																																			group() {
+																																				group() {
+																																					multmatrix([[1, 0, 0, 100], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																						group() {
+																																							group() {
+																																								group() {
+																																									group() {
+																																										group() {
+																																											group() {
+																																												group() {
+																																													group() {
+																																														multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																															group() {
+																																																group() {
+																																																	group() {
+																																																		group() {
+																																																			group() {
+																																																				group() {
+																																																					group() {
+																																																						group() {
+																																																							group() {
+																																																								group() {
+																																																									group() {
+																																																										group() {
+																																																											group() {
+																																																												group() {
+																																																													group() {
+																																																														cube(size = [17, 17, 17], center = true);
+																																																													}
+																																																												}
+																																																											}
+																																																										}
+																																																									}
+																																																								}
+																																																							}
+																																																						}
+																																																					}
+																																																				}
+																																																			}
+																																																		}
+																																																	}
+																																																	group() {
+																																																		group() {
+																																																			group();
+																																																		}
+																																																	}
+																																																}
+																																															}
+																																														}
+																																													}
+																																												}
+																																											}
+																																										}
+																																									}
+																																								}
+																																							}
+																																						}
+																																					}
+																																				}
+																																			}
+																																		}
+																																	}
+																																}
+																															}
+																														}
+																													}
+																												}
+																											}
+																										}
+																									}
+																								}
+																							}
+																						}
+																						group() {
+																							group() {
+																								group() {
+																									group() {
+																										group();
+																									}
+																									group() {
+																										group() {
+																											group() {
+																												group() {
+																													multmatrix([[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																														group() {
+																															group() {
+																																group() {
+																																	group() {
+																																		group() {
+																																			group();
+																																		}
+																																		group() {
+																																			group() {
+																																				group() {
+																																					multmatrix([[1, 0, 0, 100], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																						group() {
+																																							group() {
+																																								group() {
+																																									group() {
+																																										group() {
+																																											group() {
+																																												group() {
+																																													group() {
+																																														multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																																															group() {
+																																																group() {
+																																																	group() {
+																																																		group() {
+																																																			group() {
+																																																				group() {
+																																																					group() {
+																																																						group() {
+																																																							group() {
+																																																								group() {
+																																																									group() {
+																																																										group() {
+																																																											group() {
+																																																												group() {
+																																																													group() {
+																																																														sphere($fn = 0, $fa = 12, $fs = 2, r = 22);
+																																																													}
+																																																												}
+																																																											}
+																																																										}
+																																																									}
+																																																								}
+																																																							}
+																																																						}
+																																																					}
+																																																				}
+																																																			}
+																																																		}
+																																																	}
+																																																	group() {
+																																																		group() {
+																																																			group();
+																																																		}
+																																																	}
+																																																}
+																																															}
+																																														}
+																																													}
+																																												}
+																																											}
+																																										}
+																																									}
+																																								}
+																																							}
+																																						}
+																																					}
+																																				}
+																																			}
+																																		}
+																																	}
+																																}
+																															}
+																														}
+																													}
+																												}
+																											}
+																										}
+																									}
+																								}
+																							}
+																						}
+																					}
+																				}
+																			}
+																		}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+							group() {
+								group() {
+									union();
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
