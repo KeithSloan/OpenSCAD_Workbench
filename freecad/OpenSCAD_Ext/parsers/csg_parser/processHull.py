@@ -115,22 +115,28 @@ def hull_spheres(spheres):
 
     write_log("Centers",centers)
 
+    if is_collinear(centers):
+        if all(abs(s["r"] - spheres[0]["r"]) < 1e-12 for s in spheres):
+            r = spheres[0]["r"]
+            write_log("Spheres: make capsule")
+            return make_capsule(centers[0], centers[-1], r)
+            
+        else:
+            write_log("Spheres","Not all equal Radius")
+            return make_colinear_sphere_hull(spheres)
+
     if not all(abs(s["r"] - spheres[0]["r"]) < 1e-12 for s in spheres):
-        write_log("Spheres","Not all equal Radius")
-        return None
+        return None # Not handled
 
     r = spheres[0]["r"]
     write_log("Spheres",f" Radius {r} Type {type(r)}")
-
-    if is_collinear(centers):
-        return make_capsule(centers[0], centers[-1], r)
-    write_log("Spheres","Not collinear")
 
     grid = detect_grid(centers)
     if grid:
         return try_hull_spheres(centers, r)
     write_log("Spheres","Not Grid")
     return None
+
 
 def try_hull_spheres(centers, r, min_thickness=1e-3):
     """
@@ -207,6 +213,97 @@ def try_hull_spheres(centers, r, min_thickness=1e-3):
             rounded_box = rounded_box.fuse(s)
 
         return rounded_box
+
+
+def make_tangent_frustum(x1, r1, x2, r2):
+    """
+    Exact external tangent frustum between two spheres
+    using a revolved X–R profile.
+    """
+
+    assert x2 > x1, "Non-monotonic sphere centers (OpenSCAD order)"
+
+    # profile in X–R plane
+    p1 = Vector(x1, 0, 0)
+    p2 = Vector(x1, r1, 0)
+    p3 = Vector(x2, r2, 0)
+    p4 = Vector(x2, 0, 0)
+
+    wire = Part.makePolygon([p1, p2, p3, p4, p1])
+    face = Part.Face(wire)
+
+    # revolve around X axis
+    return face.revolve(
+        Vector(0, 0, 0),
+        Vector(1, 0, 0),
+        360
+    )
+
+
+def make_colinear_sphere_hull(spheres):
+    """
+    OpenSCAD-faithful hull() for colinear spheres.
+
+    spheres: list of dicts in AST order:
+      { 'center': FreeCAD.Vector, 'r': float }
+
+    Builds:
+      sphere(0)
+      frustum(0→1)
+      frustum(1→2)
+      ...
+      sphere(n)
+    """
+
+    assert len(spheres) >= 2, "Hull requires at least two spheres"
+
+    parts = []
+
+    # first sphere
+    s0 = spheres[0]
+    parts.append(
+        Part.makeSphere(s0['r'], s0['center'])
+    )
+
+    # adjacent tangent frusta
+    for i in range(len(spheres) - 1):
+        a = spheres[i]
+        b = spheres[i + 1]
+
+        x1 = a['center'].x
+        r1 = a['r']
+        x2 = b['center'].x
+        r2 = b['r']
+
+        d = x2 - x1
+        assert d > 0, "Sphere centers not increasing in AST order"
+
+        # equal radii → cylinder
+        if abs(r2 - r1) < 1e-9:
+            parts.append(
+                Part.makeCylinder(
+                    r1, d,
+                    Vector(x1, 0, 0),
+                    Vector(1, 0, 0)
+                )
+            )
+        else:
+            parts.append(
+                make_tangent_frustum(x1, r1, x2, r2)
+            )
+
+    # last sphere
+    sn = spheres[-1]
+    parts.append(
+        Part.makeSphere(sn['r'], sn['center'])
+    )
+
+    # fuse everything
+    shape = parts[0]
+    for p in parts[1:]:
+        shape = shape.fuse(p)
+
+    return shape
 
 
 def hull_cubes(cubes):
