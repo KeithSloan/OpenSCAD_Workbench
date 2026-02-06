@@ -39,9 +39,7 @@ if open.__module__ in ['__builtin__', 'io']:
     pythonopen = open
 
 #import importCSG
-from freecad.OpenSCAD_Ext.core.OpenSCADObjects import \
-     SCADObject,
-     ViewSCADProvider,
+from freecad.OpenSCAD_Ext.objects.SCADObject import SCADObject, ViewSCADProvider
 
 #from OpenSCADFeatures import ViewProviderTree
 from freecad.OpenSCAD_Ext.importers.importAltCSG import processCSG

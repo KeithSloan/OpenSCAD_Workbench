@@ -41,7 +41,6 @@ def build_arg_assignments(obj, module):
     write_log("Info", f"Generated SCAD arguments: {result}")
     return result
 
-import os
 
 def generate_scad_import_lines(meta):
     """

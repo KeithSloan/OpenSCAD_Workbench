@@ -21,9 +21,26 @@
 #*   Acknowledgements :                                                    *
 #*                                                                         *
 #***************************************************************************
-__title__="FreeCAD OpenSCAD Workbench - CSG importer SCAD Object"
+__title__="FreeCAD OpenSCAD Workbench - importer All File SCAD Object"
 __author__ = "Keith Sloan <keith@sloan-home.co.uk>"
 __url__ = ["http://www.sloan-home.co.uk/ImportSCAD"]
+
+#***************************************************************************
+#*
+#*  SCAD Files can have different structures
+#*
+#*      Plain executable scad
+#*      Library
+#*          one or more Modules
+#*          one or more fucntions
+#*          Mixture of Modules, Functions
+#*          All the above with Comments
+#*          Modules with immediate Comments
+#*
+#*		Use parse_scad_meta from parsers.scan_scad_library      
+#*
+#***************************************************************************
+
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 
@@ -46,8 +63,8 @@ from PySide import QtGui, QtCore
 #       SCADfileBase, \
 #       ViewSCADProvider
 
-from freecad.OpenSCAD_Ext.importers.importAltCSG import processCSG
-from freecad.OpenSCAD_Ext.core.create_scad_object_interactive import create_scad_object_interactive
+#from freecad.OpenSCAD_Ext.importers.importAltCSG import processCSG
+from freecad.OpenSCAD_Ext.parsers.parse_library_scad import parse_scad_meta
 #from freecad.OpenSCAD_Ext.objects.SCADObject import createSCADObject
 
 params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
@@ -78,13 +95,7 @@ def insert(filename, docName):
 		doc = FreeCAD.newDocument(docName)
 	# objectName  = os.path.splitext(os.path.basename(filename))[0]
 	# The for newfile = False, scadName is created from stem of sourcefile
-	obj = create_scad_object_interactive(
-            title="Import OpenSCAD File Objects",
-            newFile = False,
-			sourceFile = filename,
-	)
-		
-	obj.Proxy.executeFunction(obj)
+	parse_scad_meta(filename)
 
 	#FreeCAD.ActiveDocument.recompute()
 	#obj.recompute()

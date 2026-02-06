@@ -16,7 +16,7 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 
 def create_scad_object_interactive(
     title,
-    *,
+    *,              # Following must be passed as keywords
     newFile=True,
     scadName=None,
     sourceFile=None,
@@ -36,20 +36,20 @@ def create_scad_object_interactive(
     write_log("Info",f"Interactive - scadName {scadName} sourceFile {sourceFile} newFile {newFile}")
 
     #write_log("Dialog",f"newFile = {newFile} sourceFile = {sourceFile}")
-    preset = {
-        "newFile": newFile,             # New file flag
-        "sourceFile": sourceFile,       # Full path to existing SCAD file
-    }
     dlg = OpenSCADeditOptions(title,
                                 newFile=newFile,
                                 scadName=scadName,
                                 sourceFile=sourceFile,
-                                preset=preset
                                 )
     if dlg.exec_() != QtWidgets.QDialog.Accepted:
         return None
 
     params = dlg.getValues()
+
+    if not params.get("scadName"):
+        write_log("Error", "Interactive SCAD creation cancelled: scadName is empty")
+        return None
+
 
     # Import core after dialog completes to avoid circular imports
     from freecad.OpenSCAD_Ext.core.create_scad_object import create_scad_object
