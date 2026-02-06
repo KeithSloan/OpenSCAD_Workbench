@@ -341,8 +341,6 @@ def callopenscadstring(scadstr,outputext='csg',check_syntax=False):
     return outputfilename
 
 
-
-
 def reverseimporttypes():
     '''allows to search for supported filetypes by module'''
 
@@ -370,6 +368,7 @@ def fcsubmatrix(m):
     as a list of row vectors"""
     return [[m.A11,m.A12,m.A13],[m.A21,m.A22,m.A23],[m.A31,m.A32,m.A33]]
 
+
 def multiplymat(l,r):
     """multiply matrices given as lists of row vectors"""
     rt=zip(*r) #transpose r
@@ -382,11 +381,13 @@ def multiplymat(l,r):
         mat.append(mline)
     return mat
 
+
 def isorthogonal(submatrix,precision=4):
     """checking if 3x3 Matrix is orthogonal (M*Transp(M)==I)"""
     prod=multiplymat(submatrix,list(zip(*submatrix)))
     return [[round(f,precision) for f in line] \
         for line in prod]==[[1,0,0],[0,1,0],[0,0,1]]
+
 
 def detsubmatrix(s):
     """get the determinant of a 3x3 Matrix given as list of row vectors"""
@@ -394,16 +395,20 @@ def detsubmatrix(s):
            s[0][2]*s[1][0]*s[2][1]-s[2][0]*s[1][1]*s[0][2]-\
            s[2][1]*s[1][2]*s[0][0]-s[2][2]*s[1][0]*s[0][1]
 
+
 def isspecialorthogonalpython(submat,precision=4):
     return isorthogonal(submat,precision) and round(detsubmatrix(submat),precision)==1
 
+
 def isrotoinversionpython(submat,precision=4):
     return isorthogonal(submat,precision) and round(detsubmatrix(submat),precision)==-1
+
 
 def isspecialorthogonal(mat,precision=4):
     return abs(mat.submatrix(3).isOrthogonal(10**(-precision))-1.0) < \
             10**(-precision) and \
             abs(mat.submatrix(3).determinant()-1.0) < 10**(-precision)
+
 
 def decomposerotoinversion(m,precision=4):
     import FreeCAD
@@ -422,6 +427,7 @@ def decomposerotoinversion(m,precision=4):
         cmat.scale(1,1,-1)
         return m*cmat, FreeCAD.Vector(0,0,1)
 
+
 def mirror2mat(nv,bv):
     import FreeCAD
     """calculate the transformation matrix of a mirror feature"""
@@ -430,6 +436,7 @@ def mirror2mat(nv,bv):
     maft=FreeCAD.Matrix()
     maft.move(bv)
     return maft*vec2householder(nv)*mbef
+
 
 def vec2householder(nv):
     """calculated the householder matrix for a given normal vector"""
@@ -445,6 +452,7 @@ def vec2householder(nv):
 def angneg(d):
     return d if (d <= 180.0) else (d-360)
 
+
 def shorthexfloat(f):
     s=f.hex()
     mantisse, exponent = f.hex().split('p',1)
@@ -458,6 +466,7 @@ def comparerotations(r1,r2):
     r2c=FreeCAD.Rotation(r2)
     r2c.invert()
     return r1.multiply(r2c).Angle
+
 
 def findbestmatchingrotation(r1):
     import FreeCAD
@@ -503,6 +512,8 @@ def findbestmatchingrotation(r1):
 -22.0, -21.0, -20.0, -19.0, -18.0, -17.0,(-180.0/11.0), -16.0, -15.0, -14.0,
 -13.0, -12.0, -11.25, -11.0, -10.0, -9.0, -8.0, -7.0, -6.0, -5.0, -4.0, -3.0,
 -2.0, -1.0)
+
+
     def tup2nvect(tup):
         """convert a tuple to a normalized vector"""
         v=FreeCAD.Vector(*tup)
@@ -527,6 +538,7 @@ def findbestmatchingrotation(r1):
                     bestrot = r2
                     dangle = dangletest
     return (bestrot,dangle)
+
 
 def roundrotation(rot,maxangulardistance=1e-5):
     '''guess the rotation axis and angle for a rotation
@@ -558,6 +570,7 @@ def roundrotation(rot,maxangulardistance=1e-5):
     else: #use original
         return rot
 
+
 def callopenscadmeshstring(scadstr):
     """Call OpenSCAD and return the result as a Mesh"""
     import Mesh,os
@@ -570,6 +583,7 @@ def callopenscadmeshstring(scadstr):
         pass
     return newmesh
 
+
 def meshopinline(opname,iterable1):
     """uses OpenSCAD to combine meshes
     takes the name of the CGAL operation and an iterable (tuple,list) of
@@ -579,6 +593,7 @@ def meshopinline(opname,iterable1):
     from exportCSG import mesh2polyhedron
     return callopenscadmeshstring('%s(){%s}' % (opname,' '.join(\
         (mesh2polyhedron(meshobj) for meshobj in iterable1))))
+
 
 def meshoptempfile(opname,iterable1):
     """uses OpenSCAD to combine meshes
@@ -604,6 +619,7 @@ def meshoptempfile(opname,iterable1):
         except OSError:
             pass
     return result
+
 
 def meshoponobjs(opname,inobjs):
     """
@@ -639,6 +655,7 @@ def meshoponobjs(opname,inobjs):
     else:
             return (None,[])
 
+
 def process2D_ObjectsViaOpenSCADShape(ObjList,Operation,doc):
     import FreeCAD,importDXF
     import os,tempfile
@@ -670,6 +687,7 @@ def process2D_ObjectsViaOpenSCADShape(ObjList,Operation,doc):
         pass
     return face
 
+
 def process2D_ObjectsViaOpenSCAD(ObjList,Operation,doc=None):
     import FreeCAD
     doc = doc or FreeCAD.activeDocument()
@@ -681,6 +699,7 @@ def process2D_ObjectsViaOpenSCAD(ObjList,Operation,doc=None):
        for index in ObjList :
           index.ViewObject.hide()
     return(obj)
+
 
 def process3D_ObjectsViaOpenSCADShape(ObjList,Operation,maxmeshpoints=None):
     write_log("Info",f"Process 3D Objects via OpenSCAD objs {ObjList} operation {Operation}")
@@ -708,6 +727,7 @@ def process3D_ObjectsViaOpenSCADShape(ObjList,Operation,maxmeshpoints=None):
            solid.complement()
         return solid
 
+
 def process3D_ObjectsViaOpenSCAD(doc,ObjList,Operation):
     write_log("Info",f"Process 3D Objects via OpenSCAD objs {ObjList} operation {Operation}")
     solid = process3D_ObjectsViaOpenSCADShape(ObjList,Operation)
@@ -718,6 +738,7 @@ def process3D_ObjectsViaOpenSCAD(doc,ObjList,Operation):
           for index in ObjList :
               index.ViewObject.hide()
         return(obj)
+
 
 def process_ObjectsViaOpenSCADShape(doc,children,name,maxmeshpoints=None):
     write_log("Info",f"Process Objects Via OpenSCADShape {name}")
@@ -733,6 +754,7 @@ def process_ObjectsViaOpenSCADShape(doc,children,name,maxmeshpoints=None):
         FreeCAD.Console.PrintError( translate('OpenSCAD',\
             "Error all shapes must be either 2D or both must be 3D")+u'\n')
 
+
 def process_ObjectsViaOpenSCAD(doc,children,name):
     write_log("Info",f"Process Objects Via OpenSCAD {name}")
     checkAllChildShapes(children)
@@ -746,6 +768,7 @@ def process_ObjectsViaOpenSCAD(doc,children,name):
         import FreeCAD
         FreeCAD.Console.PrintError( translate('OpenSCAD',\
             "Error all shapes must be either 2D or both must be 3D")+u'\n')
+
 
 def removesubtree(objs):
     def addsubobjs(obj,toremoveset):
@@ -767,6 +790,7 @@ def removesubtree(objs):
             checkinlistcomplete = True
     for obj in toremove:
         obj.Document.removeObject(obj.Name)
+
 
 def applyPlacement(shape):
     if shape.Placement.isNull():

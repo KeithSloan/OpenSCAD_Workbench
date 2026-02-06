@@ -1,3 +1,4 @@
+from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 import ezdxf
 from ezdxf import recover, query, disassemble
 import FreeCAD
@@ -5,6 +6,7 @@ from FreeCAD import Vector, Rotation #treat as vectors; need rotation for ellips
 import Part
 #import Draft
 import numpy as np #for unique function
+import math
 
 def importOpenSCADdxf_POINT(an_entity):
     #print("POINT")
@@ -403,11 +405,30 @@ def returnEnts(arecord): #returns a list of things to convert to FC
         new_entity = [e for e in new_entity]
         return new_entity #bc it relocates components
 
+
+# ---------------------------------------------------------------------------------------
+# Matt Considines Hack fix as OpenSCAD dxf version used does not match indicated version
+# ---------------------------------------------------------------------------------------
 def loadDXF(filepath):
-    #based on https://ezdxf.readthedocs.io/en/stable/drawing/recover.html
+    write_log('EZdxf','Corrrect version information to AC1014')
+    #based on https://ezdxf.readthedocs.io/en/stable/ ... cover.html
     #NOTE: This expects ASCII DXF files
     #TODO: test if ZIP and handle that case??
 
+    with open(filepath, 'r') as f:
+        content = f.read()
+
+        content = content.replace('AC1006', 'AC1014')
+
+    with open(filepath, 'w') as f:
+        f.write(content)
+
+###
+###def saved loadDXF(filepath):        # Save till after Matt's mconsidines openscad fix
+###    #based on https://ezdxf.readthedocs.io/en/stable/drawing/recover.html
+###    #NOTE: This expects ASCII DXF files
+###    #TODO: test if ZIP and handle that case??
+###
     try:  # Slow path including fixing low level structures:
         print(f"Reading file {filepath}")
         doc, auditor = recover.readfile(filepath) #vs  doc = ezdxf.readfile(filename)
@@ -485,10 +506,10 @@ def getFlatList(a_nested_list):
 def makeholedshape(shapes) : #takes a list of faces
 
   def AholdsB(A, B): #test for A completely enclosing B
-    if ((A.common(B).Area == B.Area) and (A != B)):
-      return 1
+    if ((math.isclose(A.common(B).Area,B.Area,rel_tol=1e-09) == True) and (A != B)):
+        return 1
     else :
-      return 0
+        return 0
     
   import numpy as np
   num_shapes = len(shapes) #list of faces to start with

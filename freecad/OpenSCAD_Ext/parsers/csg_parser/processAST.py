@@ -12,8 +12,8 @@ Placement() = identity
 Placement is always applied last, never baked unless required
 '''
 import os
-import subprocess
-import tempfile
+#import subprocess
+#import tempfile
 import FreeCAD
 import Part
 import Mesh
@@ -29,65 +29,15 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import (
     Hull, Minkowski,
     )
 
-from freecad.OpenSCAD_Ext.parsers.csg_parser.process_polyhedron import process_polyhedron 
+from freecad.OpenSCAD_Ext.parsers.csg_parser.process_utils import call_openscad_scad_string#
+from freecad.OpenSCAD_Ext.parsers.csg_parser.process_polyhedron import process_polyhedron
+from freecad.OpenSCAD_Ext.parsers.csg_parser.processHull import try_hull
 
-# -----------------------------
-# Utility functions
-# -----------------------------
-
-BaseError = FreeCAD.Base.FreeCADError
-
-class OpenSCADError(BaseError):
-    def __init__(self,value):
-        self.value= value
-    #def __repr__(self):
-    #    return self.msg
-    def __str__(self):
-        return repr(self.value)
+from freecad.OpenSCAD_Ext.parsers.csg_parser.process_text import process_text 
 
 
 def generate_stl_from_scad(scad_str, timeout_sec=60):
-    """
-    Generate STL from a SCAD string using the Workbench-configured OpenSCAD executable.
-    Returns path to STL on success, None on error/timeout.
-    """
-    # Get OpenSCAD path from FreeCAD preferences
-    prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
-    openscad_exe = prefs.GetString("openscadexecutable", "")
-
-    if not openscad_exe or not os.path.isfile(openscad_exe):
-        write_log("OpenSCAD", f"OpenSCAD executable not configured or invalid: {openscad_exe}")
-        return None
-
-    # Create temp SCAD file
-    with tempfile.NamedTemporaryFile(suffix=".scad", delete=False) as scad_file:
-        scad_file_path = scad_file.name
-        scad_file.write(scad_str.encode("utf-8"))
-        scad_file.flush()
-
-    # STL output path
-    stl_path = scad_file_path.replace(".scad", ".stl")
-
-    # OpenSCAD CLI command
-    cmd = [openscad_exe, "-o", stl_path, scad_file_path]
-
-    write_log("OpenSCAD", f"Running: {' '.join(cmd)}")
-
-    try:
-        subprocess.run(cmd,
-                        timeout=timeout_sec,
-                        check=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        )
-        write_log("OpenSCAD", f"Generated STL: {stl_path}")
-        return stl_path
-    except subprocess.TimeoutExpired:
-        write_log("OpenSCAD", f"Timeout after {timeout_sec}s")
-    except subprocess.CalledProcessError as e:
-        write_log("OpenSCAD", f"OpenSCAD error: {e}")
-
-    return None
+    return call_openscad_scad_string(scad_str, export_type='stl', timeout_sec=timeout_sec)
 
 
 def _mesh_to_shape_worker(stl_path, tolerance, queue):
@@ -102,6 +52,7 @@ def _mesh_to_shape_worker(stl_path, tolerance, queue):
 
     # See also stl_to_shape
 def shape_from_scad(scad_str, refine=True):
+    
     stl_path = generate_stl_from_scad(scad_str)
     if not stl_path:
         return None
@@ -245,11 +196,10 @@ def fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60)
     write_log(operation_type, f"{operation_type} fallback completed, shape cached")
 
     return shape
-
+''' Now imported !!!!
 # -----------------------------
 # Hull / Minkowski native attempts
 # -----------------------------
-
 def try_hull(node):
     """
     #Attempt to generate a native FreeCAD hull from children shapes.
@@ -257,6 +207,11 @@ def try_hull(node):
     """
     write_log("AST","Try Hull")
     return None
+
+    hull_shape = try_hull(node)
+    if hull_shape:
+        # fast native hull handled
+        return hull_shape
 
     shapes = [process_AST_node(c) for c in node.children if process_AST_node(c)]
     if len(shapes) < 2:
@@ -266,7 +221,7 @@ def try_hull(node):
     # Returning None for now to trigger OpenSCAD fallback
     write_log("AST_Hull", "Native hull not implemented, falling back")
     return None
-
+'''
 
 def try_minkowski(node):
     """
@@ -290,76 +245,109 @@ def try_minkowski(node):
 # SCAD flattening (Hull / Minkowski fallback)
 # ============================================================
 
+def _format_csg_params(node):
+    """
+    Return parameter string for OpenSCAD reconstruction.
+    Prefers raw csg_params if present.
+    """
+    if node.csg_params is None:
+        return ""
+    if isinstance(node.csg_params, str):
+        return node.csg_params
+    if isinstance(node.csg_params, dict):
+        return ", ".join(f"{k}={v!r}" for k, v in node.csg_params.items())
+    return str(node.csg_params)
+
+
 def flatten_hull_minkowski_node(node, indent=0):
     pad = " " * indent
     scad_lines = []
 
     if node is None:
-        return ""  # ← always return string
+        return ""
 
-    write_log("FLATTEN", f"{pad}Flatten node: {node.node_type}, children={len(getattr(node, 'children', []))}, csg_params={getattr(node, 'csg_params', None)}")
+    write_log(
+        "FLATTEN",
+        f"{pad}Flatten node: {node.node_type}, "
+        f"children={len(getattr(node, 'children', []))}, "
+        f"csg_params={getattr(node, 'csg_params', None)}"
+    )
 
+    # -------------------------
     # Transparent group
+    # -------------------------
     if node.node_type == "group":
         for child in node.children:
             scad_lines.append(flatten_hull_minkowski_node(child, indent))
-        return "\n".join(filter(None, scad_lines))  # filter out None
+        return "\n".join(filter(None, scad_lines))
 
+    # -------------------------
     # Hull / Minkowski
-    elif node.node_type in ("hull", "minkowski"):
+    # -------------------------
+    if node.node_type in ("hull", "minkowski"):
         scad_lines.append(f"{pad}{node.node_type}() {{")
         for child in node.children:
-            scad_lines.append(flatten_hull_minkowski_node(child, indent + 4))
+            scad_lines.append(
+                flatten_hull_minkowski_node(child, indent + 4)
+            )
         scad_lines.append(f"{pad}}}")
         return "\n".join(filter(None, scad_lines))
 
-    # MultMatrix: raw string from csg_params
-    elif node.node_type == "multmatrix":
-        matrix_str = ""
-        if isinstance(node.csg_params, str):
-            matrix_str = node.csg_params
-        elif isinstance(node.csg_params, dict) and "matrix" in node.csg_params:
-            matrix_str = node.csg_params["matrix"]
+    # -------------------------
+    # MultMatrix
+    # -------------------------
+    if node.node_type == "multmatrix":
+        matrix_str = _format_csg_params(node)
         scad_lines.append(f"{pad}multmatrix({matrix_str}) {{")
         for child in node.children:
-            scad_lines.append(flatten_hull_minkowski_node(child, indent + 4))
+            scad_lines.append(
+                flatten_hull_minkowski_node(child, indent + 4)
+            )
         scad_lines.append(f"{pad}}}")
         return "\n".join(filter(None, scad_lines))
 
-    elif node.node_type == "linear_extrude":
-        write_log("AST",node.node_type)
+    # -------------------------
+    # Linear Extrude
+    # -------------------------
+    if node.node_type == "linear_extrude":
+        params = _format_csg_params(node)
+        scad_lines.append(f"{pad}linear_extrude({params}) {{")
+        for child in node.children:
+            scad_lines.append(
+                flatten_hull_minkowski_node(child, indent + 4)
+            )
+        scad_lines.append(f"{pad}}}")
+        return "\n".join(filter(None, scad_lines))
 
-    elif node.node_type == "rotate_extrude":
-        write_log("AST",node.node_type)
-    
-    elif node.node_type == "text":
-    # Always fallback — FreeCAD has no native text solid
-    # This is in a hull/minkowski flatten
-    # Call OpenSCAD to return 2D Dxf
-        #shape = fallback_to_OpenSCAD(node, "Text")
-        return None
+    # -------------------------
+    # Rotate Extrude
+    # -------------------------
+    if node.node_type == "rotate_extrude":
+        params = _format_csg_params(node)
+        scad_lines.append(f"{pad}rotate_extrude({params}) {{")
+        for child in node.children:
+            scad_lines.append(
+                flatten_hull_minkowski_node(child, indent + 4)
+            )
+        scad_lines.append(f"{pad}}}")
+        return "\n".join(filter(None, scad_lines))
 
+    # -------------------------
+    # Text (always OpenSCAD fallback)
+    # -------------------------
+    if node.node_type == "text":
+        params = _format_csg_params(node)
+        return f"{pad}text({params});"
 
-    # Other primitives (sphere, cube, etc.) — just use csg_params string
-    csg_str = ""
-    if hasattr(node, "csg_params") and isinstance(node.csg_params, str):
-        csg_str = node.csg_params
-    elif hasattr(node, "csg_params") and isinstance(node.csg_params, dict):
-        parts = []
-        for k, v in node.csg_params.items():
-            if v is not None:
-                try:
-                    float(v)
-                    parts.append(f"{k}={v}")
-                except (ValueError, TypeError):
-                    parts.append(f'{k}="{v}"')
-        csg_str = ", ".join(parts)
+    # -------------------------
+    # Generic fallback (cube, sphere, etc.)
+    # -------------------------
+    params = _format_csg_params(node)
+    if params:
+        return f"{pad}{node.node_type}({params});"
+    else:
+        return f"{pad}{node.node_type}();"
 
-    if csg_str:
-        scad_lines.append(f"{pad}{node.node_type}({csg_str});")
-
-    return "\n".join(filter(None, scad_lines))
-'''
 
 def apply_transform(node):
     p = node.params
@@ -376,16 +364,25 @@ def apply_transform(node):
         if a:
             pl.Rotation = FreeCAD.Rotation(FreeCAD.Vector(*v), float(a))
 
-    elif node.node_type == "multmatrix":
-        m = p.get("m")
-        if m:
-            # row-major → column-major flatten
-            fm = [m[row][col] for col in range(4) for row in range(4)]
-            mat = FreeCAD.Matrix(*fm)
-            pl = FreeCAD.Placement(mat)
 
-    return pl
-'''
+    elif node.node_type == "multmatrix":
+        m = p.get("matrix")
+        if isinstance(m, FreeCAD.Matrix):
+            pl = FreeCAD.Placement(m)
+        elif m is not None:
+            raise TypeError(f"multmatrix param is not Matrix: {type(m)}")
+
+    ### Matrix should have been handled by parsing to AST
+    #elif node.node_type == "multmatrix":
+    #    m = p.get("m")
+    #    if m:
+    #        # row-major → column-major flatten
+    #        fm = [m[row][col] for col in range(4) for row in range(4)]
+    #        mat = FreeCAD.Matrix(*fm)
+    #        pl = FreeCAD.Placement(mat)
+
+    #return pl
+
 '''
 def apply_scale(node, pl):
     if node.node_type == "scale":
@@ -421,14 +418,6 @@ def placement_from_matrix(matrix):
 #   (placement: FreeCAD.Placement, shape: Part.Shape | None)
 # ----------------------------------------------------------
 
-
-# -----------------------------
-# Recursive AST node processing
-# -----------------------------
-import FreeCAD as App
-import Part
-
-
 def _as_list(result):
     """Normalize single or list return to list."""
     if result is None:
@@ -443,6 +432,13 @@ def debug_dump_cylinder_node(node, prefix=""):
     write_log("CYL_DEBUG", f"{prefix}  params = {node.params}")
     write_log("CYL_DEBUG", f"{prefix}  csg_params = {node.csg_params!r}")
     write_log("CYL_DEBUG", f"{prefix}  children = {len(node.children)}")
+
+
+def log_empty_groups(node, depth=0):
+    if node.node_type == "group" and not node.children:
+        write_log("AST", f"{'  '*depth}EMPTY GROUP at depth {depth}")
+    for child in getattr(node, "children", []):
+        log_empty_groups(child, depth+1)
 
 
 def process_AST_node(node):
@@ -534,16 +530,31 @@ def process_AST_node(node):
         write_log("AST", f"Processing Polyhedron: points={node.points}, faces={node.faces}")
         return (process_polyhedron(node), local_pl)
 
+    elif node.node_type == "text":
+        write_log("AST","Processing text")
+        return(process_text(node), local_pl)
+
+
     # -----------------------------
     # Hull Minkowski
     # -----------------------------
+
     if isinstance(node, Hull):
-        write_log("AST","Hull")
+        write_log("AST", f"Hull node detected, children={len(node.children or [])}")
+        
+        # Optional: log if degenerate
+        if len(node.children or []) == 1:
+            write_log("AST", "Degenerate hull (single child)")
+
+        # Call the usual hull processor
         shape = try_hull(node)
+
         if shape is None:
+            write_log("AST", "try_hull failed, falling back to OpenSCAD")
             shape = fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60)
-        # """" Return shape, local_pl
+
         return [(shape, local_pl)]
+
     # -------------------------------------------------
     # MINKOWSKI
     # -------------------------------------------------
@@ -552,12 +563,19 @@ def process_AST_node(node):
         if shape is None:
             shape = fallback_to_OpenSCAD(node, operation_type="Minkowski", tolerance=1.0, timeout=60)
         return [(shape, local_pl)]
+        
     # -----------------------------
     # GROUP
     # -----------------------------
     if node_type in ("group", "root"):
+        # Instrumentation
+        n_children = len(node.children or [])
+        write_log("AST", f"Group node_type={node_type}, children={n_children}")
+        if n_children == 0:
+            write_log("AST", "EMPTY GROUP detected")
+
         results = []
-        for child in node.children:
+        for child in node.children or []:
             results.extend(_as_list(process_AST_node(child)))
         return results
 
@@ -582,15 +600,26 @@ def process_AST_node(node):
             m.A11, m.A22, m.A33 = s
             local_pl = App.Placement(m)
 
+
+        # PARSING SHOULD NOW HAVE CREATED MAtrix
+        # elif node_type == "multmatrix":
+        #    dump_ast_node(node)
+        #    m = node.params.get("matrix")
+        #    mat = App.Matrix()
+        #    mat.A11, mat.A12, mat.A13, mat.A14 = m[0]
+        #    mat.A21, mat.A22, mat.A23, mat.A24 = m[1]
+        #    mat.A31, mat.A32, mat.A33, mat.A34 = m[2]
+        #    trans_pl = App.Placement(mat)
+
+
         elif node_type == "multmatrix":
             dump_ast_node(node)
-            m = node.params.get("matrix")
-            mat = App.Matrix()
-            mat.A11, mat.A12, mat.A13, mat.A14 = m[0]
-            mat.A21, mat.A22, mat.A23, mat.A24 = m[1]
-            mat.A31, mat.A32, mat.A33, mat.A34 = m[2]
-            trans_pl = App.Placement(mat)
 
+            m = node.params.get("matrix")
+            if not isinstance(m, App.Matrix):
+                raise TypeError(f"multmatrix param is not Matrix: {type(m)}")
+
+            trans_pl = App.Placement(m)
 
         results = []
         write_log("Transform",f"trans_pl {trans_pl}")
@@ -600,6 +629,127 @@ def process_AST_node(node):
                 write_log("Transform",f"Return_pl {return_pl}")
                 results.append((shape, return_pl))
         return results
+
+    # -----------------------------
+    # EXTRUSIONS
+    # -----------------------------
+    if node_type in ("linear_extrude", "rotate_extrude"):
+        write_log("Extrusion",node_type)
+        if node_type == "linear_extrude":
+            write_log("Extrusion", node_type)
+            p = node.params
+            height = p.get("height", 1)
+            center = p.get("center", False)
+            twist = p.get("twist", 0)      # degrees
+
+            solids = []
+
+            for child in node.children:
+                for shape, pl in _as_list(process_AST_node(child)):
+                    s = shape.copy()
+                    s.Placement = pl  # children already have transforms applied
+
+                    # Expect Wire or Face
+                    if isinstance(s, Part.Wire):
+                        face = Part.Face(s)
+                    elif isinstance(s, Part.Face):
+                        face = s
+                    else:
+                        write_log("Extrusion", f"Skipping non-face/wire child: {s}")
+                        continue
+
+                    # ---- Fast path: no twist
+                    if twist == 0:
+                        solid = face.extrude(App.Vector(0, 0, height))
+                    else:
+                        # ---- Slow path: twist present -> use loft along segments
+                        segments = max(int(abs(twist) / 5), 1)  # 5° per step
+                        layers = []
+                        for i in range(segments + 1):
+                            z = height * i / segments
+                            angle = twist * i / segments
+                            # rotate face for twist
+                            rotated_face = face.copy()
+                            rotated_face.rotate(App.Vector(0, 0, 0), App.Vector(0, 0, 1), angle)
+                            # translate along Z
+                            rotated_face.translate(App.Vector(0, 0, z))
+                            layers.append(rotated_face)
+
+                        # loft through layers
+                        solid = Part.makeLoft(layers, True, True)
+
+                    # ---- Center after extrusion using bounding box
+                    if center:
+                        bb = solid.BoundBox
+                        dz = (bb.ZMin + bb.ZMax) / 2
+                        solid.translate(App.Vector(0, 0, -dz))
+
+                    solids.append(solid)
+
+            if not solids:
+                return []
+
+            # fuse all child extrusions
+            result = solids[0]
+            for s in solids[1:]:
+                result = result.fuse(s)
+
+            return (result, local_pl)
+
+        if node_type == "rotate_extrude":
+            write_log("Extrusion", node_type)
+            p = node.params
+            angle = p.get("angle", 360)     # degrees
+            center = p.get("center", False)
+            segments = max(int(abs(angle) / 5), 8)  # 5° per segment, min 8
+
+            solids = []
+
+            for child in node.children:
+                for shape, pl in _as_list(process_AST_node(child)):
+                    s = shape.copy()
+                    s.Placement = pl  # transforms already applied
+
+                    # Expect Wire or Face
+                    if isinstance(s, Part.Wire):
+                        face = Part.Face(s)
+                    elif isinstance(s, Part.Face):
+                        face = s
+                    else:
+                        write_log("Extrusion", f"Skipping non-face/wire child: {s}")
+                        continue
+
+                    # ---- Fast path: full rotation with single segment
+                    if angle == 360:
+                        solid = face.revolve(App.Vector(0,0,0), App.Vector(0,0,1), angle)
+                    else:
+                        # ---- Slow path: partial rotation or segments
+                        step_angle = angle / segments
+                        layers = [face]
+                        for i in range(1, segments + 1):
+                            rotated = face.copy()
+                            rotated.rotate(App.Vector(0,0,0), App.Vector(0,0,1), step_angle * i)
+                            layers.append(rotated)
+
+                        solid = Part.makeLoft(layers, True, True)
+
+                    # ---- Center after extrusion using bounding box
+                    if center:
+                        bb = solid.BoundBox
+                        dz = (bb.ZMin + bb.ZMax) / 2
+                        solid.translate(App.Vector(0, 0, -dz))
+
+                    solids.append(solid)
+
+            if not solids:
+                return []
+
+            # fuse all child extrusions
+            result = solids[0]
+            for s in solids[1:]:
+                result = result.fuse(s)
+
+            return (result, local_pl)
 
     # -----------------------------
     # BOOLEANS

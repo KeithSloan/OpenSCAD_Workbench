@@ -136,11 +136,6 @@ class RotateExtrude(AstNode):
     def __init__(self, params=None, csg_params=None, children=None):
         super().__init__("rotate_extrude", params or {}, csg_params, children)
 
-# -------------------------------------------------
-# Unknown / Text 
-# -------------------------------------------------
-
-# ToDo Needs additional params
 
 class Text(AstNode):
     def __init__(self, params=None, csg_params=None, children=None):
