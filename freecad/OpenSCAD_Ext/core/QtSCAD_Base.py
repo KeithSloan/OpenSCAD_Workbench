@@ -53,7 +53,7 @@ class ShapeType(QtGui.QWidget):
 		self.importType = QtGui.QComboBox()
 		self.importType.addItem('Mesh')
 		self.importType.addItem('Brep')
-		self.importType.addItem('Opt')
+		self.importType.addItem('AST-Brep')
 		self.layout.addWidget(self.importType)
 		self.setLayout(self.layout)
 

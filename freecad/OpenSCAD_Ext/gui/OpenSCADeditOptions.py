@@ -70,7 +70,7 @@ class GeometryType(QtWidgets.QWidget):
         layout = QtWidgets.QHBoxLayout()
         self.label = QtWidgets.QLabel("Geometry Type")
         self.importType = QtWidgets.QComboBox()
-        self.importType.addItems(["Mesh", "Brep", "Opt"])
+        self.importType.addItems(["Mesh", "AST_Brep", "Brep"])
         layout.addWidget(self.label)
         layout.addWidget(self.importType)
         self.setLayout(layout)
@@ -91,39 +91,38 @@ class GeometryType(QtWidgets.QWidget):
 # ------------------------
 class OpenSCADeditOptions(QtWidgets.QDialog):
 
+
     def __init__(self, title, **kwargs):
         super().__init__()
 
         self.setWindowTitle(title)
 
-        # ---- extract preset first ----
-        preset = kwargs.get("preset", {})
-        # Use preset values first, then kwargs override if present
-        self.newFile = preset.get("newFile", kwargs.get("newFile", True))
-        self.scadName = preset.get("newFile", kwargs.get("scadName", True))
-        self.sourceFile = preset.get("sourceFile", kwargs.get("sourceFile",True))
+        # ✅ dialog state (not widgets)
+        self.newFile = kwargs.get("newFile", True)
+        self.sourceFile = kwargs.get("sourceFile", None)
 
-        # Keep other parameters
-        self.params = kwargs
-
-        # ---- layout MUST be created ----
         self.layout = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.layout)
 
         self._build_ui()
-        self._apply_presets()
+
+
 
     def _build_ui(self):
+
         # ---------- SCAD Name ----------
-        if self.newFile:
-            # Always default to "SCAD_Object" for new files
+        if self.sourceFile:
+            scadNameVal = Path(self.sourceFile).stem
+            readOnly = True
+        else:
             scadNameVal = "SCAD_Object"
             readOnly = False
-        else:
-            scadNameVal = str(Path(self.sourceFile).stem) if self.sourceFile else "SCAD_Object"
-            readOnly = True
 
-        self.scadName = EditTextValue("SCAD Name", default=scadNameVal, readOnly=readOnly)
+        self.scadName = EditTextValue(
+            "SCAD Name",
+            default=scadNameVal,
+            readOnly=readOnly
+        )
         self.layout.addWidget(self.scadName)
 
         # ---------- Other fields ----------
@@ -146,19 +145,6 @@ class OpenSCADeditOptions(QtWidgets.QDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.layout.addWidget(self.buttonBox)
-
-    def _apply_presets(self):
-        if self.params.get("fnMax") is not None:
-            self.fnMax.setVal(self.params["fnMax"])
-
-        if self.params.get("geometryType") is not None:
-            self.geometryType.setVal(self.params["geometryType"])
-
-        if self.params.get("keepOption") is not None:
-            self.keepOption.setVal(self.params["keepOption"])
-
-        if self.params.get("preset") == "library":
-            self.geometryType.setVal("Brep")
 
     # ---------- collect values ----------
     def getValues(self):

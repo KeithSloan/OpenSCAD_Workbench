@@ -31,6 +31,8 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
 from freecad.OpenSCAD_Ext.core.OpenSCADUtils import callopenscad, \
                                                OpenSCADError
+from freecad.OpenSCAD_Ext.importers import importAltCSG
+from freecad.OpenSCAD_Ext.importers import importASTCSG
 
 def create_scad_object(title, newFile, sourceFile, scadName="SCAD_Object"):
     write_log("Info",f"create scad object  ; newFile {newFile} scadName = {scadName} sourceFile = {sourceFile}")
@@ -90,43 +92,47 @@ def createMesh(srcObj, wrkSrc):
         srcObj.execute = False
 
 # Source may be processed
-def createBrep(srcObj, tmpDir, wrkSrc):
-	from importAltCSG import  processCSG
+def createBrep(srcObj, mode, tmpDir, wrkSrc):
 
-	print(f"Create Brep {srcObj.scadName} {srcObj.fnmax}")
-	actDoc = FreeCAD.activeDocument().Name
-	print(f"Active Document {actDoc}")
-	wrkDoc = FreeCAD.newDocument("work")
-	try:
-		print(f"Source : {srcObj.scadName}")
-		print(f"SourceFile : {srcObj.sourceFile}")
-		print(wrkDoc)
-		csgOutFile = os.path.join(tmpDir, srcObj.Name+'.csg')
-		# brepOutFile = os.path.join(tmpDir, srcObj.Name+'.brep')
-		print("Call OpenSCAD to create csg file from scad")
-		tmpFileName=callopenscad(wrkSrc, \
+    print(f"Create Brep {srcObj.scadName} {srcObj.fnmax}")
+    actDoc = FreeCAD.activeDocument().Name
+    print(f"Active Document {actDoc}")
+    wrkDoc = FreeCAD.newDocument("work")
+    try:
+        print(f"Source : {srcObj.scadName}")
+        print(f"SourceFile : {srcObj.sourceFile}")
+        print(wrkDoc)
+        csgOutFile = os.path.join(tmpDir, srcObj.Name+'.csg')
+        # brepOutFile = os.path.join(tmpDir, srcObj.Name+'.brep')
+        print("Call OpenSCAD to create csg file from scad")
+        tmpFileName=callopenscad(wrkSrc, \
 			outputfilename=csgOutFile, outputext='csg', \
 			timeout=int(srcObj.timeout))
-		if hasattr(srcObj, "source"):
-			source = srcObj.scadName
-		if hasattr(srcObj, "sourceFile"):
-			source = srcObj.sourceFile
-		global pathName    
-		pathName = os.path.dirname(os.path.normpath(srcObj.scadName))
-		print(f"Process CSG File name path {pathName} file {tmpFileName}")
-		#processCSG(wrkDoc, pathName, tmpFileName, srcObj.fnmax)
-		processCSG(wrkDoc, tmpFileName, srcObj.fnmax)
-		# *** Does not work for earrings.scad
-		shapes = []
-		for cnt, obj in enumerate(wrkDoc.RootObjects, start=1):
-			if hasattr(obj, "Shape"):
-				shapes.append(obj.Shape)
-		print(f"Shapes in WrkDoc {cnt}")        
-		if cnt > 1:
-			retShape = Part.makeCompound(shapes)
-		else:
-			retShape = shapes[0]
-		print(f"CreateBrep Shape {retShape}")
+        if hasattr(srcObj, "source"):
+            source = srcObj.scadName
+        if hasattr(srcObj, "sourceFile"):
+        	source = srcObj.sourceFile
+        global pathName    
+        pathName = os.path.dirname(os.path.normpath(srcObj.scadName))
+        print(f"Process CSG File Mode {mode} name path {pathName} file {tmpFileName}")
+		
+        #processCSG(wrkDoc, pathName, tmpFileName, srcObj.fnmax)
+        if mode == 'AST-Brep':
+            importASTCSG.processCSG(wrkDoc, tmpFileName, srcObj.fnmax)
+
+        elif mode == 'Brep':
+            importAltCSG.processCSG(wrkDoc, tmpFileName, srcObj.fnmax)
+            # *** Does not work for earrings.scad
+        shapes = []
+        for cnt, obj in enumerate(wrkDoc.RootObjects, start=1):
+            if hasattr(obj, "Shape"):
+                shapes.append(obj.Shape)
+                print(f"Shapes in WrkDoc {cnt}")        
+        if cnt > 1:
+            retShape = Part.makeCompound(shapes)
+        else:
+            retShape = shapes[0]
+        print(f"CreateBrep Shape {retShape}")
 		#links = []
 		#for cnt, obj in enumerate(wrkDoc.RootObjects):
 		#    if hasattr(obj, "Shape"):
@@ -141,29 +147,29 @@ def createBrep(srcObj, tmpDir, wrkSrc):
 		#    #    return
 		#else:
 		#    retObj = wrkDoc.RootObjects[0]    
-		if srcObj.keep_work_doc is not True:
-			FreeCAD.closeDocument("work")
+        if srcObj.keep_work_doc is not True:
+            FreeCAD.closeDocument("work")
 		# restore active document 
-		print(f"Set Active Document {actDoc}")
-		FreeCAD.setActiveDocument(actDoc)
+        print(f"Set Active Document {actDoc}")
+        FreeCAD.setActiveDocument(actDoc)
 		#FreeCADGui.SendMsgToActiveView("ViewFit")
 		#print(f"Ret Obj {retObj.Name} Shape {retObj.Shape}")
-		print(f"Ret Shape {retShape}")
-		return retShape
+        print(f"Ret Shape {retShape}")
+        return retShape
 		#return retObj
 
-	except OpenSCADError as e:
+    except OpenSCADError as e:
 		#print(f"OpenSCADError {e} {e.value}")
-		before = e.value.split('in file',1)[0]
-		print(f"Before : {before}")
-		after = e.value.rsplit(',',1)[1]
-		print(f"After  : {after}")
-		after = after.splitlines()[0]
-		print(f"After  : {after}")
-		srcObj.message = before + after
-		print(f" End After - Error Message {srcObj.message}")
-		FreeCAD.closeDocument("work")
-		srcObj.execute = False
+        before = e.value.split('in file',1)[0]
+        print(f"Before : {before}")
+        after = e.value.rsplit(',',1)[1]
+        print(f"After  : {after}")
+        after = after.splitlines()[0]
+        print(f"After  : {after}")
+        srcObj.message = before + after
+        print(f" End After - Error Message {srcObj.message}")
+        FreeCAD.closeDocument("work")
+        srcObj.execute = False
 
 
 # def scanForModules(appendFp, sourceFp, module):
@@ -211,8 +217,8 @@ def shapeFromSourceFile(srcObj, module=False, modules=False):
 
     #srcObj.mode = "Mesh"
 
-    if srcObj.mode == "Brep":
-        brepShape = createBrep(srcObj, tmpDir, wrkSrc)
+    if srcObj.mode in ["Brep", "AST-Brep"]:
+        brepShape = createBrep(srcObj, srcObj.mode, tmpDir, wrkSrc)
         print(f"Active Document {FreeCAD.ActiveDocument.Name}")
         return brepShape
         #return brepObj.Shape
@@ -255,22 +261,21 @@ class EditTextValue(QtGui.QWidget):
         return self.textName.text()
 
 class GeometryType(QtGui.QWidget):
-        def __init__(self):
-                super().__init__()
-                self.layout = QtGui.QHBoxLayout()
-                self.label = QtGui.QLabel('Geometry Type')
-                self.layout.addWidget(self.label)
-                self.importType = QtGui.QComboBox()
-                self.importType.addItem('Mesh')
-                self.importType.addItem('Brep')
-                self.importType.addItem('Opt')
-                self.layout.addWidget(self.importType)
-                self.setLayout(self.layout)
+    def __init__(self):
+        super().__init__()
+        self.layout = QtGui.QHBoxLayout()
+        self.label = QtGui.QLabel('Geometry Type')
+        self.layout.addWidget(self.label)
+        self.importType = QtGui.QComboBox()
+        self.importType.addItem('Mesh')
+        self.importType.addItem('Brep')
+        self.importType.addItem('Opt')
+        self.layout.addWidget(self.importType)
+        self.setLayout(self.layout)
 
-        def getVal(self):
-                return self.importType.currentText()
+    def getVal(self):
+        return self.importType.currentText()
                      
-
 class IntegerValue(QtGui.QWidget):
 	def __init__(self, label, value):
 		super().__init__()
@@ -410,7 +415,7 @@ class SCADfileBase:
         obj.addProperty("App::PropertyBool","execute","OpenSCAD","Process SCAD source")
         obj.modules = True
         obj.addProperty("App::PropertyEnumeration","mode","OpenSCAD","mode - create Brep or Mesh")
-        modeLst = ['Mesh', 'Brep']
+        modeLst = ['Mesh','AST_Brep','Brep']
         modeIdx = modeLst.index(mode)
         obj.mode = modeLst
         obj.mode = modeIdx
@@ -436,9 +441,9 @@ class SCADfileBase:
             return
 
         if prop in ['mode']:
-                print(f"Change of Mode")
+            print(f"Change of Mode")
 
-        if prop in ["execute"]:
+        if prop in ["execute","mode"]:
             if fp.execute == True:
                 self.executeFunction(fp)
                 fp.execute = False
@@ -474,7 +479,7 @@ class SCADfileBase:
 
     def executeFunction(self, obj):
         from timeit import default_timer as timer
-        print(f"Execute {obj.Name} Mode {obj.mode} keepWork {obj.keep_work_doc}")
+        write_log("SCADfileBase",f"Execute {obj.Name} Mode {obj.mode} keepWork {obj.keep_work_doc}")
         start = timer()
         #print(dir(obj))
         obj.message = ""
@@ -649,10 +654,17 @@ class ViewSCADProvider:
         Since we have some un-serializable parts here -- the Coin stuff --
         we must define this method\
         to return a tuple of all serializable objects or None."""
-        return None
+        if hasattr(self, "Type"):  # If not saved just return
+            return {"type": self.Type}
+        else:
+            pass
 
     def __setstate__(self, arg):
         """When restoring the serialized object from document we have the
         chance to set some internals here. Since no data were serialized
         nothing needs to be done here."""
+        if arg is not None and arg != {}:
+            if 'type' in arg:
+                self.Type = arg["Type"]
+            #print(self.Type)
         return None

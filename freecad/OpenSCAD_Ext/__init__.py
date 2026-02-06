@@ -51,13 +51,19 @@ def setup_importers():
 
 
     FreeCAD.addImportType(
+        "External OpenSCAD Workbench : New : import SCAD and Parse to MetaFile -> ReportView (*.scad)",
+        f"{IMPORTER_BASE}.importParseSCADMeta"
+    )
+
+
+    FreeCAD.addImportType(
         "External OpenSCAD Workbench : Legacy import SCAD file (*.scad)",
         f"{IMPORTER_BASE}.importAltCSG"
     )
 
 
     FreeCAD.addImportType(
-        "External OpenSCAD Workbench : import SCAD File Object (*.scad)",
+        "External OpenSCAD Workbench : Legacy import SCAD File Object (*.scad)",
         f"{IMPORTER_BASE}.importFileSCAD"
     )
 
