@@ -396,6 +396,7 @@ def create_from_dialog(self, sourceFile, newFile=True):
 
 
 class SCADfileBase:
+   
     def __init__(self, obj, scadName, sourceFile, mode='Mesh', fnmax=16, timeout=30, keep=False):
         super().__init__()
         self.Object = obj      # ← REQUIRED in your case
@@ -541,6 +542,40 @@ class SCADfileBase:
     
         else:
             print(f"External Editor preference editorPathName not set")
+
+    def editOpenStudio(self):       # Dummy so can change later
+        self.open_in_openscad_studio
+
+    def open_in_openscad_studio(self):
+        import sys, subprocess, os
+
+        obj = self.Object
+
+        if not hasattr(obj, "sourceFile"):
+            FreeCAD.Console.PrintError("SCAD object has no sourceFile\n")
+            return
+
+        scad_path = obj.sourceFile  
+        write_log("openscad studio",scad_path)
+
+        if sys.platform == "darwin":
+            subprocess.Popen([
+                "open",
+                "-a", "OpenSCAD Studio",
+                scad_path
+            ])
+
+        elif sys.platform.startswith("linux"):
+            subprocess.Popen([
+                "openscad-studio",
+                scad_path
+            ])
+
+        elif sys.platform.startswith("win"):
+            subprocess.Popen([
+                r"C:\Program Files\OpenSCAD Studio\openscad-studio.exe",
+                scad_path
+            ])
 
 
     def createGeometry(self, obj):

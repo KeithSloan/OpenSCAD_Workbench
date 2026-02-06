@@ -20,6 +20,7 @@ class EditSCADFile_Class(BaseParams):
         doc = FreeCAD.ActiveDocument
         write_log("Info",doc.Label)
         if not doc:
+            write_log("No Active Document")
             return
 
         sel = FreeCADGui.Selection.getSelection()
