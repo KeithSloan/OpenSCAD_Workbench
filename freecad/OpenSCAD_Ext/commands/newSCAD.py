@@ -24,11 +24,10 @@ class NewSCADFile_Class(BaseParams):
         
         obj = create_scad_object_interactive(
             title="Create New SCAD Object",
-            preset={
-                "newFile": True,
-                "scadName": "SCAD_Object",
-            }
-        )
+            scadName = "SCAD_Object",
+            newFile = True,
+            )
+        
         #obj.recompute()
         obj.Proxy.editFunction()
 

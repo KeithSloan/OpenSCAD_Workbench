@@ -39,7 +39,7 @@ def create_scad_object(
     if newFile:
         sourceFile = os.path.join(
             BaseParams.getScadSourcePath(),
-            scadName,
+            scadName+'.scad',
         )
         write_log("Info", f"New source file: {sourceFile}")
 

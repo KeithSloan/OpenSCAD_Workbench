@@ -5,6 +5,7 @@ Avoids circular imports and PyQt5 fallback errors.
 """
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+import FreeCADGui
 
 #
 # Direct values — if you pass them, they set initial values unless overridden by preset.
@@ -25,7 +26,7 @@ def create_scad_object_interactive(
     fnMax=None,
     timeOut=None,
     keepOption=None,
-):
+    ):
 
 
     # GUI imports inside function to avoid early Qt5 fallback
@@ -33,13 +34,18 @@ def create_scad_object_interactive(
     from freecad.OpenSCAD_Ext.gui.OpenSCADeditOptions import OpenSCADeditOptions
 
     write_log("info", "LOADED create_scad_object_interactive v2")
-    write_log("Info",f"Interactive - scadName {scadName} sourceFile {sourceFile} newFile {newFile}")
+    write_log(
+    "Interactive",
+    f"RAW ARGS title={title} newFile={newFile} scadName={scadName} sourceFile={sourceFile}"
+    )
+
 
     #write_log("Dialog",f"newFile = {newFile} sourceFile = {sourceFile}")
     dlg = OpenSCADeditOptions(title,
                                 newFile=newFile,
                                 scadName=scadName,
                                 sourceFile=sourceFile,
+                                parent=FreeCADGui.getMainWindow()
                                 )
     if dlg.exec_() != QtWidgets.QDialog.Accepted:
         return None

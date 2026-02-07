@@ -21,20 +21,10 @@ class EditStudioSCADFile_Class(BaseParams):
         FreeCAD.Console.PrintMessage("OpenSCAD Studio - Edit SCAD File Object executed\n")
         write_log("Info", "Studio - Edit SCAD File Object executed")
         
-        obj = create_scad_object_interactive(
-            title="Create New openscad Studio Object",
-            preset={
-                "newFile": True,
-                "scadName": "SCAD_Object",
-            }
-        )
-        #obj.recompute()
-        obj.Proxy.editOpenStudio()
-
         doc = FreeCAD.ActiveDocument
         if not doc:
             write_log("Info", "No Active Document")
-            return
+            doc = FreeCAD.newDocument("OpenSCAD_Studio")
         write_log("Info",doc.Label)
 
         sel = FreeCADGui.Selection.getSelection()
@@ -42,7 +32,20 @@ class EditStudioSCADFile_Class(BaseParams):
         #if not sel:
         #    FreeCAD.Console.PrintErrorMessage("No objects selected\n")
         #return
+        if sel == []:
+            obj = create_scad_object_interactive(
+            title="Create New openscad Studio Object",
+            scadName = "OpenSCAD_Studio",
+            newFile = True,
+            )
+            #obj.recompute()
+            obj.Proxy.editOpenStudio()
+        
+        else:
+            for obj in sel:
+                obj.Proxy.editOpenStudio()                            
 
+        '''
         for obj in sel:
             if obj.TypeId != "Part::FeaturePython":
                write_log("INFO","Feature Python")
@@ -65,6 +68,7 @@ class EditStudioSCADFile_Class(BaseParams):
                FreeCAD.Console.PrintError(
                 f"Failed to edit SCAD file for {obj.Label}: {e}\n"
                )
+        '''
 
     def IsActive(self):
         return True

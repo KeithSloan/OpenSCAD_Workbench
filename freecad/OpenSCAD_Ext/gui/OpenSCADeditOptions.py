@@ -1,7 +1,9 @@
 # freecad/OpenSCAD_Ext/gui/OpenSCADeditOptions.py
+from PySide import QtCore
 from PySide2 import QtWidgets
 from pathlib import Path
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams  # for workbench preference path
+from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 
 # ------------------------
 # Widget wrappers
@@ -91,36 +93,56 @@ class GeometryType(QtWidgets.QWidget):
 # ------------------------
 class OpenSCADeditOptions(QtWidgets.QDialog):
 
-
     def __init__(self, title, **kwargs):
-        super().__init__()
+        super().__init__(None)   # no parent, no reuse
 
-        self.setWindowTitle(title)
+        # ---- authoritative title ----
+        self.setWindowTitle(str(title))
 
-        # ✅ dialog state (not widgets)
-        self.newFile = kwargs.get("newFile", True)
+        # ---- dialog state (pure data) ----
+        self.newFile = bool(kwargs.get("newFile", True))
+        self.scadNameVal = kwargs.get("scadName", "")
         self.sourceFile = kwargs.get("sourceFile", None)
 
+        write_log("EditOpt", f"INIT scadName={self.scadNameVal}")
+
+        # ---- rebuild layout cleanly ----
         self.layout = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.layout)
 
+        # ---- build widgets fresh ----
         self._build_ui()
 
+        # ---- force reset widget contents ----
+        if hasattr(self, "scadName"):
+            self.scadName.lineEdit.blockSignals(True)
+            self.scadName.lineEdit.clear()
+            self.scadName.lineEdit.setText(str(self.scadNameVal))
+            self.scadName.lineEdit.blockSignals(False)
 
+        if hasattr(self, "sourceFileEdit"):
+            self.sourceFileEdit.blockSignals(True)
+            self.sourceFileEdit.clear()
+            if self.sourceFile:
+                self.sourceFileEdit.setText(str(self.sourceFile))
+            self.sourceFileEdit.blockSignals(False)
 
     def _build_ui(self):
-
         # ---------- SCAD Name ----------
-        if self.sourceFile:
-            scadNameVal = Path(self.sourceFile).stem
-            readOnly = True
-        else:
-            scadNameVal = "SCAD_Object"
-            readOnly = False
-
+        readOnly = False
+        if self.newFile is False:
+            if self.sourceFile:
+                self.scadNameVal = Path(self.sourceFile).stem
+                readOnly = True
+            else:
+                write_log("Edit Options","newFile = False and No sourceFile")
+        if self.scadNameVal is None:
+            self.scadNameVal = "SCAD_Object"
+            
+        write_log("EditOptions",self.scadNameVal)
         self.scadName = EditTextValue(
             "SCAD Name",
-            default=scadNameVal,
+            default=self.scadNameVal,
             readOnly=readOnly
         )
         self.layout.addWidget(self.scadName)
