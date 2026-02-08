@@ -1,0 +1,9 @@
+{
+    "name": "Test SCAD Project",
+    "files": [
+        { "path": "circle.scad" },
+        { "path": "polygon.scad" },
+        { "path": "square.scad" }
+    ]
+}
+

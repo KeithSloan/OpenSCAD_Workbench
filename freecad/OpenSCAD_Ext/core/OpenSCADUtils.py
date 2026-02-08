@@ -216,6 +216,79 @@ def callopenscad(
     else:
         raise OpenSCADError('OpenSCAD executable unavailable')
 
+def callopenscad_with_overrides(
+    inputfilename,
+    outputfilename=None,
+    outputext='csg',
+    keepname=False,
+    timeout=None,
+    fn=12,
+    fa=15,
+    fs=2,
+):
+    '''call the open scad binary with $fn/$fa/$fs overrides'''
+    import FreeCAD, os, subprocess, tempfile
+    from subprocess import TimeoutExpired
+
+    def check_output2(*args, **kwargs):
+        kwargs.update({'stdout': subprocess.PIPE, 'stderr': subprocess.PIPE})
+        p = subprocess.Popen(*args, **kwargs)
+        try:
+            stdoutd, stderrd = p.communicate(timeout=timeout)
+            stdoutd = stdoutd.decode("utf8")
+            stderrd = stderrd.decode("utf8")
+            if p.returncode != 0:
+                raise OpenSCADError(
+                    '%s %s\n' % (stdoutd.strip(), stderrd.strip())
+                )
+            if stderrd.strip():
+                FreeCAD.Console.PrintWarning(stderrd + u'\n')
+            if stdoutd.strip():
+                FreeCAD.Console.PrintMessage(stdoutd + u'\n')
+                return stdoutd
+        except TimeoutExpired:
+            msg = "Call to OpenSCAD timed out after " + str(timeout) + " secs"
+            errorDialog(msg)
+            p.kill()
+            p.communicate()
+
+    # Locate OpenSCAD executable
+    osfilename = FreeCAD.ParamGet(
+        "User parameter:BaseApp/Preferences/Mod/OpenSCAD"
+    ).GetString('openscadexecutable')
+
+    if not (osfilename and os.path.isfile(osfilename)):
+        raise OpenSCADError('OpenSCAD executable unavailable')
+
+    # Output filename
+    if not outputfilename:
+        dir1 = tempfile.gettempdir()
+        if keepname:
+            outputfilename = os.path.join(
+                dir1,
+                '%s.%s' % (
+                    os.path.split(inputfilename)[1].rsplit('.', 1)[0],
+                    outputext
+                )
+            )
+        else:
+            outputfilename = os.path.join(
+                dir1,
+                '%s.%s' % (next(tempfilenamegen), outputext)
+            )
+
+    # Build command with overrides
+    cmd = [
+        osfilename,
+        '-D', f'$fn={int(fn)}',
+        '-D', f'$fa={float(fa)}',
+        '-D', f'$fs={float(fs)}',
+        '-o', outputfilename,
+        inputfilename
+    ]
+
+    check_output2(cmd)
+    return outputfilename
 
 def callopenscad_check_syntax(inputfilename, timeout=None):
     """
@@ -285,6 +358,8 @@ def callopenscadstring_to_file(scad_str, check_syntax=False, outputfilename=None
     import tempfile
     import os
     import FreeCAD
+
+    scad_str = "$fn=12; $fa=15; $fs=2;" + scad_str
 
     # --- get OpenSCAD executable from FreeCAD preferences ---
     prefs = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")

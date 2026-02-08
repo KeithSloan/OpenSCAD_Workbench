@@ -1,0 +1,4 @@
+resize(newsize = [30,15,5], auto = [0,0,0], convexity = 0) {
+	cube(size = [10, 5, 2], center = true);
+}
+

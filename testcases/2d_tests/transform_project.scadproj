@@ -1,0 +1,9 @@
+{
+    "name": "Test SCAD Transformations",
+    "files": [
+        { "path": "offset.scad" },
+        { "path": "projection.scad" },
+        { "path": "resize.scad" }
+    ]
+}
+

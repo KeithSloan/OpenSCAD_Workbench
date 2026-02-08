@@ -70,10 +70,17 @@ def call_openscad_scad_string(
 
     out_path = scad_path.replace(".scad", f".{export_type}")
 
+    fn=12,
+    fa=15,
+    fs=2,
+    
     # Base command
     cmd = [
         openscad_exe,
         "--export-format", export_type,
+        '-D', f'$fn={int(fn)}',
+        '-D', f'$fa={float(fa)}',
+        '-D', f'$fs={float(fs)}'
         "-o", out_path,
         scad_path,
     ]
