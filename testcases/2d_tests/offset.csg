@@ -1,0 +1,4 @@
+offset(r = 2, $fn = 0, $fa = 12, $fs = 2) {
+	square(size = [20, 10], center = true);
+}
+

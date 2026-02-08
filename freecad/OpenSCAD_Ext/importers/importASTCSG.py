@@ -84,10 +84,10 @@ def open(filename):
     docname = os.path.splitext(os.path.basename(filename))[0]
     doc = FreeCAD.newDocument(docname)
     if filename.lower().endswith('.scad'):
-        from freecad.OpenSCAD_Ext.core.OpenSCADUtils import callopenscad, workaroundforissue128needed
+        from freecad.OpenSCAD_Ext.core.OpenSCADUtils import callopenscad_with_overrides, workaroundforissue128needed
 
         write_log("Info","Calling OpenSCAD")
-        tmpfile=callopenscad(filename)
+        tmpfile=callopenscad_with_overrides(filename)
         if workaroundforissue128needed():
             pathName = '' #https://github.com/openscad/openscad/issues/128
             #pathName = os.getcwd() #https://github.com/openscad/openscad/issues/128
@@ -113,8 +113,8 @@ def insert(filename,docname):
         doc=FreeCAD.newDocument(docname)
     #importgroup = doc.addObject("App::DocumentObjectGroup",groupname)
     if filename.lower().endswith('.scad'):
-        from OpenSCADUtils import callopenscad, workaroundforissue128needed
-        tmpfile=callopenscad(filename)
+        from OpenSCADUtils import callopenscad_with_overrides, workaroundforissue128needed
+        tmpfile=callopenscad_with_overrides(filename)
         if workaroundforissue128needed():
             pathName = '' #https://github.com/openscad/openscad/issues/128
             #pathName = os.getcwd() #https://github.com/openscad/openscad/issues/128

@@ -18,6 +18,7 @@ import FreeCAD
 import Part
 import Mesh
 import FreeCAD as App
+from FreeCAD import Vector
 
 #from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
@@ -26,7 +27,7 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_utils import dump_ast_node
 
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import (
-    Hull, Minkowski,
+    Hull, Minkowski
     )
 
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_utils import call_openscad_scad_string#
@@ -415,15 +416,17 @@ def placement_from_matrix(matrix):
 # ----------------------------------------------------------
 #
 # Returns : List of
-#   (placement: FreeCAD.Placement, shape: Part.Shape | None)
+#   (shape: Part.Shape , placement: FreeCAD.Placement, | None)
 # ----------------------------------------------------------
 
 def _as_list(result):
     """Normalize single or list return to list."""
+    #dump_nodes_list(result)
     if result is None:
         return []
     if isinstance(result, list):
         return result
+    write_log("List Item Types",f"{type(result[0])} , {type(result[1])}")
     return [result]
 
 
@@ -439,6 +442,21 @@ def log_empty_groups(node, depth=0):
         write_log("AST", f"{'  '*depth}EMPTY GROUP at depth {depth}")
     for child in getattr(node, "children", []):
         log_empty_groups(child, depth+1)
+
+def dump_nodes_list(node_type, shapes_list):
+    write_log("Dump",f"Node list Type : {node_type} type : {type(shapes_list)}")
+    list_type = type(shapes_list)
+    if list_type == "list":
+        for item in shapes_list:
+            write_log("Dump",f"{item} type {item.node_type} {item}")
+            print(dir(item))
+            write_log("Dump",f"Children {len(item.children)}")
+            for child in item.children:
+                write_log("Dump",f"{child}")
+
+    elif list_type =="tuple":
+        write_log("Dump",f"Tuple {list_type}")
+
 
 
 def process_AST_node(node):
@@ -758,6 +776,8 @@ def process_AST_node(node):
         write_log("Boolean",node_type)
         shapes = []
         for child in node.children:
+            lst = _as_list(process_AST_node(child))
+            dump_nodes_list(node_type, lst)
             for shape, pl in _as_list(process_AST_node(child)):
                 s = shape.copy()
                 s.Placement = pl
@@ -778,6 +798,31 @@ def process_AST_node(node):
 
         # ???? placement
         return (result, local_pl)
+
+    # -----------------------------
+    # 2D 
+    # -----------------------------
+
+    elif node.node_type == "circle":
+        write_log("AST", f"Processing Circle: params={node.params}, csg={node.csg_params}")
+
+        # Determine radius
+        if "r" in node.params:
+            r = node.params["r"]
+        elif "d" in node.params:
+            r = node.params["d"] / 2.0
+        else:
+            try:
+                r = float(node.csg_params.strip())
+            except Exception:
+                r = 1.0
+                write_log("AST", "Circle missing radius, defaulting to 1")
+
+        # Make the wire in canonical XY plane
+        face = Part.makeCircle(r, Vector(0, 0, 0), Vector(0, 0, 1))
+        #face = Part.Face(edge)
+        # Return as a **list of tuples** — this satisfies _as_list and downstream code
+        return face, local_pl
 
     # -----------------------------
     # FALLBACK
@@ -805,6 +850,9 @@ def process_AST(nodes, mode="multiple"):
             continue
 
         # Normalize to list
+
+        write_log("Dump",f"processed type {type(processed)}")
+        write_log("Dump",f"{processed}")
         if not isinstance(processed, list):
             processed = [processed]
 
