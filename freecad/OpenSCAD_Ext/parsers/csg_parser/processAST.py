@@ -803,6 +803,18 @@ def process_AST_node(node):
     # 2D 
     # -----------------------------
 
+    # Alternate uses Draft
+    #
+    # Alternate uses : mycircle = Draft.makeCircle(r,face=True) # would call doc.recompute
+    # When $fn setting to interpet as a polygon
+
+    #mycircle = Draft.makePolygon(n,r) # would call doc.recompute
+    #    mycircle = FreeCAD.ActiveDocument.addObject("Part::Part2DObjectPython",'polygon')
+    #    Draft._Polygon(mycircle)
+    #    mycircle.FacesNumber = n
+    #    mycircle.Radius = r
+    #    mycircle.DrawMode = "inscribed"
+    #    mycircle.MakeFace = True
     elif node.node_type == "circle":
         write_log("AST", f"Processing Circle: params={node.params}, csg={node.csg_params}")
 
@@ -823,6 +835,79 @@ def process_AST_node(node):
         #face = Part.Face(edge)
         # Return as a **list of tuples** — this satisfies _as_list and downstream code
         return face, local_pl
+
+    elif node.node_type == "square":
+        write_log("AST", f"Processing Square: params={node.params}, csg={node.csg_params}")
+
+        if "size" in node.params:
+            size = node.params["size"]
+        else:
+            try:
+                size = float(node.csg_params.strip())
+            except Exception:
+                size = 1.0
+                write_log("AST", "Square missing size, defaulting to 1")
+
+        if isinstance(size, (int, float)):
+            width = height = float(size)
+        elif isinstance(size, (list, tuple)) and len(size) == 2:
+            width, height = float(size[0]), float(size[1])
+        else:
+            width = height = 1.0
+            write_log("AST", f"Invalid square size {size}, defaulting to 1")
+
+        wire = Part.makePolygon([
+            Vector(0, 0, 0),
+            Vector(width, 0, 0),
+            Vector(width, height, 0),
+            Vector(0, height, 0),
+            Vector(0, 0, 0)
+        ])
+        wire.Placement = local_pl
+        face = Part.Face(wire)
+        return face, local_pl
+
+
+    # Polygon
+    # With and without Path ?
+    '''
+    def p_polygon_action_nopath(p) :
+        'polygon_action_nopath : polygon LPAREN points EQ OSQUARE points_list_2d ESQUARE COMMA paths EQ undef COMMA keywordargument_list RPAREN SEMICOL'
+        if printverbose: print("Polygon")
+        if printverbose: print(p[6])
+        v = convert_points_list_to_vector(p[6])
+        mypolygon = doc.addObject('Part::Feature',p[1])
+        if printverbose: print("Make Parts")
+        # Close Polygon
+        v.append(v[0])
+        parts = Part.makePolygon(v)
+        if printverbose: print("update object")
+        mypolygon.Shape = Part.Face(parts)
+        p[0] = [mypolygon]
+
+    def p_polygon_action_plus_path(p) :
+        'polygon_action_plus_path : polygon LPAREN points EQ OSQUARE points_list_2d ESQUARE COMMA paths EQ OSQUARE path_set ESQUARE COMMA keywordargument_list RPAREN SEMICOL'
+        if printverbose: print(f"Polygon with Path : len {len(p[6])} {p[6]}")
+        v = convert_points_list_to_vector(p[6])
+        # Make sure a closed list
+        v.append(v[0])
+        if printverbose: print(f"Path Set List {p[12]}")
+        for i in p[12] :
+            if printverbose: print(f"Set entry {i}")
+            mypolygon = doc.addObject('Part::Feature','wire')
+            path_list = []
+            for j in i :
+                j = int(j)
+                if printverbose: print(f"index {j}")
+                path_list.append(v[j])
+    #        Close path
+            path_list.append(v[int(i[0])])
+            if printverbose: print(f"Path List {path_list}")
+            wire = Part.makePolygon(path_list)
+            mypolygon.Shape = Part.Face(wire)
+            p[0] = [mypolygon]
+    #        This only pushes last polygon
+    '''
 
     # -----------------------------
     # FALLBACK
