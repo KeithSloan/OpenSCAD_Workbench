@@ -56,6 +56,7 @@ def call_openscad_scad_string(
     Call OpenSCAD with a SCAD string and export STL or DXF.
     Returns output path on success, None on failure.
     """
+    write_log("OpenSCAD",f"Call OpenSCAD String via Temo File")
     openscad_exe = get_openscad_executable()
 
     # Write temp SCAD
@@ -68,19 +69,22 @@ def call_openscad_scad_string(
         scad_path = f.name
         f.write(scad_str)
 
+    write_log("OpenSCAD",f"temp file {scad_path}")
+
     out_path = scad_path.replace(".scad", f".{export_type}")
 
-    fn=12,
-    fa=15,
-    fs=2,
+    fn=12
+    fa=15
+    fs=2
     
+    write_log("OpenSCAD","Add $fn, $fa, $fs")
     # Base command
     cmd = [
         openscad_exe,
         "--export-format", export_type,
         '-D', f'$fn={int(fn)}',
         '-D', f'$fa={float(fa)}',
-        '-D', f'$fs={float(fs)}'
+        '-D', f'$fs={float(fs)}',
         "-o", out_path,
         scad_path,
     ]
