@@ -39,6 +39,7 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.process_text import process_text
 
 
 def generate_stl_from_scad(scad_str, timeout_sec=60):
+    write_log("AST",f"Generate STL from SCAD string")
     return call_openscad_scad_string(scad_str, export_type='stl', timeout_sec=timeout_sec)
 
 
@@ -777,6 +778,7 @@ def process_AST_node(node):
         write_log("Boolean",node_type)
         shapes = []
         for child in node.children:
+
             lst = _as_list(process_AST_node(child))
             dump_nodes_list(node_type, lst)
             for shape, pl in _as_list(process_AST_node(child)):
