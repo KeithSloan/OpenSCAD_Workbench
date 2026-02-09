@@ -1,4 +1,3 @@
-from freecad.OpenSCAD_Ext.importers.processSCADProject import processSCADProj
 '''
 SCADProject Importer Structure for FreeCAD
 -----------------------------------------
@@ -74,6 +73,7 @@ import FreeCADGui
 #from pathlib import Path
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+from freecad.OpenSCAD_Ext.importers.processSCADProject import importSCADProject
 
 #
 # For Process openscad_studio scadproj JSON  files 
@@ -102,7 +102,7 @@ def open(filename):
     docname = os.path.splitext(os.path.basename(filename))[0]
     doc = FreeCAD.newDocument(docname)
     if filename.lower().endswith('.scadproj'):
-        processSCADProj(doc, filename)
+        importSCADProject(doc, filename)
     return doc
 
 def insert(filename, currentdoc):

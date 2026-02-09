@@ -396,38 +396,42 @@ def create_from_dialog(self, sourceFile, newFile=True):
     def onOk(self):
         self.result = 'ok'
         #QtGui.QGuiApplication.restoreOverrideCursor()
-
-
 class SCADfileBase:
-   
-    def __init__(self, obj, scadName, sourceFile, mode='Mesh', fnmax=16, timeout=30, keep=False):
+    IMPORT_MODE = ["Mesh", "AST-Brep", "Brep"]
+
+    def __init__(self, obj, scadName, sourceFile, mode="Mesh", fnmax=16, timeout=30, keep=False):
+        self.Object = obj
+        obj.Proxy = self
+
+        # 1. Ensure properties exist
+        self._init_properties(obj,scadName, sourceFile, mode, fnmax, timeout, keep)
+        modeList = SCADfileBase.IMPORT_MODE
+        obj.scadName = scadName
+        obj.setEditorMode("scadName",1)
+        obj.sourceFile = sourceFile
+        obj.modules = True
+        modeIdx = modeList.index(mode)
+        obj.mode = modeList
+        obj.mode = modeIdx
+        obj.mesh_recombine = False
+
+    def _init_properties(self, obj, scadName, sourceFile, mode, fnmax, timeout, keep):
         super().__init__()
         self.Object = obj      # ← REQUIRED in your case
         obj.addProperty("App::PropertyString","scadName","OpenSCAD","OpenSCAD scadObject")
-        obj.scadName = scadName
-        obj.setEditorMode("scadName",1)
         obj.addProperty("App::PropertyFile","sourceFile","OpenSCAD","OpenSCAD source")
-        obj.sourceFile = sourceFile
         obj.addProperty("App::PropertyString","message","OpenSCAD","OpenSCAD message")
         obj.addProperty("App::PropertyBool","modules","OpenSCAD","OpenSCAD Uses Modules")
         obj.addProperty("App::PropertyBool","edit","OpenSCAD","Edit SCAD source")
         obj.addProperty("App::PropertyBool","execute","OpenSCAD","Process SCAD source")
-        obj.modules = True
         obj.addProperty("App::PropertyEnumeration","mode","OpenSCAD","mode - create Brep or Mesh")
-        modeLst = ['Mesh','AST_Brep','Brep']
-        modeIdx = modeLst.index(mode)
-        obj.mode = modeLst
-        obj.mode = modeIdx
         obj.addProperty("App::PropertyInteger","fnmax","OpenSCAD","Max Poylgon - If circle or cylinder has more than this number of sides, treat as circle or cyliner")
         obj.fnmax = fnmax
         obj.addProperty("App::PropertyBool","mesh_recombine","OpenSCAD","Mesh Recombine")
-        obj.mesh_recombine = False
         obj.addProperty("App::PropertyBool","keep_work_doc","OpenSCAD","Keep FC Work Document")
         obj.keep_work_doc = keep
         obj.addProperty("App::PropertyInteger","timeout","OpenSCAD","OpenSCAD process timeout (secs)")
         obj.timeout = timeout
-        obj.Proxy = self
-        self.createGeometry(obj)
 
     def onChanged(self, fp, prop):
         print(f"{fp.Label} State : {fp.State} prop : {prop}")
