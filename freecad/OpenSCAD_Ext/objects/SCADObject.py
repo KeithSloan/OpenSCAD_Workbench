@@ -42,7 +42,7 @@ def create_scad_object(title, newFile, sourceFile, scadName="SCAD_Object"):
     QtGui.QGuiApplication.restoreOverrideCursor()
     if result != QtGui.QDialog.Accepted:
         pass
-    write_log("Info",f"Action")
+    write_log("Info","Action")
     options = dialog.getValues()
     write_log("Info",f"Options {options}") 
 
@@ -101,7 +101,6 @@ def createBrep(srcObj, mode, tmpDir, wrkSrc):
     try:
         print(f"Source : {srcObj.scadName}")
         print(f"SourceFile : {srcObj.sourceFile}")
-        print(wrkDoc)
         csgOutFile = os.path.join(tmpDir, srcObj.Name+'.csg')
         # brepOutFile = os.path.join(tmpDir, srcObj.Name+'.brep')
         print("Call OpenSCAD to create csg file from scad")
@@ -123,14 +122,15 @@ def createBrep(srcObj, mode, tmpDir, wrkSrc):
             importAltCSG.processCSG(wrkDoc, tmpFileName, srcObj.fnmax)
             # *** Does not work for earrings.scad
         shapes = []
-        for cnt, obj in enumerate(wrkDoc.RootObjects, start=1):
+        retShape = Part.Shape()     # Empty Shape
+        for cnt, obj in enumerate(wrkDoc.RootObjects, start=0):
             if hasattr(obj, "Shape"):
                 shapes.append(obj.Shape)
                 print(f"Shapes in WrkDoc {cnt}")        
-        if cnt > 1:
-            retShape = Part.makeCompound(shapes)
-        else:
-            retShape = shapes[0]
+            if cnt > 1:
+                retShape = Part.makeCompound(shapes)
+            else:
+                retShape = shapes[0]
         print(f"CreateBrep Shape {retShape}")
 		#links = []
 		#for cnt, obj in enumerate(wrkDoc.RootObjects):
@@ -266,8 +266,8 @@ class GeometryType(QtGui.QWidget):
         self.layout.addWidget(self.label)
         self.importType = QtGui.QComboBox()
         self.importType.addItem('Mesh')
+        self.importType.addItem('AST-Brep')
         self.importType.addItem('Brep')
-        self.importType.addItem('Opt')
         self.layout.addWidget(self.importType)
         self.setLayout(self.layout)
 

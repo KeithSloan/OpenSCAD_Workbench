@@ -16,6 +16,7 @@ import os
 #import tempfile
 import FreeCAD
 import Part
+import Draft
 import Mesh
 import FreeCAD as App
 from FreeCAD import Vector
@@ -805,7 +806,7 @@ def process_AST_node(node):
 
     # Alternate uses Draft
     #
-    # Alternate uses : mycircle = Draft.makeCircle(r,face=True) # would call doc.recompute
+    # Alternate Import uses : mycircle = Draft.makeCircle(r,face=True) # would call doc.recompute
     # When $fn setting to interpet as a polygon
 
     #mycircle = Draft.makePolygon(n,r) # would call doc.recompute
@@ -831,7 +832,12 @@ def process_AST_node(node):
                 write_log("AST", "Circle missing radius, defaulting to 1")
 
         # Make the wire in canonical XY plane
-        face = Part.makeCircle(r, Vector(0, 0, 0), Vector(0, 0, 1))
+        # Using Draft 
+        part2D = Draft.makeCircle(r,face=True)
+        face = part2D.Shape
+        # Using Part
+        #face = Part.makeCircle(r, Vector(0, 0, 0), Vector(0, 0, 1))
+        #
         #face = Part.Face(edge)
         # Return as a **list of tuples** — this satisfies _as_list and downstream code
         return face, local_pl

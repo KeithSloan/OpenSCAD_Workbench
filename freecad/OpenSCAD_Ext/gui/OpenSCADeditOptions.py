@@ -72,7 +72,7 @@ class GeometryType(QtWidgets.QWidget):
         layout = QtWidgets.QHBoxLayout()
         self.label = QtWidgets.QLabel("Geometry Type")
         self.importType = QtWidgets.QComboBox()
-        self.importType.addItems(["Mesh", "AST_Brep", "Brep"])
+        self.importType.addItems(["Mesh", "AST-Brep", "Brep"])
         layout.addWidget(self.label)
         layout.addWidget(self.importType)
         self.setLayout(layout)

@@ -4,7 +4,11 @@ Safe, PySide2-only interactive SCAD object creator.
 Avoids circular imports and PyQt5 fallback errors.
 """
 
+from PySide2 import QtWidgets, QtCore
+
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+from freecad.OpenSCAD_Ext.gui.OpenSCADeditOptions import OpenSCADeditOptions
+
 import FreeCADGui
 
 #
@@ -30,8 +34,6 @@ def create_scad_object_interactive(
 
 
     # GUI imports inside function to avoid early Qt5 fallback
-    from PySide2 import QtWidgets
-    from freecad.OpenSCAD_Ext.gui.OpenSCADeditOptions import OpenSCADeditOptions
 
     write_log("info", "LOADED create_scad_object_interactive v2")
     write_log(
@@ -39,6 +41,8 @@ def create_scad_object_interactive(
     f"RAW ARGS title={title} newFile={newFile} scadName={scadName} sourceFile={sourceFile}"
     )
 
+    QtWidgets.QApplication.restoreOverrideCursor()
+    QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.ArrowCursor)
 
     #write_log("Dialog",f"newFile = {newFile} sourceFile = {sourceFile}")
     dlg = OpenSCADeditOptions(title,
@@ -49,6 +53,9 @@ def create_scad_object_interactive(
                                 )
     if dlg.exec_() != QtWidgets.QDialog.Accepted:
         return None
+
+    QtWidgets.QApplication.restoreOverrideCursor()
+    QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.ArrowCursor)
 
     params = dlg.getValues()
 

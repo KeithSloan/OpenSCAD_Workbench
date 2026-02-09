@@ -1,9 +1,12 @@
 import FreeCADGui
+from PySide2 import QtWidgets, QtCore
 import os
 import json
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
-from freecad.OpenSCAD_Ext.objects.SCADProjectObject import SCADProjectObject, SCADfileBase
+from freecad.OpenSCAD_Ext.objects.SCADProjectObject import SCADProjectObject
+from freecad.OpenSCAD_Ext.objects.SCADObject import SCADfileBase, ViewSCADProvider
 from freecad.OpenSCAD_Ext.gui.OpenSCADeditOptions import OpenSCADeditOptions
+
 
 
 def importSCADProject(doc, proj_filename):
@@ -48,6 +51,10 @@ def importSCADProject(doc, proj_filename):
     # ONE interactive dialog for project defaults
     # -------------------------------------------------
     
+    QtWidgets.QApplication.restoreOverrideCursor()
+    QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.ArrowCursor)
+
+
     dlg = OpenSCADeditOptions(
         title=project_fc_obj.Label,  
         scadName="Project",
@@ -60,6 +67,8 @@ def importSCADProject(doc, proj_filename):
         doc.removeObject(project_fc_obj.Name)
         return None
 
+    QtWidgets.QApplication.restoreOverrideCursor()
+    QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.ArrowCursor)
 
     #project_fc_obj = doc.addObject("App::DocumentObjectGroup", project_name)
 
@@ -79,45 +88,50 @@ def importSCADProject(doc, proj_filename):
         "Base",
         "Default import mode for SCAD files"
     )
+
+    # populate enum FIRST
     project_fc_obj.DefaultImportMode = SCADfileBase.IMPORT_MODE
-    project_fc_obj.DefaultImportMode = proj_data.get(
-        "default_import_mode", "AST-Brep"
-    )
+
+    # now set from dialog
+    project_fc_obj.DefaultImportMode = dlg.geometryType.getVal()
 
     write_log(
         "ScadProject",
         f"Project default import mode: {project_fc_obj.DefaultImportMode}"
     )
 
-
     # -------------------------------------------------
     # Create SCADFileObjects (NON-interactive)
     # -------------------------------------------------
     created_objects = []
 
+    write_log("project",f" : project path : {proj_filename}")
+    project_directory = os.path.dirname(proj_filename) 
+
     for fentry in files:
+        
         scad_path = fentry.get("path")
+        write_log("Project",f"scad_path : {scad_path}")
+
         if not scad_path:
             write_log("ScadProject", "Skipping file entry without path")
             continue
 
         name = os.path.splitext(os.path.basename(scad_path))[0]
+        sourceName = os.path.join(project_directory, scad_path)
         file_fc_obj = doc.addObject("Part::FeaturePython", name)
+        ViewSCADProvider(file_fc_obj.ViewObject)
 
         file_proxy = SCADfileBase(
             file_fc_obj,
-            scadName=name,           # <-- REQUIRED
-            sourceFile=scad_path,    # <-- REQUIRED
-            mode=project_fc_obj.DefaultImportMode  # optional, default is "Mesh"
+            scadName=name,
+            sourceFile=sourceName,
+            mode=project_fc_obj.DefaultImportMode # Project Default Mode
         )
-
-        # Apply project default ONCE
-        file_fc_obj.mode = project_fc_obj.DefaultImportMode
-        project_fc_obj.addObject(file_fc_obj)
 
         write_log(
             "ScadProject",
-            f"Added SCAD file '{scad_path}' with ImportMode={file_fc_obj.mode}"
+            f"Added SCAD file '{scad_path}' with mode={project_fc_obj.mode}"
         )
 
     doc.recompute()
