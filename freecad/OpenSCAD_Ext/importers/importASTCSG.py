@@ -35,7 +35,7 @@ from pathlib import Path
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.parsers.csg_parser.processAST import process_AST
-from freecad.OpenSCAD_Ext.parsers.csg_parser.parse_csg_file_to_AST_nodes import parse_csg_file_to_AST_nodes
+from freecad.OpenSCAD_Ext.parsers.csg_parser.parse_csg_to_AST import parse_csg_file_to_AST_nodes
 #from freecad.OpenSCAD_Ext.parsers.csg_parser.parse_csg_file_to_AST_nodes import normalize_ast
 
 #

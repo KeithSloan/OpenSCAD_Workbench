@@ -261,7 +261,37 @@ def _format_csg_params(node):
         return ", ".join(f"{k}={v!r}" for k, v in node.csg_params.items())
     return str(node.csg_params)
 
+'''
+def flatten_hull_minkowski_children(node):
+    """
+    Recursively flatten children of a hull node into a list of supported primitives.
+    Returns a list of AST nodes that can be used by the hull operation.
+    """
+    flat_children = []
 
+    for child in node.children:
+        # If child is a primitive we support, keep it
+        if child.node_type in ("cube", "sphere", "cylinder", "polyhedron"):
+            flat_children.append(child)
+
+        # If child is another hull, recurse
+        elif child.node_type in ("hull", "minkowski"):
+            nested = flatten_hull_minkowski_children(child)
+            flat_children.extend(nested)
+
+        # If child is a group, union, difference, etc., recurse into its children
+        elif hasattr(child, "children") and child.children:
+            nested = flatten_hull_minkowski_children(child)
+            flat_children.extend(nested)
+
+        else:
+            write_log("Hull", f"Unsupported node inside hull: {child.node_type}")
+            # Optional: keep raw fallback for safety
+            flat_children.append(child)
+
+    return flat_children
+
+'''
 def flatten_hull_minkowski_node(node, indent=0):
     pad = " " * indent
     scad_lines = []
@@ -288,6 +318,7 @@ def flatten_hull_minkowski_node(node, indent=0):
     # Hull / Minkowski
     # -------------------------
     if node.node_type in ("hull", "minkowski"):
+        
         scad_lines.append(f"{pad}{node.node_type}() {{")
         for child in node.children:
             scad_lines.append(
@@ -353,23 +384,23 @@ def flatten_hull_minkowski_node(node, indent=0):
 
 
 def apply_transform(node):
-    p = node.params
+    params  = node.params
     pl = FreeCAD.Placement()  # identity
 
     if node.node_type == "translate":
-        v = p.get("v")
+        v = params.get("v")
         if v:
             pl.Base = FreeCAD.Vector(*v)
 
     elif node.node_type == "rotate":
-        a = p.get("a")
-        v = p.get("v", [0,0,1])
+        a = params.get("a")
+        v = params.get("v", [0,0,1])
         if a:
             pl.Rotation = FreeCAD.Rotation(FreeCAD.Vector(*v), float(a))
 
 
     elif node.node_type == "multmatrix":
-        m = p.get("matrix")
+        m = params.get("matrix")
         if isinstance(m, FreeCAD.Matrix):
             pl = FreeCAD.Placement(m)
         elif m is not None:
@@ -459,7 +490,44 @@ def dump_nodes_list(node_type, shapes_list):
     elif list_type =="tuple":
         write_log("Dump",f"Tuple {list_type}")
 
+# ------------------------------------------------
+# Polygon functions
+# ------------------------------------------------
 
+
+def points2d_to_vectors(points):
+    return [Vector(p[0], p[1], 0) for p in points]
+
+
+def make_polygon_no_paths(points):
+    verts = points2d_to_vectors(points)
+
+    # OpenSCAD polygons are implicitly closed
+    if verts[0] != verts[-1]:
+        verts.append(verts[0])
+
+    wire = Part.makePolygon(verts)
+    return Part.Face(wire)
+
+
+def make_polygon_with_paths(points, paths):
+    verts = points2d_to_vectors(points)
+    faces = []
+
+    for path in paths:
+        path_verts = [verts[int(i)] for i in path]
+
+        # Close path
+        if path_verts[0] != path_verts[-1]:
+            path_verts.append(path_verts[0])
+
+        wire = Part.makePolygon(path_verts)
+        faces.append(Part.Face(wire))
+
+    if len(faces) == 1:
+        return faces[0]
+
+    return Part.Compound(faces)
 
 def process_AST_node(node):
 
@@ -501,12 +569,12 @@ def process_AST_node(node):
     local_pl = App.Placement()
 
     node_type = getattr(node, "node_type", None)
+    params = node.params
 
     # -----------------------------
     # SOLIDS
     # -----------------------------
     if node_type == "cube":
-        params = node.params
         size = params.get("size", 1)
         center = params.get("center", False)
 
@@ -532,10 +600,9 @@ def process_AST_node(node):
         return (shape, local_pl)
 
     if node_type == "cylinder":
-        p = node.params
-        h = p.get("h", 1)
-        r1 = p.get("r1", p.get("r", 1))
-        r2 = p.get("r2", r1)
+        h = params.get("h", 1)
+        r1 = params.get("r1", params.get("r", 1))
+        r2 = params.get("r2", r1)
 
         if r1 == r2:
             shape = Part.makeCylinder(r1, h)
@@ -606,16 +673,16 @@ def process_AST_node(node):
         write_log("Transform",node_type)
 
         if node_type == "translate":
-            v = node.params.get("v", [0,0,0])
+            v = params.get("v", [0,0,0])
             trans_pl = local_pl.move(App.Vector(*v))
 
         elif node_type == "rotate":
-            a = node.params.get("a", 0)
-            v = node.params.get("v", [0,0,1])
+            a = params.get("a", 0)
+            v = params.get("v", [0,0,1])
             local_pl.Rotation = App.Rotation(App.Vector(*v), a)
 
         elif node_type == "scale":
-            s = node.params.get("v", [1,1,1])
+            s = params.get("v", [1,1,1])
             m = App.Matrix()
             m.A11, m.A22, m.A33 = s
             local_pl = App.Placement(m)
@@ -635,7 +702,7 @@ def process_AST_node(node):
         elif node_type == "multmatrix":
             dump_ast_node(node)
 
-            m = node.params.get("matrix")
+            m = params.get("matrix")
             if not isinstance(m, App.Matrix):
                 raise TypeError(f"multmatrix param is not Matrix: {type(m)}")
 
@@ -657,10 +724,9 @@ def process_AST_node(node):
         write_log("Extrusion",node_type)
         if node_type == "linear_extrude":
             write_log("Extrusion", node_type)
-            p = node.params
-            height = p.get("height", 1)
-            center = p.get("center", False)
-            twist = p.get("twist", 0)      # degrees
+            height = params.get("height", 1)
+            center = params.get("center", False)
+            twist = params.get("twist", 0)      # degrees
 
             solids = []
 
@@ -718,9 +784,8 @@ def process_AST_node(node):
 
         if node_type == "rotate_extrude":
             write_log("Extrusion", node_type)
-            p = node.params
-            angle = p.get("angle", 360)     # degrees
-            center = p.get("center", False)
+            angle = params.get("angle", 360)     # degrees
+            center = params.get("center", False)
             segments = max(int(abs(angle) / 5), 8)  # 5° per segment, min 8
 
             solids = []
@@ -780,8 +845,8 @@ def process_AST_node(node):
         for child in node.children:
 
             lst = _as_list(process_AST_node(child))
-            dump_nodes_list(node_type, lst)
-            for shape, pl in _as_list(process_AST_node(child)):
+            #dump_nodes_list(node_type, lst)
+            for shape, pl in _as_list(lst):
                 s = shape.copy()
                 s.Placement = pl
                 write_log(node_type,f"Child {child} Placement {pl}")
@@ -806,6 +871,25 @@ def process_AST_node(node):
     # 2D 
     # -----------------------------
 
+    # Polygon With and without Paths
+    elif node.node_type == "polygon":
+        params = node.params    # use dict from parser
+        points = params.get("points", [])
+        paths  = params.get("paths")
+
+        if not points:
+            write_log("Polygon", "No points supplied")
+            return None
+
+        # Normalize OpenSCAD 'undef' or missing paths to None
+        if paths is None or (isinstance(paths, str) and paths.lower() == "undef"):
+            # Call the right function
+            shape = make_polygon_no_paths(points)
+        else:
+            shape = make_polygon_with_paths(points, paths)
+
+        return shape, local_pl
+
     # Alternate uses Draft
     #
     # Alternate Import uses : mycircle = Draft.makeCircle(r,face=True) # would call doc.recompute
@@ -822,10 +906,10 @@ def process_AST_node(node):
         write_log("AST", f"Processing Circle: params={node.params}, csg={node.csg_params}")
 
         # Determine radius
-        if "r" in node.params:
-            r = node.params["r"]
+        if "r" in params:
+            r = params["r"]
         elif "d" in node.params:
-            r = node.params["d"] / 2.0
+            r = params["d"] / 2.0
         else:
             try:
                 r = float(node.csg_params.strip())
@@ -847,8 +931,8 @@ def process_AST_node(node):
     elif node.node_type == "square":
         write_log("AST", f"Processing Square: params={node.params}, csg={node.csg_params}")
 
-        if "size" in node.params:
-            size = node.params["size"]
+        if "size" in params:
+            size = params["size"]
         else:
             try:
                 size = float(node.csg_params.strip())
@@ -875,47 +959,6 @@ def process_AST_node(node):
         face = Part.Face(wire)
         return face, local_pl
 
-
-    # Polygon
-    # With and without Path ?
-    '''
-    def p_polygon_action_nopath(p) :
-        'polygon_action_nopath : polygon LPAREN points EQ OSQUARE points_list_2d ESQUARE COMMA paths EQ undef COMMA keywordargument_list RPAREN SEMICOL'
-        if printverbose: print("Polygon")
-        if printverbose: print(p[6])
-        v = convert_points_list_to_vector(p[6])
-        mypolygon = doc.addObject('Part::Feature',p[1])
-        if printverbose: print("Make Parts")
-        # Close Polygon
-        v.append(v[0])
-        parts = Part.makePolygon(v)
-        if printverbose: print("update object")
-        mypolygon.Shape = Part.Face(parts)
-        p[0] = [mypolygon]
-
-    def p_polygon_action_plus_path(p) :
-        'polygon_action_plus_path : polygon LPAREN points EQ OSQUARE points_list_2d ESQUARE COMMA paths EQ OSQUARE path_set ESQUARE COMMA keywordargument_list RPAREN SEMICOL'
-        if printverbose: print(f"Polygon with Path : len {len(p[6])} {p[6]}")
-        v = convert_points_list_to_vector(p[6])
-        # Make sure a closed list
-        v.append(v[0])
-        if printverbose: print(f"Path Set List {p[12]}")
-        for i in p[12] :
-            if printverbose: print(f"Set entry {i}")
-            mypolygon = doc.addObject('Part::Feature','wire')
-            path_list = []
-            for j in i :
-                j = int(j)
-                if printverbose: print(f"index {j}")
-                path_list.append(v[j])
-    #        Close path
-            path_list.append(v[int(i[0])])
-            if printverbose: print(f"Path List {path_list}")
-            wire = Part.makePolygon(path_list)
-            mypolygon.Shape = Part.Face(wire)
-            p[0] = [mypolygon]
-    #        This only pushes last polygon
-    '''
 
     # -----------------------------
     # FALLBACK

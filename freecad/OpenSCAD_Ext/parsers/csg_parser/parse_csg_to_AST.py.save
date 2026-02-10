@@ -171,7 +171,6 @@ def parse_csg_lines(lines, start=0, indent=0, max_depth=1000):
         if opens_block:
             children, next_i = parse_csg_lines(lines, i + 1, indent + 1, max_depth)
 
-        # Parse CSG parameters safely
         try:
             params, csg_positional = parse_csg_params(raw_csg_params)
         except Exception as e:
@@ -184,39 +183,14 @@ def parse_csg_lines(lines, start=0, indent=0, max_depth=1000):
                 params["size"] = csg_positional if csg_positional is not None else 1
             params.setdefault("center", False)
 
-        # Polygon and Polyhedron special param handling
-        if node_type in ("polygon", "polyhedron"):
-            poly_params = {}
-            for p in split_top_level_commas(raw_csg_params or ""):
-                if "=" not in p:
-                    continue
-                k, v = p.split("=", 1)
-                k, v = k.strip(), v.strip()
-                try:
-                    poly_params[k] = ast.literal_eval(v)
-                except Exception:
-                    poly_params[k] = v
-
-            if node_type == "polygon":
-                params["points"] = poly_params.get("points", [])
-                params["paths"] = poly_params.get("paths")
-                params["convexity"] = poly_params.get("convexity")
-            else:
-                # polyhedron
-                params["points"] = poly_params.get("points", [])
-                params["faces"] = poly_params.get("faces", [])
-                params["convexity"] = poly_params.get("convexity")
-
         # Create AST node safely
         cls = NODE_CLASSES.get(node_type)
-
         if cls is None:
             node = UnknownNode(node_type, params, raw_csg_params, children)
         else:
             try:
+                # MultMatrix handling
                 if node_type == "multmatrix":
-                    # Safe MultMatrix parsing
-                    fm = None
                     try:
                         mat_list = ast.literal_eval(raw_csg_params)
                         if len(mat_list) != 4 or any(len(row) != 4 for row in mat_list):
@@ -228,16 +202,57 @@ def parse_csg_lines(lines, start=0, indent=0, max_depth=1000):
                     fm.A21, fm.A22, fm.A23, fm.A24 = mat_list[1]
                     fm.A31, fm.A32, fm.A33, fm.A34 = mat_list[2]
                     params["matrix"] = fm
-
                     node = cls(children=children, params=params, csg_params=raw_csg_params)
                     node.matrix = fm
+
+                # Polygon
+                elif node_type == "polygon":
+                    poly_params = {}
+                    for p in split_top_level_commas(raw_csg_params or ""):
+                        if "=" not in p:
+                            continue
+                        k, v = p.split("=", 1)
+                        k, v = k.strip(), v.strip()
+                        try:
+                            poly_params[k] = ast.literal_eval(v)
+                        except Exception:
+                            poly_params[k] = v
+
+                    params["points"] = poly_params.get("points", [])
+                    params["paths"] = poly_params.get("paths")
+                    params["convexity"] = poly_params.get("convexity")
+
+                    node = cls(children=children, params=params, csg_params=raw_csg_params)
+
+                # Polyhedron
+                elif node_type == "polyhedron":
+                    poly_params = {}
+                    for p in split_top_level_commas(raw_csg_params or ""):
+                        if "=" not in p:
+                            continue
+                        k, v = p.split("=", 1)
+                        k, v = k.strip(), v.strip()
+                        try:
+                            poly_params[k] = ast.literal_eval(v)
+                        except Exception:
+                            poly_params[k] = v
+                    params["points"] = poly_params.get("points", [])
+                    params["faces"] = poly_params.get("faces", [])
+                    params["convexity"] = poly_params.get("convexity")
+                    node = cls(children=children, params=params, csg_params=raw_csg_params)
+
                 else:
-                    # Normal node
                     node = cls(children=children, params=params, csg_params=raw_csg_params)
 
             except Exception as e:
                 write_log("CSG_PARSE", f"AST node creation failed for '{node_type}': {e}")
-                node = AstNode(node_type, params, raw_csg_params, children)
+                node = AstNode(
+                    node_type,
+                    params,
+                    raw_csg_params,
+                    children
+                    )
+
 
         nodes.append(node)
         i = max(next_i, i + 1)
