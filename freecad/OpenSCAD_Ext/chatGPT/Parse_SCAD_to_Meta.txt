@@ -1,0 +1,628 @@
+Wish to parse/scan a SCAD file creating a meta structure
+
+Looking for 
+
+initial variables / config
+initial $fn, $fa $fs
+use of libs.
+single call followings includes/use
+contains modules
+   includes just before / after module
+contains functions
+contains includes in comments BOSL/BOSL2
+initial comments
+
+Want to create a classification
+which will depend on combinations of the above
+function to return classification
+
+Any python libs that would helo?
+
+stage 2 - store in tinydb? Hash codes?
+
+Large Comments ? file_path, start_line, end_line
+
+Data class variable ?
+
+Some Data Classes created for Library scan
+
+And some example files.
+
+# --- Data Classes ---
+class SCADArgument:
+    def __init__(self, name, default=None, description=None):
+        self.name = name
+        self.default = default
+        self.description = description
+
+
+class SCADModule:
+    def __init__(self, name):
+        self.name = name
+        self.description = ""
+        self.synopsis = ""
+        self.usage = []
+        self.includes = []
+        self.arguments = []
+
+        
+class SCADMeta:
+    def __init__(self, filename):
+        self.sourceFile = filename
+        self.baseName = os.path.basename(filename)
+        self.includes = []          # Includes in the file
+        self.comment_includes = []  # Includes found in file header comments
+        self.modules = []           # List of SCADModule objects
+
+
+
+
+
+Typical section of the SCAD file
+
+//////////////////////////////////////////////////////////////////////
+// LibFile: linear_bearings.scad
+//   Mounts and models for LMxUU style linear bearings.
+// Includes:
+//   include <BOSL2/std.scad>
+//   include <BOSL2/linear_bearings.scad>
+// FileGroup: Parts
+// FileSummary: Mounts for LMxUU style linear bearings.
+//////////////////////////////////////////////////////////////////////
+
+_BOSL2_LINEAR_BEARINGS = is_undef(_BOSL2_STD) && (is_undef(BOSL2_NO_STD_WARNING) || !BOSL2_NO_STD_WARNING) ?
+       echo("Warning: linear_bearings.scad included without std.scad; dependencies may be missing\nSet BOSL2_NO_STD_WARNING = true to mute this warning.") true : true;
+
+
+include <screws.scad>
+
+
+// Section: Generic Linear Bearings
+
+// Module: linear_bearing_housing()
+// Synopsis: Creates a generic linear bearing mount clamp.
+// SynTags: Geom
+// Topics: Parts, Bearings
+// See Also: linear_bearing(), lmXuu_info(), ball_bearing()
+// Usage:
+//   linear_bearing_housing(d, l, tab, gap, wall, tabwall, screwsize) [ATTACHMENTS];
+// Description:
+//   Creates a model of a clamp to hold a generic linear bearing cartridge.
+// Arguments:
+//   d = Diameter of linear bearing. (Default: 15)
+//   l = Length of linear bearing. (Default: 24)
+//   tab = Clamp tab height. (Default: 8)
+//   tabwall = Clamp Tab thickness. (Default: 5)
+//   wall = Wall thickness of clamp housing. (Default: 3)
+//   gap = Gap in clamp. (Default: 5)
+//   screwsize = Size of screw to use to tighten clamp. (Default: 3)
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example:
+//   linear_bearing_housing(d=19, l=29, wall=2, tab=8, screwsize=2.5);
+module linear_bearing_housing(d=15, l=24, tab=8, gap=5, wall=3, tabwall=5, screwsize=3, anchor=BOTTOM, spin=0, orient=UP)
+{
+    od = d+2*wall;
+    ogap = gap+2*tabwall;
+    tabh = tab/2+od/2*sqrt(2)-ogap/2-1;
+    h = od+tab/2;
+    anchors = [
+        named_anchor("axis", [0,0,-tab/2/2]),
+        named_anchor("screw", [0,2-ogap/2,tabh-tab/2/2],FWD),
+        named_anchor("nut", [0,ogap/2-2,tabh-tab/2/2],FWD)
+    ];
+    attachable(anchor,spin,orient, size=[l, od, h], anchors=anchors) {
+        down(tab/2/2)
+        difference() {
+            union() {
+                // Housing
+                zrot(90) teardrop(r=od/2,h=l);
+
+                // Base
+                cube([l,od,od/2], anchor=TOP);
+
+                // Tabs
+                cube([l,ogap,od/2+tab/2], anchor=BOTTOM);
+            }
+
+            // Clear bearing space
+            zrot(90) teardrop(r=d/2,h=l+0.05);
+
+            // Clear gap
+            cube([l+0.05,gap,od], anchor=BOTTOM);
+
+            up(tabh) {
+                screwsize = is_string(screwsize)? screwsize : str("M",screwsize);
+
+                // Screwhole
+                fwd(ogap/2-2+0.01)
+                    screw_hole(str(screwsize,",",ogap), head="socket", counterbore=3, anchor="head_bot", orient=FWD, $fn=12);
+
+                // Nut holder
+                back(ogap/2-2+0.01)
+                    nut_trap_inline(tabwall, screwsize, orient=BACK);
+            }
+        }
+        children();
+    }
+}
+
+NEXT File
+#########
+
+
+// Module: linear_bearing()
+// Synopsis: Creates a generic linear bearing cartridge.
+// SynTags: Geom
+// Topics: Parts, Bearings
+// See Also: linear_bearing_housing(), lmXuu_info(), ball_bearing()
+// Usage:
+//   linear_bearing(l, od, id, length) [ATTACHMENTS];
+// Description:
+//   Creates a rough model of a generic linear ball bearing cartridge.
+// Arguments:
+//   l/length = The length of the linear bearing cartridge.
+//   od = The outer diameter of the linear bearing cartridge.
+//   id = The inner diameter of the linear bearing cartridge.
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#subsection-anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#subsection-spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#subsection-orient).  Default: `UP`
+// Example:
+//   linear_bearing(l=24, od=15, id=8);
+module linear_bearing(l, od=15, id=8, length, anchor=CTR, spin=0, orient=UP) {
+    l = first_defined([l, length, 24]);
+    attachable(anchor,spin,orient, d=od, l=l) {
+        color("silver") {
+            tube(id=id, od=od, l=l-1);
+            tube(id=od-1, od=od, l=l);
+            tube(id=id, od=id+1, l=l);
+            tube(id=id+2, od=od-2, l=l);
+        }
+        children();
+    }
+}
+
+NEXT File
+#########
+
+
+// =============================================================================
+//
+// Small keyring container
+//
+// Copyright Darren Faulke (Autistech) Feb 2024
+//
+// Version 2.0
+//
+// 1.0
+//  Initial code.
+// 2.0
+//  Redesigned to have internal thread on main body
+// 2.1
+//  Updated due to changes with BOSL2 library
+//  Added license for release to Printables
+//
+// =============================================================================
+
+// =============================================================================
+// License
+// =============================================================================
+// This material is licensed under the Creative Commons
+// CC BY-NC-SA 4.0 Deed.
+// See https://creativecommons.org/licenses/by-nc-sa/4.0/
+//
+// Attribution — You must give appropriate credit , provide a link to the
+// license, and indicate if changes were made . You may do so in any
+// reasonable manner, but not in any way that suggests the licensor
+// endorses you or your use.
+//
+// NonCommercial — You may not use the material for commercial purposes.
+//
+// ShareAlike — If you remix, transform, or build upon the material, you must
+// distribute your contributions under the same license as the original.
+//
+// No additional restrictions — You may not apply legal terms or technological
+// measures that legally restrict others from doing anything the license
+// permits. 
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Customisation
+// -----------------------------------------------------------------------------
+
+// Cannister body
+can_h =  20;    // Cannister height
+can_d =  10;    // Cannister diameter (internal)
+can_t = 1.2;    // Cannister wall thickness
+can_b = 1.2;    // Cannister bottom thickness
+
+// Cap
+cap_h = 5;      // Cap height
+cap_t = 1.2;    // Cap wall thickness
+cap_b = 1.2;    // Cap bottom thickness
+
+// Cap ring
+rng_d = 2.0;    // Ring hole size
+rng_t = 1.0;    // Ring wall thickness
+rng_w = 3.0;    // Ring width
+
+// Thread
+thr_p = 1.0;                // Thread pitch
+thr_l = 3.0;                // Thread length
+
+// Texture body
+txb_b = true;               // Texture on/off Boolean
+txb_n = "trunc_diamonds";   // Texture name
+txb_s = [3, 3];             // Texture size
+txb_d = 0.4;                // Texture depth factor
+txb_i = 1.0;                // Texture inset depth
+txb_o = [0.1, 0.1];         // Factor offsets from ends for texture
+txb_z = "default";
+
+// Texture cap
+txc_b = true;               // Texture on/off Boolean
+txc_n = "wave_ribs";        // Texture name
+txc_s = [2, 10];            // Texture size
+txc_d = 0.2;                // Texture depth factor
+txc_i = 0.0;                // Texture inset depth
+txc_o = [0.2, 0.2];         // Factor offsets from ends for texture
+txc_z = "concave";
+
+// parameter lists
+can = [can_h, can_d, can_t, can_b];
+cap = [cap_h, cap_t, cap_b];
+rng = [rng_d, rng_t, rng_w];
+thr = [thr_p, thr_l];
+
+txb = [txb_b, txb_n, txb_s, txb_d, txb_i, txb_o, txb_z];
+txc = [txc_b, txc_n, txc_s, txc_d, txc_i, txc_o, txc_z];
+
+// Tolerance
+tol  = 0.1;     // Tolerance for ring fit
+slop = 0.1;    // Tolerance for thread fit.
+
+// =============================================================================
+// Libraries
+// =============================================================================
+
+include <BOSL2/std.scad>
+include <BOSL2/threading.scad>
+
+// =============================================================================
+// Modules
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Creates the main body outer shell
+// -----------------------------------------------------------------------------
+module can_shell(can, tex)
+{
+    hh = can[0];
+    dd = can[1];
+    tt = can[2];
+    bb = can[3];
+
+    tb = tex[0];
+    tn = tex[1];
+    ts = tex[2];
+    td = tex[3];
+    ti = tex[4];
+    to = tex[5];
+    tz = tex[6];
+
+    hh1 = to[0] * hh;
+    hh2 = (1 - to[0] - to[1]) * hh;
+    hh3 = to[1] * hh;
+
+    if (tb)
+    {
+        cyl(h = hh1,
+            d = dd + 2 * tt,
+            anchor = BOTTOM,
+            chamfer1 = 0.4,
+            $fn = 100);
+
+        translate([0, 0, hh1])
+        cyl(h = hh2,
+            d = dd + 2 * tt,
+            anchor = BOTTOM, $fn = 100,
+            texture = tn,
+            tex_size = ts,
+            tex_inset = ti,
+            tex_style = tz,
+            tex_scale = td);
+
+        translate([0, 0, hh1 + hh2])
+        cyl(h = hh3,
+            d = dd + 2 * tt,
+            anchor = BOTTOM,
+            chamfer2 = 0.4,
+            $fn = 100);
+    }
+    else
+        cyl(h = hh,
+            d = dd + 2 * tt,
+            chamfer = 0.4,
+            anchor = BOTTOM,
+            $fn = 100);
+
+}
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Creates the inner profile
+// -----------------------------------------------------------------------------
+module can_inner(can, thr)
+{
+    hh = can[0];
+    dd = can[1];
+    tt = can[2];
+    bb = can[3];
+
+    tp = thr[0];
+    tl = thr[1];
+
+    translate([0, 0, bb])
+        cyl(h = hh - bb - tl - tt,
+            d = dd,
+            chamfer1 = 0.4,
+            anchor = BOTTOM,
+            $fn = 100);
+
+    // Threaded part
+    translate([0, 0, hh - tl - tt - 0.1])
+    threaded_rod(d = dd,
+                 l = tl + 0.2,
+                 pitch = tp,
+                 internal = true,
+                 anchor = BOTTOM,
+                 $fn = 100,
+                 $slop = slop);
+
+    // Chamfer
+    translate([0, 0, hh - tt - 0.1])
+    cyl(h = tt + 0.2,
+        d1 = dd,
+        d2 = dd + tt,
+        anchor = BOTTOM,
+        $fn = 100);
+}
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Creates the cap shell
+// -----------------------------------------------------------------------------
+module cap_shell(can, cap, tex, thr)
+{
+    hh = cap[0];
+    tt = cap[1];
+    bb = cap[2];
+    dd = can[1];
+
+    tb = tex[0];
+    tn = tex[1];
+    ts = tex[2];
+    td = tex[3];
+    ti = tex[4];
+    to = tex[5];
+    tz = tex[6];
+
+    tp = thr[0];
+    tl = thr[1];
+
+    hh1 = to[0] * hh;
+    hh2 = (1 - to[0] - to[1]) * hh;
+    hh3 = to[1] * hh;
+
+    // Thread
+    threaded_rod(d = dd,
+                 l = tl,
+                 pitch = tp,
+                 anchor = BOTTOM,
+                 $fn = 100);
+
+    translate([0, 0, tl])
+    cyl(h = tt,
+        d1 = dd,
+        d2 = dd + tt,
+        anchor = BOTTOM,
+        $fn = 100);
+
+
+    if (tb)
+    {
+        translate([0, 0, tl + tt])    
+        cyl(h = hh1,
+            d = dd + 2 * tt,
+            chamfer1 = 0.4,
+            anchor = BOTTOM,
+            $fn = 100);
+
+        translate([0, 0, tl + tt + hh1])
+        cyl(h = hh2,
+            d = dd + 2 * tt,
+            anchor = BOTTOM, $fn = 100,
+            texture = tn,
+            tex_size = ts,
+            tex_inset = ti,
+            tex_style = tz,
+            tex_scale = td);
+
+        translate([0, 0, tl + tt + hh1 + hh2])
+        cyl(h = hh3,
+            d = dd + 2 * tt,
+            chamfer2 = 0.4,
+            anchor = BOTTOM,
+            $fn = 100);
+    }
+    else
+    {
+        translate([0, 0, tl + tt])
+        cyl(h = hh,
+            d = dd + 2 * tt,
+            chamfer = 0.4,
+            anchor = BOTTOM,
+            $fn = 100);
+    }
+}
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Creates the cap inner
+// -----------------------------------------------------------------------------
+module cap_inner(can, cap, thr)
+{
+    hh = cap[0];
+    tt = cap[1];
+    bb = cap[2];
+    dd = can[1];
+
+    tl = thr[1];
+    
+    translate([0, 0, -0.1])
+    cyl(d = dd - 2 * tt,
+        h = hh - bb + tl + tt + 0.1,
+        anchor = BOTTOM,
+        $fn = 100);
+        
+    // Hole for ring
+    translate([0, 0, hh - bb + tl + tt - 0.1])
+    cyl(d = dd - 4 * tt,
+        h = bb + 0.2,
+        anchor = BOTTOM,
+        $fn = 100);
+}
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Creates the cap ring
+// -----------------------------------------------------------------------------
+module cap_ring(can, cap, rng)
+{
+    hh = cap[0];
+    tt = cap[1];
+    bb = cap[2];
+    dd = can[1];
+
+    rd = rng[0];
+    rt = rng[1];
+    ww = rng[2];
+
+    cyl(d = dd - 2 * (tt + tol),
+        h = bb,
+        anchor = BOTTOM,
+        $fn = 100);
+
+    translate([0, 0, bb])
+    cyl(d = dd - 4 * (tt + tol),
+        h = bb,
+        anchor = BOTTOM,
+        $fn = 100);
+
+    translate([0, 0, bb * 2])
+    intersection()
+    {
+        translate([0, 0, -0.1])
+        cyl(d = dd - 4 * (tt + tol),
+            h = rd + rt + 0.1,
+            anchor = BOTTOM,
+            $fn = 100);
+            
+        difference()
+        {
+            translate([0, 0, -0.1])
+            cuboid([dd - 4 * (tt + tol), ww, rd + rt + 0.1],
+                    chamfer = rt,
+                    edges = TOP,
+                    anchor = BOTTOM);
+            translate([0, 0, rd / 2])
+            rotate([90, 0, 0])
+            cyl(d = rd, h = ww + 0.2, $fn = 8, spin = 22.5);
+        }
+    }
+}
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Assembles the body
+// -----------------------------------------------------------------------------
+module body()
+{
+    difference()
+    {
+        can_shell(can, txb);
+        can_inner(can, thr);
+    }
+}
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Assembles the cap
+// -----------------------------------------------------------------------------
+module cap()
+{
+    difference()
+    {
+        cap_shell(can, cap, txc, thr);
+        cap_inner(can, cap, thr);
+    }
+}
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Assembles the ring
+// -----------------------------------------------------------------------------
+module ring()
+{
+    cap_ring(can, cap, rng);
+}
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Compiles the parts
+// -----------------------------------------------------------------------------
+module main()
+{
+    body();
+    translate([0, 0, can[0] * 1.2])
+    cap();
+    translate([0, 0, can[0] * 1.2 + thr[1] + cap[0] * 2.0])
+    ring();
+}
+// -----------------------------------------------------------------------------
+
+// =============================================================================
+// Main
+// =============================================================================
+
+main();
+
+NEXT File
+#########
+
+// Shallow Hexagon Test Form for 3D Printing
+// Designed to lie flat on XY plane
+
+// Parameters
+hex_radius = 30;      // Distance from center to corner (mm)
+hex_height = 5;       // Height of the hexagon (shallow for testing)
+$fn = 6;              // Number of facets (6 = hexagon)
+
+
+// Alternative: Hexagon with hole in center 
+difference() {
+    cylinder(h = hex_height, r = hex_radius, center = false);
+    translate([0, 0, -0.5])
+        cylinder(h = hex_height + 1, r = hex_radius * 0.5, center = false);
+}
+
+
+
+
+Please instrument function with "write_log("Info", msg)
+and make sure any file uses
+
+from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
