@@ -445,6 +445,7 @@ class SCADfileBase:
 
         if prop in ['mode']:
             print(f"Change of Mode")
+            self.renderFunction(fp)
 
         if prop in ["execute","mode"]:
             if fp.execute == True:

@@ -50,6 +50,11 @@ def setup_importers():
     )
 
     FreeCAD.addImportType(
+        "External OpenSCAD Workbench : New (Alpha) import SCADFile Object (*.scad)",
+        f"{IMPORTER_BASE}.importFileSCAD"
+    )
+
+    FreeCAD.addImportType(
         "External OpenSCAD Workbench : New : import openscad_studio file (*.scadproj)",
         f"{IMPORTER_BASE}.importSCADProject"
     )
