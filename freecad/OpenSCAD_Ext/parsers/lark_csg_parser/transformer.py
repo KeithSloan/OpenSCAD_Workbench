@@ -1,39 +1,106 @@
-@v_args(inline=True)
+from lark import Transformer
+import ast_nodes
+
+
 class CSGTransformer(Transformer):
-    def __init__(self, node_classes):
-        self.node_classes = node_classes
 
-    def block_node(self, header, *children):
-        cls, params = header
-        obj = cls(*params)
-        obj.children = list(children)
-        return obj
+    def start(self, items):
+        return items
 
-    def leaf_node(self, header):
-        cls, params = header
-        return cls(*params)
+    # -------------------------
+    # Primitives
+    # -------------------------
 
-    def node_header(self, name, *params):
-        cls = self.node_classes.get(str(name))
+    def primitive(self, items):
+        keyword = items[0]
+        params, children = self._extract(items[1:] if len(items) > 1 else [])
+
+        return self._build_node(keyword, params, children)
+
+    # -------------------------
+    # Boolean ops
+    # -------------------------
+
+    def boolean_op(self, items):
+        keyword = items[0]
+        params, children = self._extract(items[1:])
+        return self._build_node(keyword, params, children)
+
+    # -------------------------
+    # Transforms
+    # -------------------------
+
+    def transform(self, items):
+        keyword = items[0]
+        params, children = self._extract(items[1:])
+        return self._build_node(keyword, params, children)
+
+    # -------------------------
+    # Helpers
+    # -------------------------
+
+    def call_block(self, items):
+        return items
+
+    def block(self, items):
+        return items
+
+    def param_list(self, items):
+        return items
+
+    def param(self, items):
+        if len(items) == 2:
+            return (items[0], items[1])
+        return items[0]
+
+    def vector(self, items):
+        return items
+
+    def NAME(self, token):
+        return str(token)
+
+    def NUMBER(self, token):
+        return float(token)
+
+    # -------------------------
+    # Internal utilities
+    # -------------------------
+
+    def _extract(self, items):
+        params = {}
+        children = []
+
+        for item in items:
+            if isinstance(item, tuple):
+                params[item[0]] = item[1]
+            elif isinstance(item, list):
+                children.extend(item)
+
+        return params, children
+
+    def _build_node(self, keyword, params, children):
+
+        mapping = {
+            "cube": ast_nodes.Cube,
+            "sphere": ast_nodes.Sphere,
+            "cylinder": ast_nodes.Cylinder,
+            "union": ast_nodes.Union,
+            "difference": ast_nodes.Difference,
+            "intersection": ast_nodes.Intersection,
+            "hull": ast_nodes.Hull,
+            "group": ast_nodes.Group,
+            "translate": ast_nodes.Translate,
+            "rotate": ast_nodes.Rotate,
+            "scale": ast_nodes.Scale,
+            "multmatrix": ast_nodes.MultMatrix,
+        }
+
+        cls = mapping.get(keyword, None)
+
         if cls is None:
-            raise ValueError(f"Unknown node type: {name}")
-        return cls, list(params)
+            return ast_nodes.UnknownNode(keyword, params=params, children=children)
 
-    def number(self, n):
-        return float(n)
+        if keyword in ["union", "difference", "intersection", "hull", "group"]:
+            return cls(children=children, params=params)
 
-    def string(self, s):
-        return s[1:-1]  # remove quotes
-
-    def vector(self, *vals):
-        return list(vals)
-
-    def true(self):
-        return True
-
-    def false(self):
-        return False
-
-    def name_param(self, name):
-        return str(name)
-
+        return cls(params=params, children=children)

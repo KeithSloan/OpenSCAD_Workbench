@@ -1,34 +1,61 @@
-from lark import Lark, Transformer, v_args
-
 CSG_GRAMMAR = r"""
-?start: node+
+    start: statement*
 
-?node: node_header "{" node* "}"     -> block_node
-     | node_header                     -> leaf_node
+    ?statement: primitive
+              | boolean_op
+              | transform
+              | ";"
 
-node_header: NAME "(" [params] ")"     -> node_header
+    // -------------------------
+    // Primitives
+    // -------------------------
 
-?params: param ("," param)*
-?param: number
-      | vector
-      | string
-      | NAME                         -> name_param
-      | "true"                        -> true
-      | "false"                       -> false
+    primitive: "cube" call_block?
+             | "sphere" call_block?
+             | "cylinder" call_block?
 
-vector: "[" [number ("," number)*] "]"
+    // -------------------------
+    // Boolean ops
+    // -------------------------
 
-number: SIGNED_NUMBER
+    boolean_op: "union" call_block
+              | "difference" call_block
+              | "intersection" call_block
+              | "hull" call_block
+              | "group" call_block
 
-string: ESCAPED_STRING
+    // -------------------------
+    // Transforms
+    // -------------------------
 
-NAME: /[a-zA-Z_][a-zA-Z0-9_]*/
+    transform: "translate" call_block
+             | "rotate" call_block
+             | "scale" call_block
+             | "multmatrix" call_block
 
-%import common.SIGNED_NUMBER
-%import common.ESCAPED_STRING
-%import common.WS
-%ignore WS
-%ignore /\/\/[^\n]*/   // C++ style comments
+    // -------------------------
+    // Call with optional params and block
+    // -------------------------
+
+    call_block: "(" param_list? ")" block?
+              | block
+
+    block: "{" statement* "}"
+
+    param_list: param ("," param)*
+    param: NAME "=" expr
+         | expr
+
+    ?expr: NUMBER
+         | vector
+         | NAME
+
+    vector: "[" [expr ("," expr)*] "]"
+
+    NAME: /[a-zA-Z_]\w*/
+    NUMBER: /-?[0-9]+(\.[0-9]+)?/
+
+    %import common.WS
+    %ignore WS
+    %ignore /\/\/[^\n]*/
 """
-
-
