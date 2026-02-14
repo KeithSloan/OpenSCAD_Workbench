@@ -136,6 +136,17 @@ def flatten_ast_node_back_to_csg(node, indent=0):
         return "\n".join(filter(None, scad_lines))
 
     # -------------------------
+    # Block-style operations
+    # -------------------------
+    if node.node_type in ("offset", "resize", "mirror", "projection"):
+        params = _format_csg_params(node) or ""
+        scad_lines.append(f"{pad}{node.node_type}({params}) {{")
+        for child in node.children:
+            scad_lines.append(flatten_ast_node_back_to_csg(child, indent + 4))
+        scad_lines.append(f"{pad}}}")
+        return "\n".join(filter(None, scad_lines))
+
+    # -------------------------
     # Text (always OpenSCAD fallback)
     # -------------------------
     if node.node_type == "text":
