@@ -30,6 +30,7 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_utils import dump_ast_node
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import (
     Hull, Minkowski
     )
+from freecad.OpenSCAD_Ext.parsers.csg_parser.flattenAST_to_csg import flatten_ast_node_back_to_csg
 
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_utils import call_openscad_scad_string#
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_polyhedron import process_polyhedron
@@ -184,7 +185,7 @@ def fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60)
     write_log(operation_type, f"{operation_type} fallback to OpenSCAD")
 
     # Flatten node to SCAD string
-    scad_str = flatten_hull_minkowski_node(node, indent=4)
+    scad_str = flatten_ast_node_back_to_csg(node, indent=4)
     write_log("CSG", scad_str)
 
     # Generate STL via OpenSCAD CLI
@@ -242,180 +243,6 @@ def try_minkowski(node):
     # Returning None for now to trigger OpenSCAD fallback
     write_log("AST_Minkowski", "Native Minkowski not implemented, falling back")
     return None
-
-
-# ============================================================
-# SCAD flattening (Hull / Minkowski fallback)
-# ============================================================
-
-def _format_csg_params(node):
-    """
-    Return parameter string for OpenSCAD reconstruction.
-    Prefers raw csg_params if present.
-    """
-    if node.csg_params is None:
-        return ""
-    if isinstance(node.csg_params, str):
-        return node.csg_params
-    if isinstance(node.csg_params, dict):
-        return ", ".join(f"{k}={v!r}" for k, v in node.csg_params.items())
-    return str(node.csg_params)
-
-'''
-def flatten_hull_minkowski_children(node):
-    """
-    Recursively flatten children of a hull node into a list of supported primitives.
-    Returns a list of AST nodes that can be used by the hull operation.
-    """
-    flat_children = []
-
-    for child in node.children:
-        # If child is a primitive we support, keep it
-        if child.node_type in ("cube", "sphere", "cylinder", "polyhedron"):
-            flat_children.append(child)
-
-        # If child is another hull, recurse
-        elif child.node_type in ("hull", "minkowski"):
-            nested = flatten_hull_minkowski_children(child)
-            flat_children.extend(nested)
-
-        # If child is a group, union, difference, etc., recurse into its children
-        elif hasattr(child, "children") and child.children:
-            nested = flatten_hull_minkowski_children(child)
-            flat_children.extend(nested)
-
-        else:
-            write_log("Hull", f"Unsupported node inside hull: {child.node_type}")
-            # Optional: keep raw fallback for safety
-            flat_children.append(child)
-
-    return flat_children
-
-'''
-def flatten_hull_minkowski_node(node, indent=0):
-    pad = " " * indent
-    scad_lines = []
-
-    if node is None:
-        return ""
-
-    write_log(
-        "FLATTEN",
-        f"{pad}Flatten node: {node.node_type}, "
-        f"children={len(getattr(node, 'children', []))}, "
-        f"csg_params={getattr(node, 'csg_params', None)}"
-    )
-
-    # -------------------------
-    # Transparent group
-    # -------------------------
-    if node.node_type == "group":
-        for child in node.children:
-            scad_lines.append(flatten_hull_minkowski_node(child, indent))
-        return "\n".join(filter(None, scad_lines))
-
-    # -------------------------
-    # Hull / Minkowski
-    # -------------------------
-    if node.node_type in ("hull", "minkowski"):
-        
-        scad_lines.append(f"{pad}{node.node_type}() {{")
-        for child in node.children:
-            scad_lines.append(
-                flatten_hull_minkowski_node(child, indent + 4)
-            )
-        scad_lines.append(f"{pad}}}")
-        return "\n".join(filter(None, scad_lines))
-
-    # -------------------------
-    # MultMatrix
-    # -------------------------
-    if node.node_type == "multmatrix":
-        matrix_str = _format_csg_params(node)
-        scad_lines.append(f"{pad}multmatrix({matrix_str}) {{")
-        for child in node.children:
-            scad_lines.append(
-                flatten_hull_minkowski_node(child, indent + 4)
-            )
-        scad_lines.append(f"{pad}}}")
-        return "\n".join(filter(None, scad_lines))
-
-    # -------------------------
-    # Linear Extrude
-    # -------------------------
-    if node.node_type == "linear_extrude":
-        params = _format_csg_params(node)
-        scad_lines.append(f"{pad}linear_extrude({params}) {{")
-        for child in node.children:
-            scad_lines.append(
-                flatten_hull_minkowski_node(child, indent + 4)
-            )
-        scad_lines.append(f"{pad}}}")
-        return "\n".join(filter(None, scad_lines))
-
-    # -------------------------
-    # Rotate Extrude
-    # -------------------------
-    if node.node_type == "rotate_extrude":
-        params = _format_csg_params(node)
-        scad_lines.append(f"{pad}rotate_extrude({params}) {{")
-        for child in node.children:
-            scad_lines.append(
-                flatten_hull_minkowski_node(child, indent + 4)
-            )
-        scad_lines.append(f"{pad}}}")
-        return "\n".join(filter(None, scad_lines))
-
-    # -------------------------
-    # Text (always OpenSCAD fallback)
-    # -------------------------
-    if node.node_type == "text":
-        params = _format_csg_params(node)
-        return f"{pad}text({params});"
-
-    # -------------------------
-    # Generic fallback (cube, sphere, etc.)
-    # -------------------------
-    params = _format_csg_params(node)
-    if params:
-        return f"{pad}{node.node_type}({params});"
-    else:
-        return f"{pad}{node.node_type}();"
-
-
-def apply_transform(node):
-    params  = node.params
-    pl = FreeCAD.Placement()  # identity
-
-    if node.node_type == "translate":
-        v = params.get("v")
-        if v:
-            pl.Base = FreeCAD.Vector(*v)
-
-    elif node.node_type == "rotate":
-        a = params.get("a")
-        v = params.get("v", [0,0,1])
-        if a:
-            pl.Rotation = FreeCAD.Rotation(FreeCAD.Vector(*v), float(a))
-
-
-    elif node.node_type == "multmatrix":
-        m = params.get("matrix")
-        if isinstance(m, FreeCAD.Matrix):
-            pl = FreeCAD.Placement(m)
-        elif m is not None:
-            raise TypeError(f"multmatrix param is not Matrix: {type(m)}")
-
-    ### Matrix should have been handled by parsing to AST
-    #elif node.node_type == "multmatrix":
-    #    m = p.get("m")
-    #    if m:
-    #        # row-major → column-major flatten
-    #        fm = [m[row][col] for col in range(4) for row in range(4)]
-    #        mat = FreeCAD.Matrix(*fm)
-    #        pl = FreeCAD.Placement(mat)
-
-    #return pl
 
 '''
 def apply_scale(node, pl):
