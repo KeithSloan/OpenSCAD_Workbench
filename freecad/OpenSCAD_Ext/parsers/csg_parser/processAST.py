@@ -548,66 +548,98 @@ def process_AST_node(node):
     # EXTRUSIONS
     # -----------------------------
     if node_type in ("linear_extrude", "rotate_extrude"):
-        write_log("Extrusion",node_type)
+        write_log("Extrusion", node_type)
+        
+
+        def compound_to_faces(shape):
+            """Convert any shape (Face, Wire, or Compound) into list of Faces."""
+            if shape is None:
+                return []
+
+            if isinstance(shape, Part.Face):
+                return [shape]
+
+            elif isinstance(shape, Part.Wire):
+                return [Part.Face(shape)]
+
+            # For Part.Compound or any Part object that might contain multiple faces
+            elif isinstance(shape, Part.Compound) or hasattr(shape, "Faces"):
+                return list(shape.Faces)
+
+            else:
+                write_log("Extrusion", f"Unsupported shape type: {type(shape)}")
+                return []
+
+        # ---------------- Linear extrude ----------------
         if node_type == "linear_extrude":
-            write_log("Extrusion", node_type)
             height = params.get("height", 1)
             center = params.get("center", False)
-            twist = params.get("twist", 0)      # degrees
+            twist = params.get("twist", 0)
+
+            write_log("Extrusion", f"Height={height} Center={center} Twist={twist}")
 
             solids = []
 
             for child in node.children:
-                for shape, pl in _as_list(process_AST_node(child)):
-                    s = shape.copy()
-                    s.Placement = pl  # children already have transforms applied
+                child_results = _as_list(process_AST_node(child))
 
-                    # Expect Wire or Face
-                    if isinstance(s, Part.Wire):
-                        face = Part.Face(s)
-                    elif isinstance(s, Part.Face):
-                        face = s
-                    else:
-                        write_log("Extrusion", f"Skipping non-face/wire child: {s}")
+                for shape, pl in child_results:
+                    if shape is None:
                         continue
 
-                    # ---- Fast path: no twist
-                    if twist == 0:
-                        solid = face.extrude(App.Vector(0, 0, height))
-                    else:
-                        # ---- Slow path: twist present -> use loft along segments
-                        segments = max(int(abs(twist) / 5), 1)  # 5° per step
-                        layers = []
-                        for i in range(segments + 1):
-                            z = height * i / segments
-                            angle = twist * i / segments
-                            # rotate face for twist
-                            rotated_face = face.copy()
-                            rotated_face.rotate(App.Vector(0, 0, 0), App.Vector(0, 0, 1), angle)
-                            # translate along Z
-                            rotated_face.translate(App.Vector(0, 0, z))
-                            layers.append(rotated_face)
+                    s = shape.copy()
+                    s.Placement = pl
 
-                        # loft through layers
-                        solid = Part.makeLoft(layers, True, True)
+                    faces = compound_to_faces(s)
+                    write_log("Extrusion", f"Faces found: {len(faces)}")
 
-                    # ---- Center after extrusion using bounding box
-                    if center:
-                        bb = solid.BoundBox
-                        dz = (bb.ZMin + bb.ZMax) / 2
-                        solid.translate(App.Vector(0, 0, -dz))
+                    for idx, face in enumerate(faces):
 
-                    solids.append(solid)
+                        if face.Area < 1e-9:
+                            write_log("Extrusion", f"Skipping degenerate face {idx}")
+                            continue
+
+                        if abs(height) < 1e-9:
+                            write_log("Extrusion", "Height ≈ 0 — skipping")
+                            continue
+
+                        if twist == 0:
+                            solid = face.extrude(App.Vector(0, 0, height))
+                        else:
+                            segments = max(int(abs(twist) / 5), 1)
+                            layers = []
+                            for i in range(segments + 1):
+                                z = height * i / segments
+                                angle = twist * i / segments
+                                f2 = face.copy()
+                                f2.rotate(App.Vector(0,0,0), App.Vector(0,0,1), angle)
+                                f2.translate(App.Vector(0,0,z))
+                                layers.append(f2)
+
+                            solid = Part.makeLoft(layers, True, True)
+
+                        write_log(
+                            "Extrusion",
+                            f"Solid {idx} Z-range: "
+                            f"{solid.BoundBox.ZMin} → {solid.BoundBox.ZMax}"
+                        )
+
+                        if center:
+                            bb = solid.BoundBox
+                            dz = (bb.ZMin + bb.ZMax) / 2
+                            solid.translate(App.Vector(0, 0, -dz))
+
+                        solids.append(solid)
 
             if not solids:
+                write_log("Extrusion", "No solids produced")
                 return []
 
-            # fuse all child extrusions
             result = solids[0]
             for s in solids[1:]:
                 result = result.fuse(s)
 
-            return (result, local_pl)
+        return (result, local_pl)
 
         if node_type == "rotate_extrude":
             write_log("Extrusion", node_type)
@@ -667,32 +699,58 @@ def process_AST_node(node):
     # BOOLEANS
     # -----------------------------
     if node_type in ("union", "difference", "intersection"):
-        write_log("Boolean",node_type)
+        write_log("Boolean", node_type)
         shapes = []
-        for child in node.children:
 
+        for child in node.children:
             lst = _as_list(process_AST_node(child))
-            #dump_nodes_list(node_type, lst)
             for shape, pl in _as_list(lst):
+                if shape is None:
+                    continue
                 s = shape.copy()
                 s.Placement = pl
-                write_log(node_type,f"Child {child} Placement {pl}")
                 shapes.append(s)
 
         if not shapes:
             return []
 
-        result = shapes[0]
-        for s in shapes[1:]:
-            if node_type == "union":
-                result = result.fuse(s)
-            elif node_type == "difference":
-                result = result.cut(s)
-            elif node_type == "intersection":
-                result = result.common(s)
+        # Determine if all shapes are 2D faces
+        all_2d = all(s.ShapeType == "Face" for s in shapes)
 
-        # ???? placement
-        return (result, local_pl)
+        if all_2d:
+            result = shapes[0]
+            for s in shapes[1:]:
+                if node_type == "union":
+                    try:
+                        result = Part.make2DFuse([result, s])
+                    except Exception:
+                        result = Part.Compound([result, s])
+                elif node_type == "difference":
+                    try:
+                        result = Part.make2DCut(result, s)
+                    except Exception:
+                        write_log("Boolean", "2D cut failed, skipping")
+                elif node_type == "intersection":
+                    try:
+                        result = Part.make2DCommon(result, s)
+                    except Exception:
+                        write_log("Boolean", "2D common failed, skipping")
+        else:
+            # 3D Boolean operations
+            result = shapes[0]
+            for s in shapes[1:]:
+                try:
+                    if node_type == "union":
+                        result = result.fuse(s)
+                    elif node_type == "difference":
+                        result = result.cut(s)
+                    elif node_type == "intersection":
+                        result = result.common(s)
+                except Exception as e:
+                    write_log("Boolean", f"3D {node_type} failed: {e}")
+
+        return (result, App.Placement())
+
 
     # -----------------------------
     # 2D 
@@ -729,13 +787,41 @@ def process_AST_node(node):
     #    mycircle.Radius = r
     #    mycircle.DrawMode = "inscribed"
     #    mycircle.MakeFace = True
+        '''
+            elif node.node_type == "circle":
+                write_log("AST", f"Processing Circle: params={node.params}, csg={node.csg_params}")
+
+                # Determine radius
+                if "r" in params:
+                    r = params["r"]
+                elif "d" in node.params:
+                    r = params["d"] / 2.0
+                else:
+                    try:
+                        r = float(node.csg_params.strip())
+                    except Exception:
+                        r = 1.0
+                        write_log("AST", "Circle missing radius, defaulting to 1")
+
+                # Make the wire in canonical XY plane
+                # Using Draft 
+                part2D = Draft.makeCircle(r,face=True)
+                face = part2D.Shape
+                # Using Part
+                #face = Part.makeCircle(r, Vector(0, 0, 0), Vector(0, 0, 1))
+                #
+                #face = Part.Face(edge)
+                # Return as a **list of tuples** — this satisfies _as_list and downstream code
+                return face, local_pl
+        '''
+
+    # Draft safer than Part? But Draft need recompute
     elif node.node_type == "circle":
         write_log("AST", f"Processing Circle: params={node.params}, csg={node.csg_params}")
 
-        # Determine radius
         if "r" in params:
             r = params["r"]
-        elif "d" in node.params:
+        elif "d" in params:
             r = params["d"] / 2.0
         else:
             try:
@@ -744,16 +830,9 @@ def process_AST_node(node):
                 r = 1.0
                 write_log("AST", "Circle missing radius, defaulting to 1")
 
-        # Make the wire in canonical XY plane
-        # Using Draft 
-        part2D = Draft.makeCircle(r,face=True)
-        face = part2D.Shape
-        # Using Part
-        #face = Part.makeCircle(r, Vector(0, 0, 0), Vector(0, 0, 1))
-        #
-        #face = Part.Face(edge)
-        # Return as a **list of tuples** — this satisfies _as_list and downstream code
+        face = Part.Face(Part.Wire([Part.makeCircle(r)]))
         return face, local_pl
+
 
     elif node.node_type == "square":
         write_log("AST", f"Processing Square: params={node.params}, csg={node.csg_params}")
