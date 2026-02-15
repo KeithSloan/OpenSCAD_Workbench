@@ -1,0 +1,8 @@
+group() {
+    group() {
+        group() {
+            cube(10);
+        }
+    }
+}
+

@@ -1,0 +1,14 @@
+union() {
+    for(a=[0:45:180]) {
+        multmatrix([
+            [cos(a), -sin(a), 0, 0],
+            [sin(a),  cos(a), 0, 0],
+            [0,0,1,0],
+            [0,0,0,1]
+        ]) {
+            linear_extrude(height=3)
+                polygon(points=[[0,0],[20,1],[20,-1]]);
+        }
+    }
+}
+

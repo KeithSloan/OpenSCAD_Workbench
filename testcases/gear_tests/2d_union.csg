@@ -1,0 +1,5 @@
+union() {
+    circle(r=10);
+    polygon(points=[[0,0],[20,0],[10,10]]);
+}
+

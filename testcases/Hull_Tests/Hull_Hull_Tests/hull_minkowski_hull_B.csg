@@ -1,0 +1,18 @@
+union() {
+    hull() {
+        minkowski() {
+            hull(){
+                sphere($fn = 0, $fa = 12, $fs = 2, r = 5);
+                multmatrix([[1, 0, 0, 20],
+                            [0, 1, 0, 0],
+                            [0, 0, 1, 0],
+                            [0, 0, 0, 1]]) {
+                    sphere($fn = 0, $fa = 12, $fs = 2, r = 10);
+                }
+            }
+            sphere(r = 2); // 3D offset
+        }
+        cube(10);
+    }
+}
+
