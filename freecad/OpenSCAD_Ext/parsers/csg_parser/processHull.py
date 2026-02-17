@@ -57,6 +57,7 @@ def collect_primitives(children, primitives_out, matrices_out, parent_matrix=Non
 def normalize_primitives(primitives, matrices):
     out = []
 
+    write_log("Hull",f"Normalize_primitives : matrices {matrices}")
     for node, mat in zip(primitives, matrices):
         pos = Vector(0, 0, 0)
         axis = Vector(0, 0, 1)
@@ -84,29 +85,98 @@ def normalize_primitives(primitives, matrices):
             })
 
         elif node.node_type == "cylinder":
-            if not {"r", "h"} <= node.params.keys():
+
+            params = node.params
+
+            # Height
+            if "h" not in params:
                 return None
+            h = float(params["h"])
+
+            # --- Radius handling ---
+            # OpenSCAD precedence:
+            # r  OR  r1/r2  OR  d  OR  d1/d2
+
+            if "r" in params:
+                r1 = r2 = float(params["r"])
+
+            elif "r1" in params or "r2" in params:
+                r1 = float(params.get("r1", 0))
+                r2 = float(params.get("r2", 0))
+
+            elif "d" in params:
+                r1 = r2 = float(params["d"]) / 2.0
+
+            elif "d1" in params or "d2" in params:
+                r1 = float(params.get("d1", 0)) / 2.0
+                r2 = float(params.get("d2", 0)) / 2.0
+
+            else:
+                return None
+
+            # Validate radii
+            if r1 < 0 or r2 < 0:
+                return None
+
+            # --- Axis normalization ---
+            axis_vec = Vector(0, 0, 1)
+            base = Vector(0, 0, 0)
+
+            if mat:
+                base = mat.multVec(base)
+                axis_end = mat.multVec(Vector(0, 0, 1))
+                axis_vec = axis_end - base
+
+            if axis_vec.Length == 0:
+                return None
+
+            axis_vec.normalize()
+
+            # --- Center handling (OpenSCAD center=true) ---
+            center_flag = bool(params.get("center", False))
+
+            if center_flag:
+                # Move base back by h/2 along axis
+                base = base - axis_vec.multiply(h / 2.0)
+
+            # --- Negative height handling ---
+            if h < 0:
+                h = abs(h)
+                axis_vec = axis_vec.multiply(-1)
+
+            # --- Distinguish cylinder vs cone ---
+            if abs(r1 - r2) < 1e-9:
+                prim_type = "cylinder"
+                r = r1
+            else:
+                prim_type = "cone"
+
             out.append({
-                "type": "cylinder",
-                "center": pos,
-                "axis": axis.normalize(),
-                "r": node.params["r"],
-                "h": node.params["h"],
+                "type": prim_type,
+                "base": base,
+                "axis": axis_vec,
+                "h": h,
+                "r": r,     # used for cylinder, rather than cone
+                "r1": r1,
+                "r2": r2,
             })
 
-    return out
+            return out
 
 def try_hull_dispatch(normalized_hull):
     types = {p["type"] for p in normalized_hull}
     write_log("Hull", f"Dispatch types={types}")
     write_log("Normalized ",normalized_hull)
 
-    write_log("Len", len(types))
+    write_log("Number of types", len(types))
 
     if len(types) == 1:
         if types == {'sphere'}:
             return hull_spheres(normalized_hull)
-    write_log("Len", len(types))
+    
+        if types == {'cylinder'}:
+            return hull_cylinders(normalized_hull)
+
     return None
 
 def hull_spheres(spheres):
@@ -293,13 +363,17 @@ def hull_cubes(cubes):
     )
 
 def hull_cylinders(cyls):
+    write_log("Hull",f"hull clinders : {cyls}")
     axes = [c["axis"] for c in cyls]
 
     if not all(a.isEqual(axes[0], 1e-9) for a in axes):
         return None
 
-    centers = [c["center"] for c in cyls]
+    centers = [c["base"] + c["axis"].multiply(c["h"]/2.0) for c in cyls]
+
+    #centers = [c["center"] for c in cyls]
     if not is_collinear(centers):
+        write_log("hull_cylinder","Not collinear")
         return None
 
     r = cyls[0]["r"]
@@ -369,6 +443,7 @@ def rounded_bbox(points, r):
 '''
     
 def make_capsule(p0, p1, r):
+    write_log("hull","make capsule")
     axis = p1 - p0
     L = axis.Length
     if L < 1e-12:
