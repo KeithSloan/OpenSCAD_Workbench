@@ -46,6 +46,7 @@ def collect_primitives(children, primitives_out, matrices_out, parent_matrix=Non
 
         elif child.node_type in ("sphere", "cube", "cylinder"):
             primitives_out.append(child)
+            print(f"tyoe {child.node_type} params {child.params} csg_params {child.csg_params}")
             matrices_out.append(matrix if matrix else Matrix())
 
         else:
@@ -101,7 +102,7 @@ def try_hull_dispatch(normalized_hull):
     write_log("Hull", f"Dispatch types={types}")
     write_log("Normalized ",normalized_hull)
 
-    write_log("Len", len(types))
+    write_log("Number of types ", len(types))
 
     if len(types) == 1:
         if types == {'sphere'}:
