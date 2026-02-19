@@ -16,7 +16,7 @@ import os
 #import tempfile
 import FreeCAD
 import Part
-import Draft
+#import Draft
 import Mesh
 import FreeCAD as App
 from FreeCAD import Vector
@@ -35,12 +35,11 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.flattenAST_to_csg import flatten_as
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_utils import call_openscad_scad_string#
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_polyhedron import process_polyhedron
 from freecad.OpenSCAD_Ext.parsers.csg_parser.processHull import try_hull
-
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_text import process_text 
 
 
 def generate_stl_from_scad(scad_str, timeout_sec=60):
-    write_log("AST",f"Generate STL from SCAD string")
+    write_log("AST","Generate STL from SCAD string")
     return call_openscad_scad_string(scad_str, export_type='stl', timeout_sec=timeout_sec)
 
 

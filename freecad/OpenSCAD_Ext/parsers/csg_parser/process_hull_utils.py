@@ -80,13 +80,6 @@ def rounded_bbox(points, r):
     return rounded_box
 '''
     
-def make_capsule(p0, p1, r):
-    axis = p1 - p0
-    L = axis.Length
-    if L < 1e-12:
-        return Part.makeSphere(r, p0)
-    cyl = Part.makeCylinder(r, L, p0, axis.normalize())
-    return cyl.fuse(Part.makeSphere(r, p0)).fuse(Part.makeSphere(r, p1))
 
 '''
 

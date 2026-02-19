@@ -5,7 +5,6 @@ from FreeCAD import (
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_utils import (
     is_collinear,
-    make_capsule, 
     make_tangent_frustum,
     detect_grid,
     )
@@ -23,7 +22,7 @@ def hull_spheres(spheres):
         if all(abs(s["r"] - spheres[0]["r"]) < 1e-12 for s in spheres):
             r = spheres[0]["r"]
             write_log("Spheres: make capsule")
-            return make_capsule(centers[0], centers[-1], r)
+            return make_capsule_spheres(centers[0], centers[-1], r)
             
         else:
             write_log("Spheres","Not all equal Radius")
@@ -118,6 +117,14 @@ def try_hull_spheres(centers, r, min_thickness=1e-3):
 
         return rounded_box
 
+def make_capsule_spheres(p0, p1, r):
+    axis = p1 - p0
+    L = axis.Length
+    if L < 1e-12:
+        return Part.makeSphere(r, p0)
+    cyl = Part.makeCylinder(r, L, p0, axis.normalize())
+    return cyl.fuse(Part.makeSphere(r, p0)).fuse(Part.makeSphere(r, p1))
+
 
 def make_colinear_sphere_hull(spheres):
     parts = []
@@ -199,3 +206,80 @@ def rounded_bbox(points, r):
 
     return rounded_box
 '''
+
+
+def try_hull_spheres(centers, r, min_thickness=1e-3):
+    """
+    Create a rounded hull for a set of spheres.
+    Automatically handles:
+      - Flat 2D grids (Z nearly zero)
+      - Full 3D arrangements
+    centers: list of Vector
+    r: sphere radius / rounding radius
+    """
+    if not centers:
+        return None
+
+    min_pt = Vector(
+        min(c.x for c in centers),
+        min(c.y for c in centers),
+        min(c.z for c in centers)
+    )
+    max_pt = Vector(
+        max(c.x for c in centers),
+        max(c.y for c in centers),
+        max(c.z for c in centers)
+    )
+
+    size = max_pt - min_pt
+
+    # Determine if flat in Z
+    is_flat = size.z < 1e-6 or size.z < r
+
+    if not is_flat:
+        # Full 3D → fillet all edges
+        box_size = Vector(
+            max(size.x + 2*r, min_thickness),
+            max(size.y + 2*r, min_thickness),
+            max(size.z + 2*r, min_thickness)
+        )
+        placement = min_pt - Vector(r, r, r)
+        box = Part.makeBox(box_size.x, box_size.y, box_size.z, placement)
+        fillet_radius = min(r, box_size.x/2, box_size.y/2, box_size.z/2)
+        try:
+            rounded_box = box.makeFillet(fillet_radius, box.Edges)
+        except Exception:
+            rounded_box = box
+        return rounded_box
+
+    else:
+        # Flat grid → thin box + corner spheres + XY edge cylinders
+        thickness = max(size.z + 2*r, min_thickness)
+        box = Part.makeBox(size.x + 2*r, size.y + 2*r, thickness,
+                           min_pt - Vector(r, r, r))
+        shapes = [box]
+
+        # Corners
+        corners = [
+            Vector(min_pt.x - r, min_pt.y - r, min_pt.z),
+            Vector(max_pt.x + r, min_pt.y - r, min_pt.z),
+            Vector(min_pt.x - r, max_pt.y + r, min_pt.z),
+            Vector(max_pt.x + r, max_pt.y + r, min_pt.z)
+        ]
+        for c in corners:
+            shapes.append(Part.makeSphere(r, c))
+
+        # XY edge cylinders
+        # along X edges
+        shapes.append(Part.makeCylinder(r, size.x + 2*r, corners[0], Vector(1,0,0)))
+        shapes.append(Part.makeCylinder(r, size.x + 2*r, corners[2], Vector(1,0,0)))
+        # along Y edges
+        shapes.append(Part.makeCylinder(r, size.y + 2*r, corners[0], Vector(0,1,0)))
+        shapes.append(Part.makeCylinder(r, size.y + 2*r, corners[1], Vector(0,1,0)))
+
+        # Fuse all
+        rounded_box = shapes[0]
+        for s in shapes[1:]:
+            rounded_box = rounded_box.fuse(s)
+
+        return rounded_box

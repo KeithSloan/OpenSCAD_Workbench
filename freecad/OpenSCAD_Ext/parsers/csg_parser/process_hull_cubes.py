@@ -1,6 +1,6 @@
 #from FreeCAD import Vector, Matrix, Placement, Rotation
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
-from freecad.OpenSCAD_Ext.parsers.csg_parser.processHull import bbox
+from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_utils import bbox
 import Part
 
 
