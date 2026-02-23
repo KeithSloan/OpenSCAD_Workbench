@@ -2,8 +2,8 @@ from FreeCAD import Vector
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_utils import (
     is_collinear,
-    make_tangent_frustum,
-    detect_grid,
+    #make_tangent_frustum,
+    #detect_grid,
 )
 import Part
 
@@ -16,320 +16,141 @@ def hull_cylinders_cones(cylinders):
     - If different radii, create tangent frustums.
     - Otherwise fallback to generic colinear cylinders hull.
     """
-    write_log("Hull", "Cylinders Cones")
-    print(dir(cylinders[0]))
+    write_log("Hull", "Attempting to hull cylinders/cones.")
+
+    if not cylinders:
+        return None
+
+    # --- Check for aligned axes ---
+    # All cylinders/cones must have parallel axes for this handler.
+    # We check against the first primitive's direction.
+    first_dir = cylinders[0]["dir"]
+    for c in cylinders[1:]:
+        # Allow for parallel or anti-parallel axes
+        if not (c["dir"].isEqual(first_dir, 1e-9) or c["dir"].isEqual(first_dir.negative(), 1e-9)):
+            write_log("Hull", "Cylinder axes are not parallel, fallback.")
+            return None
+
+    # --- Check for collinear centers ---
+    # If axes are parallel, centers must be collinear for a simple revolved hull.
     centers = [c["center"] for c in cylinders]
-    #
-    # axes = [c["axis"] for c in cylinders]
-    #
-    # For now, only handle if all axes equal
-    #if not all(a.isEqual(axes[0], 1e-9) for a in axes):
-    #    write_log("Hull", "Cylinders axes not aligned, fallback")
-    #    return make_colinear_cylinders_hull(cylinders)
-
-    # Check collinearity along axis
-    if is_collinear(centers):
-        return make_colinear_cylinders_cones(cylinders)
-
-    else:
-        write_log("Hull", "Cylinders not collinear, fallback")
+    if not is_collinear(centers):
+        write_log("Hull", "Cylinders not collinear, fallback.")
         return None
 
+    # If checks pass, proceed with generating the revolved hull
+    return make_colinear_cylinders_cones(cylinders)
 
-def make_colinear_cylinders_cones(primitives, TOL = 1e-9):
+def make_colinear_cylinders_cones(primitives, TOL=1e-9):
+
     if not primitives:
         return None
 
-    # --------------------------------------------------
-    # 1️⃣ Common axis (guaranteed colinear)
-    # --------------------------------------------------
-    axis_dir = primitives[0]["dir"]   # already unit
+    # ---------------------------------------
+    # Axis direction (already unit from normalize)
+    # ---------------------------------------
+    axis_dir = primitives[0]["dir"]
 
-    # Choose a perpendicular direction for profile plane
+    # Use global origin for projection stability
+    axis_origin = Vector(0, 0, 0)
+
+    # ---------------------------------------
+    # Construct perpendicular radial direction
+    # ---------------------------------------
     if abs(axis_dir.z) < 0.9:
         ref = Vector(0, 0, 1)
     else:
         ref = Vector(1, 0, 0)
 
     radial_dir = axis_dir.cross(ref)
-    if radial_dir.Length < TOL:
+    if radial_dir.Length == 0:
         return None
+    radial_dir = radial_dir.normalize()
 
-    radial_dir = radial_dir / radial_dir.Length
-
-    # --------------------------------------------------
-    # 2️⃣ Convert to linear radius functions
-    #     r(t) = a*t + b
-    # --------------------------------------------------
-    funcs = []
-    breakpoints = set()
+    # ---------------------------------------
+    # Collect disc endpoints in (z, r)
+    # ---------------------------------------
+    pts = []
 
     for p in primitives:
+        base = p["base"]  # The start point of the cylinder's axis
+        h = p["h"]        # The height of the cylinder
+        dir_vec = p["dir"]  # The direction vector of the cylinder's axis
+        r1 = p["r1"]      # Radius at the base
+        r2 = p["r2"]      # Radius at the top
 
-        base = p["base"]
-        dir_vec = p["dir"]
-        h = p["h"]
-        r1 = p["r1"]
-        r2 = p["r2"]
+        # The other end of the cylinder's axis
+        top = base + dir_vec * h
 
-        # project base onto axis
-        t0 = base.dot(axis_dir)
-        t1 = t0 + h
+        # Project the base and top points onto the common axis direction
+        # to get their positions along that axis.
+        z_base = base.dot(axis_dir)
+        z_top = top.dot(axis_dir)
 
-        if abs(t1 - t0) < TOL:
-            continue
+        pts.append((z_base, r1))
+        pts.append((z_top, r2))
 
-        # linear slope
-        a = (r2 - r1) / (t1 - t0)
-        b = r1 - a * t0
+    # Sort by z
+    pts.sort(key=lambda x: x[0])
 
-        funcs.append({
-            "t0": t0,
-            "t1": t1,
-            "a": a,
-            "b": b
-        })
+    # ---------------------------------------
+    # Compute upper convex hull in (z, r)
+    # ---------------------------------------
+    def cross(o, a, b):
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
 
-        breakpoints.add(t0)
-        breakpoints.add(t1)
+    upper = []
 
-    if not funcs:
+    for p in pts:
+        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) >= -TOL:
+            upper.pop()
+        upper.append(p)
+
+    if len(upper) < 2:
         return None
 
-    # --------------------------------------------------
-    # 3️⃣ Add intersection breakpoints
-    # --------------------------------------------------
-    for i in range(len(funcs)):
-        for j in range(i + 1, len(funcs)):
-            f1 = funcs[i]
-            f2 = funcs[j]
-
-            if abs(f1["a"] - f2["a"]) < TOL:
-                continue
-
-            t = (f2["b"] - f1["b"]) / (f1["a"] - f2["a"])
-
-            if (f1["t0"] - TOL <= t <= f1["t1"] + TOL and
-                f2["t0"] - TOL <= t <= f2["t1"] + TOL):
-                breakpoints.add(t)
-
-    t_vals = sorted(breakpoints)
-
-    if len(t_vals) < 2:
-        return None
-
-    # --------------------------------------------------
-    # 4️⃣ Upper envelope radius function
-    # --------------------------------------------------
-    def max_radius(t):
-        rmax = 0.0
-        for f in funcs:
-            if f["t0"] - TOL <= t <= f["t1"] + TOL:
-                r = f["a"] * t + f["b"]
-                if r > rmax:
-                    rmax = r
-        return rmax
-
-    # Build profile points
-    profile_pts = []
-    for t in t_vals:
-        r = max_radius(t)
-        if r > TOL:
-            profile_pts.append((t, r))
-
-    if len(profile_pts) < 2:
-        return None
-
-    # --------------------------------------------------
-    # 5️⃣ Build profile wire (in 3D plane)
-    # --------------------------------------------------
+    # ---------------------------------------
+    # Build 2D profile in 3D space
+    # ---------------------------------------
     edges = []
 
-    t_start, r_start = profile_pts[0]
-    t_end, r_end = profile_pts[-1]
+    z_start, r_start = upper[0]
+    z_end, r_end = upper[-1]
 
-    # Axis start/end
-    axis_start = axis_dir * t_start
-    axis_end = axis_dir * t_end
+    axis_start = axis_origin + axis_dir * z_start
+    axis_end   = axis_origin + axis_dir * z_end
 
-    # Start radial point
-    first_pt = axis_dir * t_start + radial_dir * r_start
+    # Axis to first radius
+    first_pt = axis_start + radial_dir * r_start
     edges.append(Part.makeLine(axis_start, first_pt))
 
-    # Envelope segments
-    for i in range(len(profile_pts) - 1):
-        t0, r0 = profile_pts[i]
-        t1, r1 = profile_pts[i + 1]
+    # Hull profile segments
+    for i in range(len(upper) - 1):
+        z0, r0 = upper[i]
+        z1, r1 = upper[i + 1]
 
-        p0 = axis_dir * t0 + radial_dir * r0
-        p1 = axis_dir * t1 + radial_dir * r1
+        p0 = axis_origin + axis_dir * z0 + radial_dir * r0
+        p1 = axis_origin + axis_dir * z1 + radial_dir * r1
 
         edges.append(Part.makeLine(p0, p1))
 
-    # End radial closure
-    last_pt = axis_dir * t_end + radial_dir * r_end
+    # Close back to axis
+    last_pt = axis_end + radial_dir * r_end
     edges.append(Part.makeLine(last_pt, axis_end))
-
-    # Close along axis
-    edges.append(Part.makeLine(axis_end, axis_start))
-
-    wire = Part.Wire(edges)
-    face = Part.Face(wire)  # 👈 This is the key fix!
-
-    # --------------------------------------------------
-    # 6️⃣ Single clean revolution
-    # --------------------------------------------------
-    # Revolve around the axis
-    solid = face.revolve(axis_start, axis_dir, 360)
-
-    return solid
-
-"""
-def make_colinear_cylinders_cones(primitives, TOL = 1e-9):
-
-    if not primitives:
-        return None
-
-    # --------------------------------------------------
-    # 1️⃣ Common axis (guaranteed colinear)
-    # --------------------------------------------------
-    axis_dir = primitives[0]["dir"]   # already unit
-
-    # Choose a perpendicular direction for profile plane
-    if abs(axis_dir.z) < 0.9:
-        ref = Vector(0, 0, 1)
-    else:
-        ref = Vector(1, 0, 0)
-
-    radial_dir = axis_dir.cross(ref)
-    if radial_dir.Length < TOL:
-        return None
-
-    radial_dir = radial_dir / radial_dir.Length
-
-    # --------------------------------------------------
-    # 2️⃣ Convert to linear radius functions
-    #     r(t) = a*t + b
-    # --------------------------------------------------
-    funcs = []
-    breakpoints = set()
-
-    for p in primitives:
-
-        base = p["base"]
-        dir_vec = p["dir"]
-        h = p["h"]
-        r1 = p["r1"]
-        r2 = p["r2"]
-
-        # project base onto axis
-        t0 = base.dot(axis_dir)
-        t1 = t0 + h
-
-        if abs(t1 - t0) < TOL:
-            continue
-
-        # linear slope
-        a = (r2 - r1) / (t1 - t0)
-        b = r1 - a * t0
-
-        funcs.append({
-            "t0": t0,
-            "t1": t1,
-            "a": a,
-            "b": b
-        })
-
-        breakpoints.add(t0)
-        breakpoints.add(t1)
-
-    if not funcs:
-        return None
-
-    # --------------------------------------------------
-    # 3️⃣ Add intersection breakpoints
-    # --------------------------------------------------
-    for i in range(len(funcs)):
-        for j in range(i + 1, len(funcs)):
-            f1 = funcs[i]
-            f2 = funcs[j]
-
-            if abs(f1["a"] - f2["a"]) < TOL:
-                continue
-
-            t = (f2["b"] - f1["b"]) / (f1["a"] - f2["a"])
-
-            if (f1["t0"] - TOL <= t <= f1["t1"] + TOL and
-                f2["t0"] - TOL <= t <= f2["t1"] + TOL):
-                breakpoints.add(t)
-
-    t_vals = sorted(breakpoints)
-
-    if len(t_vals) < 2:
-        return None
-
-    # --------------------------------------------------
-    # 4️⃣ Upper envelope radius function
-    # --------------------------------------------------
-    def max_radius(t):
-        rmax = 0.0
-        for f in funcs:
-            if f["t0"] - TOL <= t <= f["t1"] + TOL:
-                r = f["a"] * t + f["b"]
-                if r > rmax:
-                    rmax = r
-        return rmax
-
-    # Build profile points
-    profile_pts = []
-    for t in t_vals:
-        r = max_radius(t)
-        if r > TOL:
-            profile_pts.append((t, r))
-
-    if len(profile_pts) < 2:
-        return None
-
-    # --------------------------------------------------
-    # 5️⃣ Build profile wire (in 3D plane)
-    # --------------------------------------------------
-    edges = []
-
-    t_start, r_start = profile_pts[0]
-    t_end, r_end = profile_pts[-1]
-
-    # Axis start/end
-    axis_start = axis_dir * t_start
-    axis_end = axis_dir * t_end
-
-    # Start radial point
-    first_pt = axis_dir * t_start + radial_dir * r_start
-    edges.append(Part.makeLine(axis_start, first_pt))
-
-    # Envelope segments
-    for i in range(len(profile_pts) - 1):
-        t0, r0 = profile_pts[i]
-        t1, r1 = profile_pts[i + 1]
-
-        p0 = axis_dir * t0 + radial_dir * r0
-        p1 = axis_dir * t1 + radial_dir * r1
-
-        edges.append(Part.makeLine(p0, p1))
-
-    # End radial closure
-    last_pt = axis_dir * t_end + radial_dir * r_end
-    edges.append(Part.makeLine(last_pt, axis_end))
-
-    # Close along axis
     edges.append(Part.makeLine(axis_end, axis_start))
 
     wire = Part.Wire(edges)
     face = Part.Face(wire)
 
-    # --------------------------------------------------
-    # 6️⃣ Single clean revolution
-    # --------------------------------------------------
-    solid = face.revolve(axis_start, axis_dir, 360)
+    # ---------------------------------------
+    # Revolve full 360 degrees
+    # ---------------------------------------
+    shape = face.revolve(axis_origin, axis_dir, 360)
 
-    return solid
-"""
+    if shape.ShapeType == "Shell":
+        shape = Part.Solid(shape)
+
+    shape = shape.removeSplitter()
+    shape.fix(1e-7, 1e-7, 1e-7)
+
+    return shape

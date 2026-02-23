@@ -1,0 +1,61 @@
+
+FreeCAD workbench for OpenSCAD
+
+importer parses OpenSCAD CSG file with lark parser.
+
+
+Challenge is for shapes that don't directly convert from csg (mesh format to Brep)
+main problem is with hull and minkowski operations.
+
+Plan is to implement
+tryHull(node)
+Test using node info and children if a Brep FreeCAD shape can be created.
+If not fall back to passing original hull request to OpenSCAD requesting stl output
+that gets converted to a Mesh and then to a Solid Shape  
+
+
+1) parse csg producd with OpenSCAD with lark to produces AST nodes
+
+2) ProcessAST - process ast nodes
+
+3) For Hodes call tryHull(ast_node)
+
+4) process hull ast and children, possibly for certain children like multmatrix recusively
+
+        collect_primitives - return list of shape types
+
+        normalise_primitives
+
+        try_hull_dispatch - perform test for possible of creating equivalent Brep Shapes.
+               e.g if all sphere
+                     check if colinear
+                        if same radius make shape
+
+                        elif different radius make shape
+
+                        elif placemnts are in a grid make shape
+
+                    if all cylinders (openscad cylinders are actually cones r1,r2)
+                        if colinear
+                            workout outine, points, allowing for situations that shape abutt or not.
+                            create shape from rotation_extruded
+
+                    other tests will follow for example parallel cylinders
+
+                    Want to consider hulls that can be be implements as Brep Hulls with loft? Sweep?
+
+                    Future additions - try and process hull of two general shapes. 
+                      nearest faces, does face contain vertexes or curved surface
+                      make breo hull accordingly
+                            
+     ast info,
+     
+        ast must store csg_params as raw csg for calling OpenSCAD fallback   
+        
+        params - openscad shape, operation parameters from csg including things like size 
+                 any extra calcualated parameters that are useful - i.e axis info for cylinders
+                 whether shape is symetric at ast creation time, objects with cuts, no cuts?
+                             
+                        
+
+
