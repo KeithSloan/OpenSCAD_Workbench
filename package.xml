@@ -1,30 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <package format="1">
-  <name>OpenSCAD_Ext</name>
-  <version>0.0.1</version>
-  <description>External OpenSCAD Workbench — replacement for legacy OpenSCAD tools.</description>
+  <name>OpenSCAD_Workbench</name>
+  <version>0.1.0</version>
+  <description>OpenSCAD tools for FreeCAD</description>
   <maintainer email="you@example.com">Keith Sloan</maintainer>
   <license>LGPL-2.1-or-later</license>
-  <url type="repository">https://github.com/KeithSloan/OpenSCAD_Workbench</url>
-  '''
-  <!-- Python packages required by the workbench -->
-    <dependencies>
-        <!-- Only list PyPI packages that are actually required -->
-        <python>pyparsing</python>
-        <python>tinydb</python>
-        <python>watchdog</python   
-        <python>lark</python>
-    </dependencies>
-  '''
-  <!-- Declare the module directory containing __init__.py -->
-    <python-module>OpenSCAD_Ext</python-module>
-  <content>
-    <mod path="freecad/OpenSCAD"/>
-    <import>*.csg</import>
-    <import>*.scad</import>
-    <import>*.dxf</import>
-  </content>
 
-  <workbench>OpenSCADWorkbench_Ext</workbench>
+  <depend type="python">ply</depend>
+  <depend type="python">tinydb</depend>
+  <depend type="python">watchdog</depend>
+  <depend type="python">ezdxf</depend>
+
 </package>
-
