@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <package format="1">
   <name>OpenSCAD_Ext</name>
-  <version>2.0.0</version>
+  <version>0.0.1</version>
   <description>External OpenSCAD Workbench — replacement for legacy OpenSCAD tools.</description>
   <maintainer email="you@example.com">Keith Sloan</maintainer>
   <license>LGPL-2.1-or-later</license>
@@ -11,7 +11,8 @@
     <dependencies>
         <!-- Only list PyPI packages that are actually required -->
         <python>pyparsing</python>
-        <python>shapely</python>
+        <python>tinydb</python>
+        <python>watchdog</python   
         <python>lark</python>
     </dependencies>
   '''
