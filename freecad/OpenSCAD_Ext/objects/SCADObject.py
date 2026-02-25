@@ -622,46 +622,14 @@ class SCADfileBase:
     #    else:
     #        print(f"Shape is None")
 
-"""def createSCADObject(title, createOption, objectName, filename):
-    from PySide import QtGui
-    from freecad.OpenSCAD_Ext.objects.menus_for_objects import SCADObject_Options
-	#pathText = os.path.splitext(os.path.basename(filename))
-	#objectName  = pathText[0]
-    doc = FreeCAD.ActiveDocument
-    if doc is None:
-        doc = FreeCADGui.newDocument(objectName)
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state["Object"] = None   # remove FeaturePython reference
+        return state
 
-    QtGui.QGuiApplication.setOverrideCursor(QtGui.Qt.ArrowCursor)
-    dialog = SCADObject_Options(title, objectName, createOption, parent=None)
-    result = dialog.exec_()
-    QtGui.QGuiApplication.restoreOverrideCursor()
-    if result == QtGui.QDialog.Accepted:
-        print(f" Action Result {dialog.result}")
-        options = dialog.getValues()
-        print(f"Options {options}")
+    def __setstate__(self, state):
+        self.__dict__.update(state)
 
-		# Create SCAD Object
-        # 
-        obj = doc.addObject("Part::FeaturePython", objectName)
-		#
-		# SCADfileBase(obj, name, filename, mode='Mesh', fnmax=16, timeout=30)
-        SCADfileBase(obj, \
-			#os.path.splitext(os.path.basename(filename))[0],
-            objectName, \
- 			filename, \
-			options[0], \
-			options[1], \
-			options[2])
-		#print(dir(scadObj))
-        write_log("Info","ViewSCADProvider")
-        ViewSCADProvider(obj.ViewObject)
-        if hasattr(obj, 'Proxy'):
-            if hasattr(obj, "editFile"):
-                obj.Proxy.editFile(filename)
-            elif hasattr(obj, "executeFunc"):
-                obj.Proxy.executeFunction(obj)
-        return obj
-"""
 class ViewSCADProvider:
     def __init__(self, obj):
         """Set this object to the proxy object of the actual view provider"""

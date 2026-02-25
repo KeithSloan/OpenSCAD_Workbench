@@ -1,0 +1,7 @@
+linear_extrude(height=5) {
+    union() {
+        polygon(points=[[0,0],[20,0],[10,10]]);
+        circle(r=10);
+    }
+}
+

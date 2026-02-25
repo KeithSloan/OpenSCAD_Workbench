@@ -39,10 +39,11 @@ def setup_importers():
         f"{IMPORTER_BASE}.newImportCSG"
     )
 
-    FreeCAD.addImportType(
-        "External OpenSCAD Workbench : Create AST from CSG (*.csg)",
-        f"{IMPORTER_BASE}.createASTfromCSG"
-    )
+    # Parser changed need to refactor
+    #FreeCAD.addImportType(
+    #    "External OpenSCAD Workbench : Create AST from CSG (*.csg)",
+    #    f"{IMPORTER_BASE}.createASTfromCSG"
+    #)
 
     FreeCAD.addImportType(
         "External OpenSCAD Workbench : New (Alpha) import SCAD file (*.scad)",

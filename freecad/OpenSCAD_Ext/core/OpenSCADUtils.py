@@ -30,6 +30,7 @@ __url__ = ["https://www.freecadweb.org"]
 
 import os
 import tempfile
+from PySide import QtCore
 from freecad.OpenSCAD_Ext.core.checkObjectShapes import *
 
 try:

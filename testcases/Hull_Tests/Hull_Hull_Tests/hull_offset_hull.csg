@@ -1,0 +1,21 @@
+union() {
+	hull() {
+		hull() {
+			linear_extrude(height = 10, $fn = 0, $fa = 12, $fs = 2) {
+				offset(r = 2, $fn = 0, $fa = 12, $fs = 2) {
+					hull() {
+						circle($fn = 0, $fa = 12, $fs = 2, r = 5);
+						multmatrix([[1, 0, 0, 20], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+							circle($fn = 0, $fa = 12, $fs = 2, r = 10);
+						}
+					}
+				}
+			}
+			multmatrix([[1, 0, 0, 20], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+				sphere($fn = 0, $fa = 12, $fs = 2, r = 10);
+			}
+		}
+		cube(size = [10, 10, 10], center = false);
+	}
+}
+

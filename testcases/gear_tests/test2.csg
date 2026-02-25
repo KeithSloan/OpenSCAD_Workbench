@@ -1,0 +1,10 @@
+difference() {
+    intersection() {
+        union() {
+            cube(20);
+            sphere(r=15);
+        }
+    }
+    cube(10);
+}
+

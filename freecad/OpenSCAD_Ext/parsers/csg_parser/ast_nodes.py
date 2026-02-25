@@ -48,6 +48,22 @@ class Polygon(AstNode):
     def __init__(self, params=None, csg_params=None, children=None):
         super().__init__("polygon", params or {}, csg_params, children)
 
+class Offset(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("offset", params or {}, csg_params, children)
+
+class Resize(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("resize", params or {}, csg_params, children)
+
+class Mirror(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("mirror", params or {}, csg_params, children)
+
+class Projection(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("projection", params or {}, csg_params, children)
+
 
 # -------------------------------------------------
 # 3D primitives
@@ -67,6 +83,23 @@ class Cylinder(AstNode):
 class Polyhedron(AstNode):
     def __init__(self, params=None, csg_params=None, children=None):
         super().__init__("polyhedron", params or {}, csg_params, children)
+
+class Surface(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("surface", params or {}, csg_params, children)
+
+
+# ------------------------------------------------
+# File imports
+# ------------------------------------------------
+class Import(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("import", params or {}, csg_params, children)
+
+class ImportDXF(AstNode):
+    def __init__(self, params=None, csg_params=None, children=None):
+        super().__init__("import_dxf", params or {}, csg_params, children)
+
 
 
 # -------------------------------------------------
