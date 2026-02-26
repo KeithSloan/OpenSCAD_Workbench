@@ -218,6 +218,8 @@ def dump_ast_compact(node, indent=0, _seen=None):
     for c in node.children:
         dump_ast_compact(c, indent + 1, _seen)
 
+
+
 def dump_ast_node(node, indent=0):
     """
     Dump a single AST node (no recursion).

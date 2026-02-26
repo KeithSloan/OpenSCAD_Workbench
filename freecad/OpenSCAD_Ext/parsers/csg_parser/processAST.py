@@ -24,19 +24,26 @@ from FreeCAD import Vector
 #from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 #from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_helpers import get_tess, apply_transform
-
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_utils import dump_ast_node
 
+# Ast nodes Hull, Minkoowski
 from freecad.OpenSCAD_Ext.parsers.csg_parser.ast_nodes import (
     Hull, Minkowski
     )
+
 from freecad.OpenSCAD_Ext.parsers.csg_parser.flattenAST_to_csg import flatten_ast_node_back_to_csg
 
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_utils import call_openscad_scad_string#
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_polyhedron import process_polyhedron
 from freecad.OpenSCAD_Ext.parsers.csg_parser.processHull import try_hull
+from freecad.OpenSCAD_Ext.parsers.csg_parser.processMinkowski import (
+    is_ast_sphere,
+    is_ast_cylinder,
+    get_ast_radius,
+    get_ast_cylinder_params,
+    minkowski_shape_with_cylinder
+    )    
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_text import process_text 
-
 
 def generate_stl_from_scad(scad_str, timeout_sec=60):
     write_log("AST","Generate STL from SCAD string")
@@ -225,23 +232,6 @@ def try_hull(node):
     write_log("AST_Hull", "Native hull not implemented, falling back")
     return None
 '''
-
-def try_minkowski(node):
-    """
-    #Attempt to generate a native FreeCAD Minkowski sum.
-    #Returns Part.Shape or None if not possible.
-    """
-    write_log("AST","Try Minkowski")
-    #return None
-
-    shapes = [process_AST_node(c) for c in node.children if process_AST_node(c)]
-    if len(shapes) != 2:
-        return None  # Minkowski sum requires exactly 2 shapes
-
-    # TODO: implement native FreeCAD Minkowski sum
-    # Returning None for now to trigger OpenSCAD fallback
-    write_log("AST_Minkowski", "Native Minkowski not implemented, falling back")
-    return None
 
 '''
 def apply_scale(node, pl):
@@ -471,10 +461,51 @@ def process_AST_node(node):
     # -------------------------------------------------
     # MINKOWSKI
     # -------------------------------------------------
+    # needs to call process_ADT_node recusively so keep in this file
     if isinstance(node, Minkowski):
-        shape = try_minkowski(node)
-        if shape is None:
-            shape = fallback_to_OpenSCAD(node, operation_type="Minkowski", tolerance=1.0, timeout=60)
+        write_log("Minkowski",f"Children {len(node.children)}")
+        write_log("params",node.params)
+        if len(node.children) != 2:
+            return None
+
+        child_a = node.children[0]
+        write_log("a",child_a.node_type)
+
+        child_b = node.children[1]
+        write_log("b",child_b.node_type)
+
+        # --- sphere fast path ---
+        if is_ast_sphere(child_b):
+            r = get_ast_radius(child_b)
+
+            # Unpack tuple
+            shape_a, placement_a = process_AST_node(child_a)
+            return (shape_a.makeOffsetShape(r, 1e-3), placement_a * local_pl)
+
+        if is_ast_sphere(child_a):
+            r = get_ast_radius(child_a)
+            # unpack tuple
+            shape_b, placement_b = process_AST_node(child_b)
+            print(f"shape b {shape_b}")
+            return (shape_b.makeOffsetShape(r, 1e-3), placement_b * local_pl)
+
+
+        # --- cylinder fast path ---
+        if is_ast_cylinder(child_b):
+            # unpack tuple
+            shape_a, placement_a = process_AST_node(child_a)
+            print(f"shape {shape_a} type {shape_a.ShapeType}")
+            return (minkowski_shape_with_cylinder(shape_a, child_b), placement_a * local_pl)
+
+        if is_ast_cylinder(child_a):
+            # unpack tuple
+            shape_b, placement_b = process_AST_node(child_b)
+            #print(f"shape {shape_b} type {shape_b.ShapeType}")
+
+            return (minkowski_shape_with_cylinder(shape_b, child_a),  placement_b * local_pl)
+
+        # --- fallback --
+        shape = fallback_to_OpenSCAD(node, operation_type="Minkowski", tolerance=1.0, timeout=60)
         return [(shape, local_pl)]
         
     # -----------------------------
