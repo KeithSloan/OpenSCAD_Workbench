@@ -1,0 +1,5 @@
+minkowski(convexity = 0) {
+	cube(size = [20, 20, 20], center = false);
+	cylinder($fn = 0, $fa = 12, $fs = 2, h = 3, r1 = 2, r2 = 2, center = false);
+}
+
