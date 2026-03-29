@@ -1,0 +1,33 @@
+		minkowski(convexity = 0) {
+			union() {
+				difference() {
+					multmatrix([[1, 0, 0, 1], [0, 1, 0, -10], [0, 0, 1, 24], [0, 0, 0, 1]]) {
+						cube(size = [10, 6, 50], center = true);
+					}
+					multmatrix([[1, 0, 0, 2], [0, 1, 0, -18], [0, 0, 1, 2], [0, 0, 0, 1]]) {
+						cube(size = [20, 50, 40], center = false);
+					}
+					multmatrix([[1, 0, 0, 2], [0, 1, 0, -9], [0, 0, 1, -10], [0, 0, 0, 1]]) {
+						cube(size = [20, 50, 30], center = false);
+					}
+				}
+				multmatrix([[1, 0, 0, -3], [0, 1, 0, 8], [0, 0, 1, 8], [0, 0, 0, 1]]) {
+					cube(size = [2, 42, 8], center = true);
+				}
+				difference() {
+					multmatrix([[1, 0, 0, 8], [0, 1, 0, -4], [0, 0, 1, 20], [0, 0, 0, 1]]) {
+						cube(size = [12, 18, 58], center = true);
+					}
+					multmatrix([[1, 0, 0, 10], [0, 1, 0, 7], [0, 0, 1, 36.5], [0, 0, 0, 1]]) {
+						cube(size = [28, 10.1, 30], center = true);
+					}
+					multmatrix([[1, 0, 0, 0], [0, 1, 0, -18], [0, 0, 1, 2], [0, 0, 0, 1]]) {
+						cube(size = [20, 50, 40], center = false);
+					}
+					multmatrix([[1, 0, 0, 0], [0, 1, 0, -1], [0, 0, 1, -32], [0, 0, 0, 1]]) {
+						cube(size = [20, 50, 60], center = false);
+					}
+				}
+			}
+			sphere($fn = 30, $fa = 12, $fs = 2, r = 2);
+		}

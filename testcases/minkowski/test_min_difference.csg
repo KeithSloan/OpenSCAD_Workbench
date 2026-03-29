@@ -1,0 +1,14 @@
+				difference() {
+					multmatrix([[1, 0, 0, 1], [0, 1, 0, -10], [0, 0, 1, 24], [0, 0, 0, 1]]) {
+						cube(size = [10, 6, 50], center = true);
+					}
+					multmatrix([[1, 0, 0, 2], [0, 1, 0, -18], [0, 0, 1, 2], [0, 0, 0, 1]]) {
+						cube(size = [20, 50, 40], center = false);
+					}
+					multmatrix([[1, 0, 0, 2], [0, 1, 0, -9], [0, 0, 1, -10], [0, 0, 0, 1]]) {
+						cube(size = [20, 50, 30], center = false);
+					}
+				}
+				multmatrix([[1, 0, 0, -3], [0, 1, 0, 8], [0, 0, 1, 8], [0, 0, 0, 1]]) {
+					cube(size = [2, 42, 8], center = true);
+				}
