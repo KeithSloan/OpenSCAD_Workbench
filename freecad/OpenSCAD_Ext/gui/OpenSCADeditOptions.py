@@ -1,6 +1,7 @@
 # freecad/OpenSCAD_Ext/gui/OpenSCADeditOptions.py
 from PySide import QtCore
-from PySide2 import QtWidgets
+#from PySide2 import QtWidgets
+from PySide import QtWidgets
 from pathlib import Path
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams  # for workbench preference path
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log

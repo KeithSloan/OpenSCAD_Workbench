@@ -37,7 +37,10 @@ def checkObjShape(obj) :
             if printverbose: write_log("INFO",'Shape is Null - recompute')
             obj.recompute()
         if (obj.Shape.isNull() == True):
-           print(f'Recompute failed : {obj.Name}')
+            write_log("INFO","TRY Document Recompute")
+            obj.Document.recompute()
+            if (obj.Shape.isNull() == True):
+                print(f'Recompute failed : {obj.Name}')
     else:
         if len(obj) > 0:
            print(f"check of obj list")

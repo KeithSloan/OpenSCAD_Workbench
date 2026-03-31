@@ -4,7 +4,7 @@ Safe, PySide2-only interactive SCAD object creator.
 Avoids circular imports and PyQt5 fallback errors.
 """
 
-from PySide2 import QtWidgets, QtCore
+from PySide import QtWidgets, QtCore
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.gui.OpenSCADeditOptions import OpenSCADeditOptions

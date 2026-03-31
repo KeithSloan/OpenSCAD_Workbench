@@ -49,7 +49,7 @@ import ply.yacc as yacc
 import random
 
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
-from freecad.OpenSCAD_Ext.core.checkObjectShapes import *
+from freecad.OpenSCAD_Ext.core.checkObjectShapes import checkObjShape
 #from freecad.OpenSCAD_Ext.core.OpenSCADFeatures import *
 from freecad.OpenSCAD_Ext.core.OpenSCADUtils import *
 from freecad.OpenSCAD_Ext.core.OpenSCADHull import *
@@ -884,6 +884,7 @@ def process_linear_extrude(obj,h) :
     mylinear.Solid = False
     if gui:
         newobj.ViewObject.hide()
+    checkObjShape(mylinear)
     return(mylinear)
 
 def process_linear_extrude_with_transform(base,height,twist,scale) :   
