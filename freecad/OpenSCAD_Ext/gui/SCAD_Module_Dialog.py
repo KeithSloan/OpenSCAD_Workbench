@@ -327,8 +327,9 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
             QtWidgets.QMessageBox.warning(
                 self,
                 "SCAD Source Path Not Set",
-                "Please set the default SCAD source directory before creating a module object.\n\n"
-                "Go to:  Edit → Preferences → OpenSCAD  and set the 'Default Source Directory'."
+                "Please set the Default Directory preference before creating a module object.\n\n"
+                "FreeCAD  |  Preferences  |  OpenSCAD_Ext\n"
+                "→  Set 'Default Directory'"
             )
             return
 
