@@ -3,34 +3,55 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
 from freecad.OpenSCAD_Ext.objects.SCADObject import SCADfileBase, ViewSCADProvider
 
-# -----------------------------
-# Utility functions
-# -----------------------------
+
+# ---------------------------------------------------------------------------
+# Meta attribute helpers (new ScadMeta uses snake_case; legacy uses camelCase)
+# ---------------------------------------------------------------------------
+
+def _source_file(meta) -> str:
+    return getattr(meta, "source_file", None) or getattr(meta, "sourceFile", "")
+
+
+def _module_params(module) -> list:
+    """Return parameter list from ScadModuleMeta (.params) or SCADModule (.arguments)."""
+    return getattr(module, "params", None) or getattr(module, "arguments", [])
+
+
+def _param_description(param) -> str:
+    """Return description string; ScadParam has none, SCADArgument does."""
+    return getattr(param, "description", "") or ""
+
+
+# ---------------------------------------------------------------------------
+# SCAD value conversion
+# ---------------------------------------------------------------------------
 
 def scad_value(val):
     """
-    Convert a FreeCAD property value to a valid OpenSCAD value.
-    Booleans -> true/false
-    Uppercase symbols -> leave as-is
-    Strings -> quoted
-    Numbers -> as-is
+    Convert a FreeCAD property value to a valid OpenSCAD value string.
+    Booleans → true/false, UPPER strings → symbol, others → quoted.
     """
     if isinstance(val, bool):
         return "true" if val else "false"
     if isinstance(val, str):
-        if val.isupper():  # treat as OpenSCAD symbol
+        if val.isupper():
             return val
         return f'"{val}"'
     return val
 
 
-def build_arg_assignments(obj, module):
+# ---------------------------------------------------------------------------
+# Argument / parameter processing
+# ---------------------------------------------------------------------------
+
+def build_arg_assignments(obj, module) -> str:
     """
     Build a comma-separated string of argument assignments for a SCAD module.
+    Reads parameter values from FreeCAD properties on *obj*.
     """
     assignments = []
-    for arg in getattr(module, "arguments", []):
-        name = arg.name
+    for param in _module_params(module):
+        name = param.name
         if name not in obj.PropertiesList:
             continue
         val = getattr(obj, name, None)
@@ -42,194 +63,170 @@ def build_arg_assignments(obj, module):
     return result
 
 
-def generate_scad_import_lines(meta):
+def _add_parameter_property(obj, param) -> None:
     """
-    Generate SCAD import lines.
+    Add a typed FreeCAD property to *obj* from a ScadParam / SCADArgument.
+    Property type is inferred from the default value string.
+    """
+    name    = param.name
+    default = param.default
+    desc    = _param_description(param)
+    section = "SCAD Parameters"
+
+    if default in ("true", "false"):
+        obj.addProperty("App::PropertyBool", name, section, desc)
+        setattr(obj, name, default == "true")
+        return
+
+    try:
+        if default is not None and "." not in str(default):
+            obj.addProperty("App::PropertyInteger", name, section, desc)
+            setattr(obj, name, int(default))
+            return
+    except Exception:
+        pass
+
+    try:
+        if default is not None:
+            obj.addProperty("App::PropertyFloat", name, section, desc)
+            setattr(obj, name, float(default))
+            return
+    except Exception:
+        pass
+
+    obj.addProperty("App::PropertyString", name, section, desc)
+    if default:
+        setattr(obj, name, str(default).strip('"'))
+
+
+# ---------------------------------------------------------------------------
+# SCAD import-line generation
+# ---------------------------------------------------------------------------
+
+def generate_scad_import_lines(meta) -> list:
+    """
+    Generate ``include <...>`` / ``use <...>`` lines for a generated SCAD file.
 
     Priority:
-      1. comment_includes + includes → include <...>
-      2. none found → use <./<library_root>/.../file.scad>
+      1. comment_includes + includes → ``include <…>``
+      2. none found → ``use <./<library-relative-path>>``
     """
-    lines = []
-
-    # --- Clean comment includes (strip //) ---
-    comment_includes = [
-        line.lstrip("/ ").strip()
-        for line in getattr(meta, "comment_includes", [])
-    ]
-
-    # --- Merge and dedupe includes ---
-    all_includes = comment_includes + getattr(meta, "includes", [])
-    seen = set()
+    # Merge and deduplicate comment + regular includes
+    seen: set = set()
     includes = []
-    for inc in all_includes:
-        if inc and inc not in seen:
-            seen.add(inc)
-            includes.append(inc)
+    for inc in list(getattr(meta, "comment_includes", [])) + list(getattr(meta, "includes", [])):
+        clean = inc.lstrip("/ ").strip()
+        if clean and clean not in seen:
+            seen.add(clean)
+            includes.append(clean)
 
-    # --- Case 1: explicit includes exist ---
     if includes:
-        for inc in includes:
-            lines.append(f"include <{inc}>")
-        return lines
+        return [f"include <{inc}>" for inc in includes]
 
-    # --- Case 2: fallback → library-relative use ---
-    src = meta.sourceFile.replace(os.sep, "/")
+    # Fallback: use importPaths set by _finalize_meta_imports, or derive from source
+    import_paths = getattr(meta, "importPaths", None)
+    if import_paths:
+        return [f"use <{p}>" for p in import_paths]
 
-    # Heuristic: libraries/<libname>/...
+    # Last resort: derive relative path heuristically
+    src = _source_file(meta).replace(os.sep, "/")
     parts = src.split("/libraries/", 1)
-    if len(parts) == 2:
-        rel_path = "./" + parts[1]
-    else:
-        # Fallback: just the filename
-        rel_path = "./" + os.path.basename(src)
-
-    lines.append(f"use <{rel_path}>")
-    return lines
+    rel = "./" + (parts[1] if len(parts) == 2 else os.path.basename(src))
+    return [f"use <{rel}>"]
 
 
-def write_scad_file(obj, module, meta):
+# ---------------------------------------------------------------------------
+# SCAD file writer
+# ---------------------------------------------------------------------------
+
+def write_scad_file(obj, module, meta) -> None:
     """
-    Write a SCAD file from a FreeCAD object and SCAD module meta.
+    Write a minimal SCAD file that imports a library and calls *module*.
     """
-    module_name = module.name.strip("()")
-    args_names = [arg.name for arg in module.arguments]
-    args_declaration = ", ".join(args_names)
-    args_values = build_arg_assignments(obj, module)
+    module_name       = module.name.strip("()")
+    params            = _module_params(module)
+    args_declaration  = ", ".join(p.name for p in params)
+    args_values       = build_arg_assignments(obj, module)
 
     try:
         os.makedirs(os.path.dirname(obj.Proxy.sourceFile), exist_ok=True)
         with open(obj.Proxy.sourceFile, "w", encoding="utf-8") as fp:
             write_log("Info", f"Writing SCAD file: {obj.Proxy.sourceFile}")
 
-            # --- Import lines ---
             for line in generate_scad_import_lines(meta):
                 print(f"{line};", file=fp)
 
             print("", file=fp)
-
-            # --- Module declaration as comment ---
             print(f"// module {module_name}({args_declaration});", file=fp)
-
-            # --- Module call ---
             print(f"{module_name}({args_values});", file=fp)
 
-            write_log(
-                "Info",
-                f"Module '{module_name}' written with args: {args_values}"
-            )
+            write_log("Info", f"Module '{module_name}' written with args: {args_values}")
 
-    except Exception as e:
-        write_log(
-            "Error",
-            f"Failed to write SCAD file {obj.Proxy.sourceFile}: {e}"
-        )
+    except Exception as exc:
+        write_log("Error", f"Failed to write SCAD file {obj.Proxy.sourceFile}: {exc}")
 
 
-def _add_argument_property(obj, arg):
-    """
-    Add a typed property to a FreeCAD object from a SCADArgument.
-    """
-    name = arg.name
-    default = arg.default
-    desc = arg.description
-    subsection = "SCAD Parameters"
-
-    # Boolean
-    if default in ("true", "false"):
-        prop = obj.addProperty("App::PropertyBool", name, subsection, desc)
-        setattr(obj, name, default == "true")
-        return
-
-    # Integer
-    try:
-        if default is not None and "." not in str(default):
-            ival = int(default)
-            prop = obj.addProperty("App::PropertyInteger", name, subsection, desc)
-            setattr(obj, name, ival)
-            return
-    except Exception:
-        pass
-
-    # Float
-    try:
-        fval = float(default)
-        prop = obj.addProperty("App::PropertyFloat", name, subsection, desc)
-        setattr(obj, name, fval)
-        return
-    except Exception:
-        pass
-
-    # String fallback
-    prop = obj.addProperty("App::PropertyString", name, subsection, desc)
-    if default:
-        setattr(obj, name, str(default).strip('"'))
-
-
-# -----------------------------
-# SCADModuleObject Class
-# -----------------------------
+# ---------------------------------------------------------------------------
+# SCADModuleObject
+# ---------------------------------------------------------------------------
 
 class SCADModuleObject(SCADfileBase):
-    def __init__(self, obj, name, sourceFile, meta, module, args):
-        super().__init__(obj, self.clean_module_name(name), sourceFile)
+    """
+    FreeCAD FeaturePython proxy for a single OpenSCAD module instantiation.
+    Works with both the new :class:`ScadMeta` / :class:`ScadModuleMeta` and
+    the legacy ``SCADMeta`` / ``SCADModule`` objects.
+    """
+
+    def __init__(self, obj, name, source_file, meta, module, args):
+        super().__init__(obj, self.clean_module_name(name), source_file)
 
         self.Object = obj
-        self.meta = meta
+        self.meta   = meta
         self.module = module
-        self.args = args
-        obj.Proxy = self
+        self.args   = args
+        obj.Proxy   = self
 
-        write_log("INFO", f"library scad file {meta.sourceFile}")
-        write_log("INFO", f"includes {meta.includes}")
-        write_log("INFO", f"modules {module.name}")
-         # Causes JSON error write_log("INFO", f"args {args}")
-        write_log("INFO", f"args {repr(args)}")
+        write_log("INFO", f"library scad file  : {_source_file(meta)}")
+        write_log("INFO", f"includes           : {meta.includes}")
+        write_log("INFO", f"module             : {module.name}")
+        write_log("INFO", f"args               : {repr(args)}")
 
         self._init_properties(obj)
-        self.add_args_as_properties(obj)
+        self.add_params_as_properties(obj)
         self._prepare_scad_file(obj)
         self.renderFunction(obj)
 
-    # -----------------------------
-    # SCADModuleObject methods
-    # -----------------------------
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+
     def clean_module_name(self, name: str) -> str:
         return name[:-2] if name.endswith("()") else name
 
-    def _init_properties(self, obj):
-        """
-        Initialize base properties like ModuleName and Description
-        """
-        obj.addProperty("App::PropertyString", "ModuleName", "Parameters", "OpenSCAD module name").ModuleName = self.module.name
-        obj.addProperty("App::PropertyString", "Description", "Parameters", "Module description").Description = getattr(self.module, "description", "")
+    def _init_properties(self, obj) -> None:
+        obj.addProperty(
+            "App::PropertyString", "ModuleName", "Parameters", "OpenSCAD module name"
+        ).ModuleName = self.module.name
+
+        obj.addProperty(
+            "App::PropertyString", "Description", "Parameters", "Module description"
+        ).Description = getattr(self.module, "description", "")
+
         obj.setEditorMode("Description", 1)
 
-    def add_args_as_properties(self, obj):
-        """
-        Add all module arguments as FreeCAD properties (typed as string).
-        """
-        for arg in getattr(self.module, "arguments", []):
-            _add_argument_property(obj, arg)
+    def add_params_as_properties(self, obj) -> None:
+        """Add all module parameters as typed FreeCAD properties."""
+        for param in _module_params(self.module):
+            _add_parameter_property(obj, param)
 
-    def _build_arg_assignments(self, obj):
-        """
-        Build a comma-separated string of argument assignments for this object/module.
-        """
+    def _build_arg_assignments(self, obj) -> str:
         return build_arg_assignments(obj, self.module)
 
-    def _prepare_scad_file(self, obj):
-        """
-        Prepare source file path and write initial SCAD file with includes and module call.
-        """
+    def _prepare_scad_file(self, obj) -> None:
         scad_dir = BaseParams.getScadSourcePath()
         obj.Proxy.sourceFile = os.path.join(scad_dir, obj.Name + ".scad")
         os.makedirs(scad_dir, exist_ok=True)
         write_scad_file(obj, self.module, self.meta)
 
-    def execute(self, obj):
-        """
-        Hook for OpenSCAD execution (can be implemented later).
-        """
+    def execute(self, obj) -> None:
         pass
-

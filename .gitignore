@@ -3,7 +3,7 @@ Utils/*.step
 freecad/__pycache__/
 __pycache__
 .DS_Store
-/freecad/gdml/#exoemacs#
+/freecad/gdml/#exoemacs#
 rsync_to_goole-drive
 .venv
 .vscode
