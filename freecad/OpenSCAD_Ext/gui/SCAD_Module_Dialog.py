@@ -106,6 +106,9 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
         # Modules panel
         self.modules_box = self._make_list_panel("Modules")
         self._limit_panel_height(self.modules_box)
+        # itemClicked fires on every click (even re-clicking the current item).
+        # currentItemChanged handles keyboard navigation.
+        self.modules_box.list.itemClicked.connect(self._on_module_item_clicked)
         self.modules_box.list.currentItemChanged.connect(self._on_module_selected)
         main_layout.addWidget(self.modules_box)
 
@@ -185,18 +188,27 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
     # Module selection
     # ------------------------------------------------------------------
 
+    def _on_module_item_clicked(self, item):
+        """Handle mouse clicks – fires even when re-clicking the current item."""
+        self._activate_module(item.text() if item else None)
+
     def _on_module_selected(self, current, previous):
-        if not current:
+        """Handle keyboard navigation via currentItemChanged."""
+        if current:
+            self._activate_module(current.text())
+
+    def _activate_module(self, name):
+        if not name:
             return
 
-        name = current.text()
-        self.selected_module = next(
-            (m for m in self.meta.modules if m.name == name), None
-        )
-        if not self.selected_module:
+        mod = next((m for m in self.meta.modules if m.name == name), None)
+        if mod is None:
+            write_log("Warning", f"Module '{name}' not found in meta.modules")
             return
 
-        self.details_label.setText(self.selected_module.description or "")
+        self.selected_module = mod
+        desc = mod.description or ""
+        self.details_label.setText(desc if desc else "(no description)")
         self._build_argument_widgets()
         self.create_btn.setEnabled(True)
 
@@ -204,39 +216,52 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
     # Arguments
     # ------------------------------------------------------------------
 
-    def _clear_arguments(self):
-        while self.args_grid.count():
-            item = self.args_grid.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-        self.arg_widgets.clear()
-
     def _build_argument_widgets(self):
-        self._clear_arguments()
+        """
+        Rebuild the arguments grid for the currently selected module.
+
+        Replaces the QScrollArea content widget entirely so there are no
+        stale widgets from the previous selection (deleteLater() is async
+        and can leave ghosts in the layout).
+        """
+        self.arg_widgets = {}
+
         # Support both new ScadModuleMeta (.params) and legacy SCADModule (.arguments)
-        params = (
-            getattr(self.selected_module, "params", None)
-            or getattr(self.selected_module, "arguments", [])
-        )
-        row = 0
-        for param in params:
-            name_lbl  = QtWidgets.QLabel(param.name)
-            name_lbl.setEnabled(False)
+        params = getattr(self.selected_module, "params", None)
+        if not params:
+            params = getattr(self.selected_module, "arguments", [])
+
+        # Fresh container – avoids any stale-widget issues
+        new_container = QtWidgets.QWidget()
+        grid = QtWidgets.QGridLayout(new_container)
+        grid.setHorizontalSpacing(10)
+        grid.setVerticalSpacing(4)
+        grid.setColumnStretch(2, 1)
+
+        for row, param in enumerate(params):
+            name_lbl = QtWidgets.QLabel(param.name)
 
             value_widget = self._create_param_widget(param)
 
-            # ScadParam has no .description; SCADArgument does
             desc_text = getattr(param, "description", "") or ""
             desc_lbl  = QtWidgets.QLabel(desc_text)
-            desc_lbl.setEnabled(False)
             desc_lbl.setWordWrap(True)
 
-            self.args_grid.addWidget(name_lbl,    row, 0)
-            self.args_grid.addWidget(value_widget, row, 1)
-            self.args_grid.addWidget(desc_lbl,    row, 2)
+            grid.addWidget(name_lbl,     row, 0)
+            grid.addWidget(value_widget, row, 1)
+            grid.addWidget(desc_lbl,     row, 2)
 
             self.arg_widgets[param.name] = value_widget
-            row += 1
+
+        # Swap in the new container
+        self.args_scroll.setWidget(new_container)
+        self.args_container = new_container
+        self.args_grid = grid
+
+        if not params:
+            grid.addWidget(QtWidgets.QLabel("(no parameters)"), 0, 0)
+
+        write_log("Info", f"Built {len(params)} argument widget(s) for '{self.selected_module.name}'")
 
     def _create_param_widget(self, param):
         default = param.default
