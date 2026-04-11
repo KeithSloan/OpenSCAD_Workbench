@@ -191,7 +191,7 @@ class SCADModuleObject(SCADfileBase):
         write_log("INFO", f"module             : {module.name}")
         write_log("INFO", f"args               : {repr(args)}")
 
-        self._init_properties(obj)
+        self._init_module_properties(obj)
         self.add_params_as_properties(obj)
         self._prepare_scad_file(obj)
         self.renderFunction(obj)
@@ -203,7 +203,8 @@ class SCADModuleObject(SCADfileBase):
     def clean_module_name(self, name: str) -> str:
         return name[:-2] if name.endswith("()") else name
 
-    def _init_properties(self, obj) -> None:
+    def _init_module_properties(self, obj) -> None:
+        """Add module-specific properties (called after the base SCADfileBase properties)."""
         obj.addProperty(
             "App::PropertyString", "ModuleName", "Parameters", "OpenSCAD module name"
         ).ModuleName = self.module.name
