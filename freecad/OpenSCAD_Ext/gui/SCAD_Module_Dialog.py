@@ -6,46 +6,49 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
 from freecad.OpenSCAD_Ext.objects.SCADModuleObject import (
     SCADModuleObject,
-    ViewSCADProvider
+    ViewSCADProvider,
 )
 
 
 def _finalize_meta_imports(meta, output_scad_path):
     """
-    Resolve SCAD import strategy and store it on meta.
+    Resolve SCAD import strategy and store it on *meta*.
 
     Sets:
         meta.importStyle  -> "include" | "use"
         meta.importPaths  -> list of strings
+
+    Works with the new :class:`~freecad.OpenSCAD_Ext.parsers.scadmeta.ScadMeta`
+    (``source_file`` / ``base_name``) as well as the legacy ``SCADMeta``
+    (``sourceFile`` / ``baseName``).
     """
-
-    # Merge comment + normal includes
+    # Merge comment + normal includes; deduplicate
+    seen: set = set()
     includes = []
-    for inc in meta.comment_includes:
-        includes.append(inc)
-    for inc in meta.includes:
-        includes.append(inc)
-
-    # Deduplicate, preserve order
-    seen = set()
-    includes = [i for i in includes if not (i in seen or seen.add(i))]
+    for inc in list(meta.comment_includes) + list(meta.includes):
+        if inc and inc not in seen:
+            seen.add(inc)
+            includes.append(inc)
 
     if includes:
         meta.importStyle = "include"
         meta.importPaths = includes
         return
 
-    # --- Fallback: use <relative path> ---
+    # Fallback: use <relative path to source>
     meta.importStyle = "use"
+
+    # Accept both new (source_file) and legacy (sourceFile) attribute names
+    src_file = getattr(meta, "source_file", None) or getattr(meta, "sourceFile", "")
+    base     = getattr(meta, "base_name", None)  or getattr(meta, "baseName",   os.path.basename(src_file))
 
     try:
         out_dir = os.path.dirname(output_scad_path)
-        rel = os.path.relpath(meta.sourceFile, out_dir)
-        rel = rel.replace(os.sep, "/")
+        rel = os.path.relpath(src_file, out_dir).replace(os.sep, "/")
         if not rel.startswith("."):
             rel = "./" + rel
     except Exception:
-        rel = meta.baseName
+        rel = base
 
     meta.importPaths = [rel]
 
@@ -53,6 +56,10 @@ def _finalize_meta_imports(meta, output_scad_path):
 class SCAD_Module_Dialog(QtWidgets.QDialog):
     """
     Dialog to inspect modules in a SCAD file and create a SCAD Module object.
+
+    Accepts the new :class:`~freecad.OpenSCAD_Ext.parsers.scadmeta.ScadMeta`
+    (modules as ``ScadModuleMeta`` with ``.params``) as well as the legacy
+    ``SCADMeta`` (modules as ``SCADModule`` with ``.arguments``).
     """
 
     def __init__(self, meta, *args, **kwargs):
@@ -63,12 +70,12 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
         self.selected_module = None
         self.arg_widgets = {}
 
-        self.setWindowTitle(
-            f"SCAD Modules - {os.path.basename(meta.sourceFile)}"
-        )
+        # Accept both new (source_file) and legacy (sourceFile) attribute names
+        src_file = getattr(meta, "source_file", None) or getattr(meta, "sourceFile", "")
+        self.setWindowTitle(f"SCAD Modules – {os.path.basename(src_file)}")
         self.resize(900, 700)
 
-        write_log("Info", f"Opening SCAD_Module_Dialog for {meta.sourceFile}")
+        write_log("Info", f"Opening SCAD_Module_Dialog for {src_file}")
 
         self._build_ui()
         self._populate_includes()
@@ -83,13 +90,12 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
         main_layout.setSpacing(4)
         main_layout.setContentsMargins(8, 6, 8, 6)
 
-        # ---------- Includes panels ----------
+        # Includes panels
         inc_layout = QtWidgets.QHBoxLayout()
         inc_layout.setSpacing(8)
 
         self.includes_box = self._make_list_panel("Includes / Uses")
         self.comment_includes_box = self._make_list_panel("Comment Includes")
-
         self._limit_panel_height(self.includes_box)
         self._limit_panel_height(self.comment_includes_box)
 
@@ -97,47 +103,39 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
         inc_layout.addWidget(self.comment_includes_box)
         main_layout.addLayout(inc_layout)
 
-        # ---------- Modules panel ----------
+        # Modules panel
         self.modules_box = self._make_list_panel("Modules")
         self._limit_panel_height(self.modules_box)
-
-        self.modules_box.list.currentItemChanged.connect(
-            self._on_module_selected
-        )
+        self.modules_box.list.currentItemChanged.connect(self._on_module_selected)
         main_layout.addWidget(self.modules_box)
 
-        # ---------- Module details ----------
+        # Module details
         self.details_box = QtWidgets.QGroupBox("Module Details")
         details_layout = QtWidgets.QVBoxLayout(self.details_box)
         details_layout.setContentsMargins(6, 4, 6, 4)
-
         self.details_label = QtWidgets.QLabel("")
         self.details_label.setWordWrap(True)
         details_layout.addWidget(self.details_label)
-
         self._limit_panel_height(self.details_box)
         main_layout.addWidget(self.details_box)
 
-        # ---------- Arguments ----------
+        # Arguments
         self.args_box = QtWidgets.QGroupBox("Arguments")
         args_layout = QtWidgets.QVBoxLayout(self.args_box)
         args_layout.setContentsMargins(6, 4, 6, 4)
 
         self.args_scroll = QtWidgets.QScrollArea()
         self.args_scroll.setWidgetResizable(True)
-
         self.args_container = QtWidgets.QWidget()
         self.args_grid = QtWidgets.QGridLayout(self.args_container)
         self.args_grid.setHorizontalSpacing(10)
         self.args_grid.setVerticalSpacing(4)
         self.args_grid.setColumnStretch(2, 1)
-
         self.args_scroll.setWidget(self.args_container)
         args_layout.addWidget(self.args_scroll)
-
         main_layout.addWidget(self.args_box, stretch=1)
 
-        # ---------- Buttons ----------
+        # Buttons
         btn_layout = QtWidgets.QHBoxLayout()
         btn_layout.addStretch()
 
@@ -160,33 +158,26 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
         box = QtWidgets.QGroupBox(title)
         layout = QtWidgets.QVBoxLayout(box)
         layout.setContentsMargins(6, 4, 6, 4)
-
         lst = QtWidgets.QListWidget()
         layout.addWidget(lst)
-
         box.list = lst
         return box
 
     def _limit_panel_height(self, widget, lines=4):
         fm = self.fontMetrics()
-        line_h = fm.lineSpacing()
-        widget.setMaximumHeight(line_h * (lines + 2))
+        widget.setMaximumHeight(fm.lineSpacing() * (lines + 2))
 
     # ------------------------------------------------------------------
-    # Populate UI
+    # Populate
     # ------------------------------------------------------------------
 
     def _populate_includes(self):
-        write_log("Info", "Populating includes and uses")
-
         for inc in self.meta.includes:
             self.includes_box.list.addItem(f"include <{inc}>")
-
         for inc in self.meta.comment_includes:
             self.comment_includes_box.list.addItem(inc)
 
     def _populate_modules(self):
-        write_log("Info", "Populating modules list")
         for mod in self.meta.modules:
             self.modules_box.list.addItem(mod.name)
 
@@ -199,13 +190,9 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
             return
 
         name = current.text()
-        write_log("Info", f"Selected module: {name}")
-
         self.selected_module = next(
-            (m for m in self.meta.modules if m.name == name),
-            None
+            (m for m in self.meta.modules if m.name == name), None
         )
-
         if not self.selected_module:
             return
 
@@ -226,27 +213,33 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
 
     def _build_argument_widgets(self):
         self._clear_arguments()
+        # Support both new ScadModuleMeta (.params) and legacy SCADModule (.arguments)
+        params = (
+            getattr(self.selected_module, "params", None)
+            or getattr(self.selected_module, "arguments", [])
+        )
         row = 0
-
-        for arg in getattr(self.selected_module, "arguments", []):
-            name_lbl = QtWidgets.QLabel(arg.name)
+        for param in params:
+            name_lbl  = QtWidgets.QLabel(param.name)
             name_lbl.setEnabled(False)
 
-            value_widget = self._create_arg_widget(arg)
+            value_widget = self._create_param_widget(param)
 
-            desc_lbl = QtWidgets.QLabel(arg.description or "")
+            # ScadParam has no .description; SCADArgument does
+            desc_text = getattr(param, "description", "") or ""
+            desc_lbl  = QtWidgets.QLabel(desc_text)
             desc_lbl.setEnabled(False)
             desc_lbl.setWordWrap(True)
 
-            self.args_grid.addWidget(name_lbl, row, 0)
+            self.args_grid.addWidget(name_lbl,    row, 0)
             self.args_grid.addWidget(value_widget, row, 1)
-            self.args_grid.addWidget(desc_lbl, row, 2)
+            self.args_grid.addWidget(desc_lbl,    row, 2)
 
-            self.arg_widgets[arg.name] = value_widget
+            self.arg_widgets[param.name] = value_widget
             row += 1
 
-    def _create_arg_widget(self, arg):
-        default = arg.default
+    def _create_param_widget(self, param):
+        default = param.default
 
         if default in ("true", "false"):
             w = QtWidgets.QCheckBox()
@@ -301,18 +294,14 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
         if not self.selected_module:
             return
 
-        write_log(
-            "Info",
-            f"Creating SCAD module object: {self.selected_module.name}",
-        )
+        write_log("Info", f"Creating SCAD module object: {self.selected_module.name}")
 
         doc = FreeCAD.ActiveDocument or FreeCAD.newDocument("SCAD_Import")
 
         module_name = self._clean_module_name(self.selected_module.name)
-        source_dir = BaseParams.getScadSourcePath()
+        source_dir  = BaseParams.getScadSourcePath()
         source_file = os.path.join(source_dir, module_name + ".scad")
 
-        # ---- Resolve import paths HERE ----
         _finalize_meta_imports(self.meta, source_file)
 
         obj = doc.addObject("Part::FeaturePython", module_name)
@@ -320,7 +309,6 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
         ViewSCADProvider(obj.ViewObject)
 
         args = self._collect_args()
-
         SCADModuleObject(
             obj,
             module_name,
@@ -332,4 +320,3 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
 
         doc.recompute()
         self.accept()
-
