@@ -324,7 +324,7 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
         doc = FreeCAD.ActiveDocument or FreeCAD.newDocument("SCAD_Import")
 
         module_name = self._clean_module_name(self.selected_module.name)
-        source_dir  = BaseParams.getScadSourcePath()
+        source_dir  = BaseParams.getScadSourcePathOrDefault()
         source_file = os.path.join(source_dir, module_name + ".scad")
 
         _finalize_meta_imports(self.meta, source_file)
