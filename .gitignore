@@ -9,4 +9,5 @@ rsync_to_goole-drive
 .vscode
 .idea
 .Utils.save
+.claude/
 

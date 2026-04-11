@@ -884,7 +884,6 @@ def process_linear_extrude(obj,h) :
     mylinear.Solid = False
     if gui:
         newobj.ViewObject.hide()
-    checkObjShape(mylinear)
     return(mylinear)
 
 def process_linear_extrude_with_transform(base,height,twist,scale) :   
