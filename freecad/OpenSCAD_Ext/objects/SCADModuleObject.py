@@ -67,35 +67,46 @@ def _add_parameter_property(obj, param) -> None:
     """
     Add a typed FreeCAD property to *obj* from a ScadParam / SCADArgument.
     Property type is inferred from the default value string.
+
+    IMPORTANT: always test the type conversion *before* calling addProperty.
+    If addProperty succeeds but the subsequent setattr fails, the property
+    is left in an inconsistent state and the next addProperty call for the
+    same name raises NameError.
     """
     name    = param.name
     default = param.default
     desc    = _param_description(param)
     section = "SCAD Parameters"
 
+    # Bool
     if default in ("true", "false"):
         obj.addProperty("App::PropertyBool", name, section, desc)
         setattr(obj, name, default == "true")
         return
 
-    try:
-        if default is not None and "." not in str(default):
+    # Integer – only attempt if the string looks like a plain integer
+    if default is not None and "." not in str(default):
+        try:
+            ival = int(default)
             obj.addProperty("App::PropertyInteger", name, section, desc)
-            setattr(obj, name, int(default))
+            setattr(obj, name, ival)
             return
-    except Exception:
-        pass
+        except (ValueError, TypeError):
+            pass
 
-    try:
-        if default is not None:
+    # Float
+    if default is not None:
+        try:
+            fval = float(default)
             obj.addProperty("App::PropertyFloat", name, section, desc)
-            setattr(obj, name, float(default))
+            setattr(obj, name, fval)
             return
-    except Exception:
-        pass
+        except (ValueError, TypeError):
+            pass
 
+    # String fallback (covers SCAD identifiers like BOTTOM, UP, etc.)
     obj.addProperty("App::PropertyString", name, section, desc)
-    if default:
+    if default is not None:
         setattr(obj, name, str(default).strip('"'))
 
 
