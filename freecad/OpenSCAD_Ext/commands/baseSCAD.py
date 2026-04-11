@@ -67,28 +67,6 @@ class BaseParams:
 
         return path
 
-    @staticmethod
-    def getScadSourcePathOrDefault() -> str:
-        """
-        Return the configured SCAD source directory, falling back to
-        ``<FreeCAD-user-data>/OpenSCAD_Modules`` when the preference is
-        not set or points to a non-existent path.
-
-        The fallback directory is created on first use.
-        """
-        path = BaseParams.getScadSourcePath()
-        if path:
-            return path
-
-        fallback = os.path.join(
-            FreeCAD.getUserAppDataDir(), "OpenSCAD_Modules"
-        )
-        try:
-            os.makedirs(fallback, exist_ok=True)
-        except OSError as exc:
-            write_log("Warning", f"Could not create fallback SCAD dir {fallback}: {exc}")
-        write_log("Info", f"Using fallback SCAD source path: {fallback}")
-        return fallback
 
 
     # ---- validation helpers ----
