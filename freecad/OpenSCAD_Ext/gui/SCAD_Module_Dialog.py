@@ -321,10 +321,20 @@ class SCAD_Module_Dialog(QtWidgets.QDialog):
 
         write_log("Info", f"Creating SCAD module object: {self.selected_module.name}")
 
+        # Guard: SCAD source path must be configured before we can write files
+        source_dir = BaseParams.getScadSourcePath()
+        if not source_dir:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "SCAD Source Path Not Set",
+                "Please set the default SCAD source directory before creating a module object.\n\n"
+                "Go to:  Edit → Preferences → OpenSCAD  and set the 'Default Source Directory'."
+            )
+            return
+
         doc = FreeCAD.ActiveDocument or FreeCAD.newDocument("SCAD_Import")
 
         module_name = self._clean_module_name(self.selected_module.name)
-        source_dir  = BaseParams.getScadSourcePathOrDefault()
         source_file = os.path.join(source_dir, module_name + ".scad")
 
         _finalize_meta_imports(self.meta, source_file)

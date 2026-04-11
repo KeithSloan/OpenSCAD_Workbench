@@ -235,7 +235,7 @@ class SCADModuleObject(SCADfileBase):
         return build_arg_assignments(obj, self.module)
 
     def _prepare_scad_file(self, obj) -> None:
-        scad_dir = BaseParams.getScadSourcePathOrDefault()
+        scad_dir = BaseParams.getScadSourcePath()
         obj.Proxy.sourceFile = os.path.join(scad_dir, obj.Name + ".scad")
         os.makedirs(scad_dir, exist_ok=True)
         write_scad_file(obj, self.module, self.meta)
