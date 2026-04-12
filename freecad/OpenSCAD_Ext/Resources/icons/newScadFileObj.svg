@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  newScadFileObj.svg  —  New SCAD File Object
+  64×64 px  |  OpenSCAD_Ext workbench
+
+  Design: gold SCAD-code document page with a green "add" badge.
+  The folded top-right corner universally signals a file/document.
+  Three horizontal lines suggest source-code content.
+  Green ⊕ badge (bottom-right) means "create new".
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="dg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#fce94f"/>
+      <stop offset="100%" stop-color="#c4a000"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ── Document body ── -->
+  <rect x="6" y="4" width="34" height="44" rx="3"
+        fill="url(#dg)" stroke="#302b00" stroke-width="2"/>
+
+  <!-- Folded top-right corner -->
+  <path d="M 34,4 L 40,10 L 34,10 Z"
+        fill="#8f6800" stroke="#302b00" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- Crease line -->
+  <line x1="34" y1="4" x2="40" y2="10" stroke="#302b00" stroke-width="1.5"/>
+
+  <!-- Code lines (SCAD source content) -->
+  <line x1="11" y1="20" x2="36" y2="20" stroke="#302b00" stroke-width="2"   stroke-linecap="round"/>
+  <line x1="11" y1="27" x2="34" y2="27" stroke="#302b00" stroke-width="2"   stroke-linecap="round"/>
+  <line x1="11" y1="34" x2="30" y2="34" stroke="#302b00" stroke-width="2"   stroke-linecap="round"/>
+
+  <!-- ── New badge: green circle + white + ── -->
+  <circle cx="50" cy="50" r="12" fill="#4e9a06" stroke="#302b00" stroke-width="1.5"/>
+  <line x1="50" y1="44" x2="50" y2="56" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="44" y1="50" x2="56" y2="50" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+</svg>

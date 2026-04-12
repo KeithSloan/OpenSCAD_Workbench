@@ -23,9 +23,14 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
                 return text
         App.Console.PrintMessage("✅ OpenSCADWorkbench_Ext.Initialize()\n")
 
-	    # Resource locations for new-style workbenches
-        Gui.addIconPath(":/icons")
-        Gui.addLanguagePath(":/translations")
+        # Resource locations — use filesystem paths so icons load without
+        # a compiled QRC.  Both Resources/ (workbench icon) and
+        # Resources/icons/ (command icons) are registered.
+        import os as _os
+        import freecad.OpenSCAD_Ext as _wb
+        _res = _os.path.join(_os.path.dirname(_wb.__file__), "Resources")
+        Gui.addIconPath(_res)
+        Gui.addIconPath(_os.path.join(_res, "icons"))
 
     	# Register preferences (new FreeCAD 1.0 API)
         # from . import preferences
@@ -175,9 +180,6 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
         #)
         # self.appendMenu('OpenSCAD',["AddOpenSCADElement"])
         ###self.appendCommandbar("&Generic Tools",["ColorCodeShape"])
-        Gui.addIconPath(":/icons")
-        Gui.addLanguagePath(":/translations")
-
         ### Change when 1.0.2 supports new Addpreference
         ### Gui.addPreferencePage(":/ui/openscadprefs-base.ui", "OpenSCAD_Ext")
         import os

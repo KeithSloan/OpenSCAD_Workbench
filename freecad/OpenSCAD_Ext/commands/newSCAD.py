@@ -14,7 +14,7 @@ class NewSCADFile_Class(BaseParams):
         return {
             'MenuText': 'New SCAD File Object',
             'ToolTip': 'Create a new SCAD file Object',
-            'Pixmap': ':/icons/newScadFileObj.svg'
+            'Pixmap': 'newScadFileObj.svg'
         }
 
     def Activated(self):

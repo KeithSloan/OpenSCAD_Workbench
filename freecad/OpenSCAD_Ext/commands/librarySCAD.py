@@ -16,7 +16,7 @@ class LibrarySCAD_Class(BaseParams):
         return {
             'MenuText': 'OpenSCAD Library',
             'ToolTip': 'Create SCADFile Object from OpenSCAD Library',
-            'Pixmap': ':/icons/editScadFileObj.svg'
+            'Pixmap': 'librarySCAD.svg'
         }
 
     def Activated(self):

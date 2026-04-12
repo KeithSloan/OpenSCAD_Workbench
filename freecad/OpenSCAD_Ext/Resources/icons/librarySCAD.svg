@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  librarySCAD.svg  —  OpenSCAD Library Browser
+  64×64 px  |  OpenSCAD_Ext workbench
+
+  Design: three gold "books" standing on a shelf (classic library motif),
+  plus an amber magnifying-glass badge (bottom-right) to signal "browse
+  / search the library".  Books vary in height and shade to give depth.
+  This icon is deliberately different from the document-family icons to
+  make the Library Browser stand out in the toolbar.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+
+  <!-- ── Shelf base ── -->
+  <rect x="4" y="47" width="46" height="3" rx="1"
+        fill="#8f6800" stroke="#302b00" stroke-width="1.5"/>
+
+  <!-- ── Book 1 (left, tallest, bright gold) ── -->
+  <rect x="5"  y="13" width="12" height="34" rx="2"
+        fill="#fce94f" stroke="#302b00" stroke-width="1.5"/>
+  <!-- Spine text hint (horizontal rule lines) -->
+  <line x1="7"  y1="20" x2="15" y2="20" stroke="#302b00" stroke-width="1" opacity="0.5"/>
+  <line x1="7"  y1="25" x2="15" y2="25" stroke="#302b00" stroke-width="1" opacity="0.5"/>
+  <line x1="7"  y1="30" x2="15" y2="30" stroke="#302b00" stroke-width="1" opacity="0.5"/>
+
+  <!-- ── Book 2 (centre, mid-height, medium gold) ── -->
+  <rect x="19" y="9"  width="12" height="38" rx="2"
+        fill="#e6b800" stroke="#302b00" stroke-width="1.5"/>
+  <line x1="21" y1="17" x2="29" y2="17" stroke="#302b00" stroke-width="1" opacity="0.5"/>
+  <line x1="21" y1="22" x2="29" y2="22" stroke="#302b00" stroke-width="1" opacity="0.5"/>
+  <line x1="21" y1="27" x2="29" y2="27" stroke="#302b00" stroke-width="1" opacity="0.5"/>
+
+  <!-- ── Book 3 (right, shorter, dark gold) ── -->
+  <rect x="33" y="18" width="12" height="29" rx="2"
+        fill="#c4a000" stroke="#302b00" stroke-width="1.5"/>
+  <line x1="35" y1="25" x2="43" y2="25" stroke="#302b00" stroke-width="1" opacity="0.5"/>
+  <line x1="35" y1="30" x2="43" y2="30" stroke="#302b00" stroke-width="1" opacity="0.5"/>
+
+  <!-- ── Library/browse badge: amber circle + magnifying glass ── -->
+  <circle cx="50" cy="50" r="12" fill="#c17d11" stroke="#302b00" stroke-width="1.5"/>
+
+  <!-- Lens circle -->
+  <circle cx="46.5" cy="46.5" r="5.5"
+          fill="none" stroke="white" stroke-width="2"/>
+  <!-- Handle -->
+  <line x1="50.5" y1="50.5" x2="56.5" y2="56.5"
+        stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

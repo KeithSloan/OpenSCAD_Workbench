@@ -10,7 +10,7 @@ class RenderSCADFileObject_Class:
         return {
             'MenuText': 'Render SCAD File Object to Shape',
             'ToolTip': 'Render SCAD file Object to Shape',
-            'Pixmap': ':/icons/renderScadFileObj.svg'
+            'Pixmap': 'renderScadFileObj.svg'
         }
 
     def Activated(self):

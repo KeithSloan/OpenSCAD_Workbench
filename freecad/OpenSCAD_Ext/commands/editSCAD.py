@@ -11,7 +11,7 @@ class EditSCADFile_Class(BaseParams):
         return {
             'MenuText': 'Edit SCAD File Object',
             'ToolTip': 'Edit  a new SCAD file Object',
-            'Pixmap': ':/icons/editScadFileObj.svg'
+            'Pixmap': 'editScadFileObj.svg'
         }
 
     def Activated(self):

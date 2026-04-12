@@ -19,7 +19,7 @@ class VarsSCADFile_Class:
         return {
             'MenuText': 'Extract SCAD Variables',
             'ToolTip': 'Extract variables from SCAD file and mirror to spreadsheet',
-            'Pixmap': ':/icons/varsSCAD.svg'
+            'Pixmap': 'varsSCAD.svg'
         }
 
     def Activated(self):
