@@ -11,13 +11,15 @@ scanner.
 - **Import** `.scad` and `.csg` files into FreeCAD as native BRep shapes
   (with mesh fallback via OpenSCAD CLI)
 - **Export** FreeCAD objects to `.scad` format
+- **Toolbar icons** for every command — visually distinct, colour-coded 64×64 SVGs
 - **OpenSCAD Library Browser** – browse your `OPENSCADPATH` library,
   inspect modules with their parameters, and create parametric FreeCAD
   objects from any SCAD module
 - **SCAD Metadata Scanner** – Lark-based parser extracts modules, functions,
   variables, includes and classifies each file by type
 - **Persistent metadata cache** – TinyDB + Watchdog keeps parsed metadata
-  fresh without re-parsing unchanged files
+  fresh without re-parsing unchanged files; automatic invalidation on
+  file-system changes
 - **Spreadsheet integration** – extract top-level SCAD variables into a
   FreeCAD spreadsheet for parametric workflows
 - **DXF support** – import/export `.dxf` files via OpenSCAD
@@ -26,18 +28,40 @@ scanner.
 
 ## Requirements
 
-| Dependency | Purpose |
-|---|---|
-| FreeCAD ≥ 1.0 | Host application |
-| OpenSCAD (CLI) | Mesh/STL generation fallback |
-| `lark` | SCAD source parser |
-| `tinydb` | Persistent metadata cache |
-| `watchdog` | File-system change detection |
+| Dependency | Version | Purpose |
+|---|---|---|
+| FreeCAD | ≥ 1.0 | Host application |
+| OpenSCAD (CLI) | any | Mesh/STL generation fallback |
+| `lark` | ≥ 1.1 | SCAD source parser (usually pre-installed) |
+| `tinydb` | ≥ 4.8 | Persistent metadata cache |
+| `watchdog` | ≥ 4.0 | File-system change detection |
 
-Install Python dependencies:
+### Installing Python dependencies
+
+> **Important:** packages must be installed into *FreeCAD's own Python*, not
+> the system Python.  Use `python -m pip` via FreeCAD's bundled interpreter.
+
+**macOS (FreeCAD app bundle):**
 ```bash
-pip install lark tinydb watchdog
+/Applications/FreeCAD_1.0.0.app/Contents/Resources/bin/python \
+    -m pip install --user tinydb watchdog
 ```
+
+**Linux (AppImage or system package):**
+```bash
+# Find FreeCAD's Python first
+which python3   # may be FreeCAD's if activated via squashfs
+# or
+/path/to/FreeCAD/bin/python3 -m pip install --user tinydb watchdog
+```
+
+**Windows:**
+```powershell
+& "C:\Program Files\FreeCAD 1.0\bin\python.exe" -m pip install --user tinydb watchdog
+```
+
+> Note: `lark` is already bundled with FreeCAD 1.0.  
+> `tinydb` and `watchdog` will be available via the Addon Manager in a future release.
 
 ---
 
@@ -71,6 +95,30 @@ Open **FreeCAD | Preferences | OpenSCAD_Ext** and set:
 
 ---
 
+## Toolbar Icons
+
+Every workbench command has a dedicated 64×64 SVG icon.  All file-operation
+icons share a **gold folded-corner document** base (matching FreeCAD's
+OpenSCAD workbench palette) and carry a coloured circular badge that signals
+the action:
+
+| Icon file | Command | Badge | Colour |
+|---|---|---|---|
+| `newScadFileObj.svg` | New SCAD File Object | **⊕** plus | Green |
+| `editScadFileObj.svg` | Edit SCAD File Object | Pencil | Blue |
+| `editStudioScadFileObj.svg` | OpenSCAD Studio | Monitor | Purple |
+| `renderScadFileObj.svg` | Render to Shape | **▶** play | Orange |
+| `varsSCAD.svg` | Extract Variables | Spreadsheet grid | Teal |
+| `librarySCAD.svg` | Library Browser | Bookshelf + magnifying glass | Amber |
+
+The Library Browser icon deliberately breaks the document pattern — its
+bookshelf motif makes it immediately distinguishable in the toolbar.
+
+Icons live in `freecad/OpenSCAD_Ext/Resources/icons/` and are loaded via
+FreeCAD's filesystem icon path (`Gui.addIconPath`); no compiled QRC is needed.
+
+---
+
 ## Usage
 
 ### Import a SCAD or CSG file
@@ -80,23 +128,38 @@ the OpenSCAD CLI.
 
 ### OpenSCAD Library Browser
 
-1. Open via the **OpenSCAD_Ext** toolbar or menu: **OpenSCAD Library**
-2. The browser lists all `.scad` files in your `OPENSCADPATH` directory,
-   annotated with their detected file type:
+Open via the **OpenSCAD_Ext** toolbar (bookshelf icon) or menu.
 
-| File Type | Meaning |
-|---|---|
-| `Pure SCAD` | Contains top-level geometry — produces output when run directly |
-| `Modules` | Defines modules (library file) |
-| `Functions` | Defines functions only |
-| `Mixed` | Defines both modules and functions |
-| `Variables` | Only variable definitions |
-| `Library` | Only `include`/`use` aggregation |
+The browser lists all entries under your `OPENSCADPATH` directory.  Each
+`.scad` file is scanned for metadata on first view (results are cached) and
+displayed with a **colour-coded file-type label and icon**:
 
-3. Select a `.scad` file to enable actions:
-   - **Scan Modules** – open the module inspector dialog
-   - **Extract Variables** – populate a FreeCAD spreadsheet with top-level
-     variable names and expressions
+| Display label | Enum value | Icon colour | Meaning |
+|---|---|---|---|
+| **Model** | `PURE_SCAD` | Green | Contains top-level geometry — produces output when rendered directly |
+| **Modules** | `MODULES_ONLY` | Blue | Reusable module definitions |
+| **Functions** | `FUNCTIONS_ONLY` | Teal | Mathematical / utility function definitions |
+| **Mixed** | `MIXED` | Purple | Both module and function definitions |
+| **Config** | `VARIABLE` | Red | Variable / constant definitions only |
+| **Library** | `LIBRARY` | Orange | Only `include`/`use` aggregation |
+| **Unknown** | `UNKNOWN` | Grey | Empty or unclassifiable |
+
+#### Buttons
+
+| Button | Enabled when | Action |
+|---|---|---|
+| **Create SCAD Object** | Any `.scad` file selected | Creates a base SCAD file object in the active document |
+| **Scan Modules** | File has ≥ 1 module | Opens the Module Inspector dialog |
+| **Extract Variables** | File has top-level variables | Populates a FreeCAD spreadsheet |
+| **Refresh** | Any `.scad` file selected | Drops all caches and re-scans the file immediately |
+
+#### Automatic cache refresh
+
+The browser tracks each file's modification time.  If a file is edited
+while the browser is open the session cache is automatically discarded on
+the next access, triggering a re-scan via the TinyDB cache (which validates
+content via SHA-256 before re-parsing).  Use **Refresh** to force a full
+re-scan bypassing both caches.
 
 ### Module Inspector
 
@@ -126,7 +189,12 @@ engine behind the library browser.
 ### Public API
 
 ```python
-from freecad.OpenSCAD_Ext.parsers.scadmeta import scan_scad_file, scan_scad_directory
+from freecad.OpenSCAD_Ext.parsers.scadmeta import (
+    scan_scad_file,
+    scan_scad_directory,
+    ScadMeta,
+    ScadFileType,
+)
 
 meta = scan_scad_file("/path/to/shape.scad")
 
@@ -142,23 +210,36 @@ for mod in meta.modules:
 
 ### File type classification
 
-| `ScadFileType` | Rule |
-|---|---|
-| `PURE_SCAD` | Has top-level geometry / executable statements |
-| `MIXED` | Defines both modules and functions |
-| `MODULES_ONLY` | Module definitions only |
-| `FUNCTIONS_ONLY` | Function definitions only |
-| `VARIABLE` | Variable definitions only |
-| `LIBRARY` | Only `include`/`use` lines |
-| `UNKNOWN` | Empty or unclassifiable |
+| `ScadFileType` | Display label | Colour | Rule |
+|---|---|---|---|
+| `PURE_SCAD` | **Model** | Green | Has top-level geometry / executable statements |
+| `MIXED` | **Mixed** | Purple | Defines both modules and functions |
+| `MODULES_ONLY` | **Modules** | Blue | Module definitions (no top-level geometry) |
+| `FUNCTIONS_ONLY` | **Functions** | Teal | Function definitions only |
+| `VARIABLE` | **Config** | Red | Variable definitions only |
+| `LIBRARY` | **Library** | Orange | Only `include`/`use` lines |
+| `UNKNOWN` | **Unknown** | Grey | Empty or unclassifiable |
+
+Classification is performed by `classify_file_type(meta)` in
+`scadmeta_model.py` using a priority-order rule set.
 
 ### Caching
 
-Results are stored in a TinyDB JSON cache
-(`<FreeCAD-user-data>/OpenSCAD_Ext/scad_meta_cache.json`).
-Cache entries are validated by mtime and SHA-256 hash.
-A Watchdog observer monitors watched directories and automatically
-invalidates stale entries when files change on disk.
+Results are stored in a TinyDB JSON file:
+
+```
+<FreeCAD-user-data>/OpenSCAD_Ext/scad_meta_cache.json
+```
+
+Each cache entry is validated against the file's **mtime** (cheap) and
+**SHA-256 hash** (only when mtime differs).  A Watchdog observer monitors
+watched directories and automatically invalidates stale entries when files
+change on disk.
+
+When running outside FreeCAD the cache defaults to:
+```
+~/.cache/openscad_ext/scad_meta_cache.json
+```
 
 ---
 
@@ -191,26 +272,45 @@ When importing a `.scad` or `.csg` file FreeCAD tries two strategies:
 
 ```
 freecad/OpenSCAD_Ext/
-├── commands/          # FreeCAD commands (toolbar/menu actions)
-├── core/              # Geometry utilities, spreadsheet helpers
-├── exporters/         # SCAD / CSG / DXF export
-├── gui/               # Dialogs (Library Browser, Module Inspector, …)
-├── importers/         # SCAD / CSG / DXF importers
-├── libraries/         # OPENSCADPATH helpers
-├── logger/            # Unified logging to FreeCAD report view + file
-├── objects/           # FreeCAD FeaturePython proxy objects
-│   ├── SCADObject.py         # Base SCAD file object
-│   ├── SCADModuleObject.py   # Parametric module instance
+├── commands/               # FreeCAD commands (toolbar/menu actions)
+│   ├── newSCAD.py          #   New SCAD File Object
+│   ├── editSCAD.py         #   Edit SCAD File Object
+│   ├── openSCADstudio.py   #   OpenSCAD Studio
+│   ├── renderSCAD.py       #   Render to Shape
+│   ├── varsSCAD.py         #   Extract Variables
+│   └── librarySCAD.py      #   Library Browser
+├── core/                   # Geometry utilities, spreadsheet helpers
+├── exporters/              # SCAD / CSG / DXF export
+├── gui/                    # Dialogs
+│   ├── OpenSCADLibraryBrowser.py   # Library Browser dialog
+│   ├── SCAD_Module_Dialog.py       # Module Inspector dialog
+│   └── scad_type_display.py        # Icons, colours and labels per ScadFileType
+├── importers/              # SCAD / CSG / DXF importers
+├── libraries/              # OPENSCADPATH helpers
+├── logger/                 # Unified logging to FreeCAD report view + file
+├── objects/                # FreeCAD FeaturePython proxy objects
+│   ├── SCADObject.py               # Base SCAD file object
+│   ├── SCADModuleObject.py         # Parametric module instance
 │   └── SCADProjectObject.py
-└── parsers/
-    ├── scadmeta/             # Lark-based SCAD metadata scanner
-    │   ├── scadmeta_grammar.py      # Lark EBNF grammar
-    │   ├── scadmeta_lark_parser.py  # Earley parser + tree walker
-    │   ├── scadmeta_cache.py        # TinyDB + Watchdog cache
-    │   ├── scadmeta_scanner.py      # Public scan_scad_file() API
-    │   └── scadmeta_model.py        # ScadMeta / ScadFileType dataclasses
-    ├── csg_parser/           # CSG → AST (regex-based)
-    └── lark_csg_parser/      # CSG → AST (Lark-based)
+├── parsers/
+│   ├── scadmeta/                   # Lark-based SCAD metadata scanner
+│   │   ├── scadmeta_grammar.py     #   Lark EBNF grammar
+│   │   ├── scadmeta_lark_parser.py #   Earley parser + tree walker
+│   │   ├── scadmeta_cache.py       #   TinyDB + Watchdog persistent cache
+│   │   ├── scadmeta_scanner.py     #   Public scan_scad_file() entry point
+│   │   └── scadmeta_model.py       #   ScadMeta / ScadFileType dataclasses
+│   ├── csg_parser/                 # CSG → AST (regex-based)
+│   └── lark_csg_parser/            # CSG → AST (Lark-based)
+└── Resources/
+    ├── OpenSCAD_Ext.svg            # Workbench icon (64×64)
+    ├── icons/                      # Toolbar command icons (64×64 SVG)
+    │   ├── newScadFileObj.svg
+    │   ├── editScadFileObj.svg
+    │   ├── editStudioScadFileObj.svg
+    │   ├── renderScadFileObj.svg
+    │   ├── varsSCAD.svg
+    │   └── librarySCAD.svg
+    └── ui/                         # Qt Designer preference pages
 ```
 
 ---
