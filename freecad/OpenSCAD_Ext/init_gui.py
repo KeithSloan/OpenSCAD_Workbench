@@ -1,3 +1,4 @@
+import os as _os
 import FreeCAD as App
 import FreeCADGui as Gui
 import sys
@@ -6,15 +7,25 @@ from FreeCAD import Qt
 
 # Register logger - Must be in Gui and outside of Workbench
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import init as init_logging
-#from freecad.OpenSCAD_Ext.logger.Workbench_logger import init as init_logging
 
 init_logging()
+
+# ── Icon paths registered at import time ────────────────────────────────────
+# Gui.addIconPath() inside Initialize() is too late: the workbench dropdown
+# renders icons at startup, before any workbench is activated.  Register both
+# paths here so the SVGs are found immediately, and use an absolute path for
+# the workbench Icon so it resolves even before addIconPath() is called.
+_res = _os.path.join(_os.path.dirname(__file__), "Resources")
+Gui.addIconPath(_res)
+Gui.addIconPath(_os.path.join(_res, "icons"))
+_WORKBENCH_ICON = _os.path.join(_res, "OpenSCAD_Ext.svg")
+# ────────────────────────────────────────────────────────────────────────────
 
 class OpenSCADWorkbench_Ext(Gui.Workbench):
     """External OpenSCAD Workbench"""
     MenuText = "OpenSCAD_Ext"
     ToolTip = "External replacement for legacy OpenSCAD tools"
-    Icon = "OpenSCAD_Ext.svg"
+    Icon = _WORKBENCH_ICON
 
     "OpenSCAD workbench object"
 
@@ -23,14 +34,7 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
                 return text
         App.Console.PrintMessage("✅ OpenSCADWorkbench_Ext.Initialize()\n")
 
-        # Resource locations — use filesystem paths so icons load without
-        # a compiled QRC.  Both Resources/ (workbench icon) and
-        # Resources/icons/ (command icons) are registered.
-        import os as _os
-        import freecad.OpenSCAD_Ext as _wb
-        _res = _os.path.join(_os.path.dirname(_wb.__file__), "Resources")
-        Gui.addIconPath(_res)
-        Gui.addIconPath(_os.path.join(_res, "icons"))
+        # Icon paths already registered at module level (top of this file).
 
     	# Register preferences (new FreeCAD 1.0 API)
         # from . import preferences
