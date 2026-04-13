@@ -24,30 +24,39 @@ def setup_importers():
     IMPORTER_BASE = __name__ + ".importers"
 
     # ---- REGISTER IMPORT TYPES ----
+
+    # Primary dispatcher — reads the "ImportStrategy" preference and routes to
+    # either importASTCSG (deferred, default) or importAltCSG (parametric).
     FreeCAD.addImportType(
-        "External OpenSCAD Workbench : Legacy CSG importer (*.csg)",
+        "OpenSCAD Ext : CSG importer (*.csg)",
+        f"{IMPORTER_BASE}.importCSG"
+    )
+
+    FreeCAD.addImportType(
+        "OpenSCAD Ext : SCAD importer (*.scad)",
+        f"{IMPORTER_BASE}.importCSG"
+    )
+
+    # ---- Advanced / explicit importer choices (still available) ----
+
+    FreeCAD.addImportType(
+        "OpenSCAD Ext [deferred]  : CSG / AST importer (*.csg)",
+        f"{IMPORTER_BASE}.importASTCSG"
+    )
+
+    FreeCAD.addImportType(
+        "OpenSCAD Ext [deferred]  : SCAD importer (*.scad)",
+        f"{IMPORTER_BASE}.importASTCSG"
+    )
+
+    FreeCAD.addImportType(
+        "OpenSCAD Ext [parametric]: Legacy CSG importer (*.csg)",
         f"{IMPORTER_BASE}.importAltCSG"
     )
 
     FreeCAD.addImportType(
-        "External OpenSCAD Workbench : NEW CSG / AST importer (*.csg)",
-        f"{IMPORTER_BASE}.importASTCSG"
-    )
-
-    FreeCAD.addImportType(
-        "External OpenSCAD Workbench : NEW CSG importer (*.csg)",
-        f"{IMPORTER_BASE}.newImportCSG"
-    )
-
-    # Parser changed need to refactor
-    #FreeCAD.addImportType(
-    #    "External OpenSCAD Workbench : Create AST from CSG (*.csg)",
-    #    f"{IMPORTER_BASE}.createASTfromCSG"
-    #)
-
-    FreeCAD.addImportType(
-        "External OpenSCAD Workbench : New (Alpha) import SCAD file (*.scad)",
-        f"{IMPORTER_BASE}.importASTCSG"
+        "OpenSCAD Ext [parametric]: Legacy SCAD importer (*.scad)",
+        f"{IMPORTER_BASE}.importAltCSG"
     )
 
     FreeCAD.addImportType(
@@ -60,22 +69,9 @@ def setup_importers():
         f"{IMPORTER_BASE}.importSCADProject"
     )
 
-
     FreeCAD.addImportType(
         "External OpenSCAD Workbench : New : import SCAD and Parse to MetaFile -> ReportView (*.scad)",
         f"{IMPORTER_BASE}.importParseSCADMeta"
-    )
-
-
-    FreeCAD.addImportType(
-        "External OpenSCAD Workbench : Legacy import SCAD file (*.scad)",
-        f"{IMPORTER_BASE}.importAltCSG"
-    )
-
-
-    FreeCAD.addImportType(
-        "External OpenSCAD Workbench : Legacy import SCAD File Object (*.scad)",
-        f"{IMPORTER_BASE}.importFileSCAD"
     )
 
 

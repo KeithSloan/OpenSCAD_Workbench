@@ -92,6 +92,16 @@ Open **FreeCAD | Preferences | OpenSCAD_Ext** and set:
 | External Editor | Editor launched by the *Edit SCAD* command |
 | Timeout | OpenSCAD CLI timeout in seconds |
 | FN Max | Maximum polygon resolution (`$fn`) |
+| **Import Strategy** | Controls how `.csg` / `.scad` files are imported (see below) |
+
+### Import Strategy preference
+
+| Value | Label | Description |
+|---|---|---|
+| `deferred` *(default)* | Deferred – in-memory shapes | Shapes are computed as in-memory OCCT objects and inserted into the document with a single `doc.recompute()` at the end.  Faster, avoids cascading recompute problems. |
+| `parametric` | Parametric – editable Part objects | Uses the legacy PLY parser.  Creates `Part::Fuse`, `Part::Cut` etc. document objects that remain fully parametric and editable in the Model tree, at the cost of requiring multiple recompute passes during import. |
+
+The setting is stored under `User parameter:BaseApp/Preferences/Mod/OpenSCAD_Ext` with the key `ImportStrategy`.  Both importers are also available directly from FreeCAD's **File → Import** type selector.
 
 ---
 
@@ -245,14 +255,43 @@ When running outside FreeCAD the cache defaults to:
 
 ## Import Strategy
 
-When importing a `.scad` or `.csg` file FreeCAD tries two strategies:
+The workbench ships two distinct importers, selectable via **FreeCAD |
+Preferences | OpenSCAD_Ext → Import strategy**.  A thin dispatcher module
+(`importers/importCSG.py`) reads this preference at import time and delegates
+to the appropriate implementation.
 
-1. **Native BRep** — builds hulls, booleans and primitives directly as
-   FreeCAD Shapes.  Preserves parametric editing and high-accuracy geometry.
+### Deferred (default) — `importASTCSG`
 
-2. **OpenSCAD fallback** — if native BRep fails, the OpenSCAD CLI generates
-   an STL which is imported as Mesh → Shape.  Tessellation (`$fn`, `$fa`,
-   `$fs`) is preserved per-node.
+The SCAD / CSG file is parsed into an AST using a Lark grammar.  Each AST
+node is evaluated to a `Part.Shape` OCCT object entirely in memory, without
+touching the FreeCAD document until all geometry is ready.  Then:
+
+1. Every root shape is added to the document as a `Part::Feature`.
+2. A single `doc.recompute()` is called once at the very end.
+
+Benefits:
+- No intermediate document recomputes or `checkObjShape` busy-waits.
+- Faster for large files.
+- Easier to debug (the full shape tree can be inspected before insertion).
+
+### Parametric — `importAltCSG`
+
+Uses the legacy PLY/Lex-Yacc parser.  During parsing it creates
+`Part::Fuse`, `Part::Cut`, `Part::Sphere`, `Part::Box` etc. directly as
+document objects.  Boolean results are available as editable nodes in the
+Model tree.
+
+Trade-offs:
+- Requires a `recompute()` pass after every boolean so subsequent operations
+  can inspect the resulting shape.
+- Heavier document churn on large files.
+- Leaves a parametric object tree that users can inspect and edit.
+
+### Fallback — OpenSCAD CLI
+
+For both strategies, nodes that cannot be handled natively (e.g. `hull()`,
+`minkowski()`) fall back to the OpenSCAD CLI to produce an STL, which is
+then imported as Mesh → Shape.
 
 ### Supported AST nodes
 
@@ -286,6 +325,9 @@ freecad/OpenSCAD_Ext/
 │   ├── SCAD_Module_Dialog.py       # Module Inspector dialog
 │   └── scad_type_display.py        # Icons, colours and labels per ScadFileType
 ├── importers/              # SCAD / CSG / DXF importers
+│   ├── importCSG.py                # Strategy dispatcher (reads ImportStrategy pref)
+│   ├── importASTCSG.py             # Deferred importer – in-memory OCCT shapes
+│   ├── importAltCSG.py             # Parametric importer – PLY parser, doc objects
 ├── libraries/              # OPENSCADPATH helpers
 ├── logger/                 # Unified logging to FreeCAD report view + file
 ├── objects/                # FreeCAD FeaturePython proxy objects

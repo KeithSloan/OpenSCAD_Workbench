@@ -207,10 +207,11 @@ def processCSG(docSrc, filename, fnmax_param = None):
     write_log("AST",f"shapePlaceList {shapePlaceList}")
     for sp in shapePlaceList:
         write_log("Import",f"{sp}")
-        obj=add_shape_to_doc(doc,sp[1],sp[2],sp[0])
-        obj.recompute()
+        add_shape_to_doc(doc, sp[1], sp[2], sp[0])
+        # NOTE: no per-object recompute() here — shapes are already fully
+        # computed in-memory (OCCT).  A single doc.recompute() below is
+        # sufficient and avoids cascading recompute issues.
 
-    #add_shapes_to_document(doc, name, shapes)
     FreeCADGui.SendMsgToActiveView("ViewFit")
     if printverbose:
         print ('ImportCSG Version 0.6a')

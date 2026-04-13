@@ -219,6 +219,40 @@
        </layout>
       </item>
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_import_strategy">
+        <item>
+         <widget class="QLabel" name="label_import_strategy">
+          <property name="toolTip">
+           <string>Choose how CSG/SCAD files are imported.
+Deferred (recommended): shapes are computed in-memory (OCCT) and inserted with a single document recompute — faster and more reliable.
+Parametric: creates Part::Fuse / Part::Cut document objects that remain editable but require multiple recompute passes.</string>
+          </property>
+          <property name="text">
+           <string>Import strategy</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="Gui::PrefComboBox" name="guiprefcomboImportStrategy">
+          <property name="toolTip">
+           <string>Choose how CSG/SCAD files are imported.
+Deferred (recommended): shapes are computed in-memory (OCCT) and inserted with a single document recompute — faster and more reliable.
+Parametric: creates Part::Fuse / Part::Cut document objects that remain editable but require multiple recompute passes.</string>
+          </property>
+          <property name="prefEntry" stdset="0">
+           <cstring>ImportStrategy</cstring>
+          </property>
+          <property name="prefPath" stdset="0">
+           <cstring>Mod/OpenSCAD_Ext</cstring>
+          </property>
+          <item><property name="text"><string>Deferred – in-memory shapes (recommended)</string></property></item>
+          <item><property name="text"><string>Parametric – editable Part objects</string></property></item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
          <widget class="QLabel" name="label_6">
