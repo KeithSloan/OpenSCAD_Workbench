@@ -406,7 +406,12 @@ def process_AST_node(node):
         shape = Part.makeBox(sx, sy, sz)
 
         if center:
-            shape.translate(App.Vector(-sx/2, -sy/2, -sz/2))
+            # Encode centering in local_pl (not via translate) so that the
+            # placement is correctly composed with parent transforms in the
+            # boolean handler.  shape.translate() can modify the shape's
+            # internal location and then `s.Placement = pl` in the boolean
+            # handler would replace it, discarding the centering.
+            local_pl = App.Placement(App.Vector(-sx/2, -sy/2, -sz/2), App.Rotation())
 
         return (shape, local_pl)
 
@@ -419,6 +424,7 @@ def process_AST_node(node):
         h = params.get("h", 1)
         r1 = params.get("r1", params.get("r", 1))
         r2 = params.get("r2", r1)
+        center = params.get("center", False)
 
         if r1 == r2:
             shape = Part.makeCylinder(r1, h)
@@ -426,6 +432,10 @@ def process_AST_node(node):
             shape = Part.makeCone(r1, r2, h)  # true cone
         else:
             shape = Part.makeCone(r1, r2, h)
+
+        if center:
+            # Same pattern as cube: encode centering in local_pl
+            local_pl = App.Placement(App.Vector(0, 0, -h/2), App.Rotation())
 
         return (shape, local_pl)
 
@@ -654,11 +664,6 @@ def process_AST_node(node):
                             f"{solid.BoundBox.ZMin} → {solid.BoundBox.ZMax}"
                         )
 
-                        if center:
-                            bb = solid.BoundBox
-                            dz = (bb.ZMin + bb.ZMax) / 2
-                            solid.translate(App.Vector(0, 0, -dz))
-
                         solids.append(solid)
 
             if not solids:
@@ -668,6 +673,26 @@ def process_AST_node(node):
             result = solids[0]
             for s in solids[1:]:
                 result = result.fuse(s)
+
+            # Encode centering in local_pl rather than calling translate().
+            # shape.translate() may modify the shape's internal TopLoc_Location;
+            # the boolean handler then does `s.Placement = pl` which *replaces*
+            # that location, silently discarding the centering offset.  Returning
+            # the centering as part of local_pl ensures it is properly composed
+            # with parent transforms before the final Placement is applied.
+            if center:
+                bb = result.BoundBox
+                dz = (bb.ZMin + bb.ZMax) / 2
+                write_log("Extrusion", f"center=True: centering offset dz={dz:.4f}")
+                local_pl = App.Placement(App.Vector(0, 0, -dz), App.Rotation())
+            else:
+                local_pl = App.Placement()
+
+            write_log(
+                "Extrusion",
+                f"linear_extrude result Z-range (pre-placement): "
+                f"{result.BoundBox.ZMin:.4f} → {result.BoundBox.ZMax:.4f}"
+            )
 
         return (result, local_pl)
 
@@ -738,7 +763,11 @@ def process_AST_node(node):
                 if shape is None:
                     continue
                 s = shape.copy()
-                s.Placement = pl
+                # Compose the parent placement (pl) with any existing placement
+                # already on the shape (e.g. centering offsets from cube/cylinder/
+                # linear_extrude with center=True).  Simple assignment `s.Placement = pl`
+                # would replace the existing placement, discarding those offsets.
+                s.Placement = pl.multiply(s.Placement)
                 shapes.append(s)
 
         if not shapes:
