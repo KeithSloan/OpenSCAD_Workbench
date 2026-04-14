@@ -18,9 +18,12 @@
   - Increment `__version__` on **every code change**: bug fix → patch (0.7.0 → 0.7.1),
     significant new feature → minor (0.7.x → 0.8.0).
   - Version is printed twice to the Report View: at start and end of `processCSG()`.
-- **ImportAltCSG** (`importers/importAltCSG.py`) is the **legacy** PLY-based importer.
-  - Kept for reference only — to be removed once ImportAstCSG covers all cases.
+- **ImportAltCSG** (`importers/importAltCSG.py`) is legacy code copied from the
+  AlternateOpenSCAD workbench. It will be maintained alongside ImportAstCSG for the
+  foreseeable future.
   - Reports itself as `ImportAltCSG Version 0.6a` in the Report View.
+- **newImportCSG** (`importers/newImportCSG.py`) is a transitional importer — to be removed
+  once ImportAstCSG is complete.
 
 ## Test file
 /Users/ksloan/github/CAD_Files_Git/OpenSCAD/Ab_Tools/test-2.csg

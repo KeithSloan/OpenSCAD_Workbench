@@ -26,7 +26,7 @@
 #*                                                                         *
 #*                                                                         *
 #***************************************************************************
-__title__="FreeCAD OpenSCAD Workbench - CSG importer (Legacy)"
+__title__="FreeCAD OpenSCAD Workbench - CSG importer (from AlternateOpenSCAD workbench)"
 __author__ = "Keith Sloan <keith@sloan-home.co.uk>"
 __url__ = ["http://www.sloan-home.co.uk/ImportCSG"]
 __version__ = "0.6a"
