@@ -64,11 +64,20 @@ def flatten_ast_node_back_to_csg(node, indent=0):
     )
 
     # -------------------------
-    # Transparent group
+    # Transparent group / color wrapper
     # -------------------------
     if node.node_type == "group":
         for child in node.children:
             scad_lines.append(flatten_ast_node_back_to_csg(child, indent))
+        return "\n".join(filter(None, scad_lines))
+
+    # color() wraps children — must output as a block, not a leaf
+    if node.node_type == "color":
+        params = _format_csg_params(node)
+        scad_lines.append(f"{pad}color({params}) {{")
+        for child in node.children:
+            scad_lines.append(flatten_ast_node_back_to_csg(child, indent + 4))
+        scad_lines.append(f"{pad}}}")
         return "\n".join(filter(None, scad_lines))
 
     # -------------------------

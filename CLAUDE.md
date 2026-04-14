@@ -14,7 +14,7 @@
 
 ## Importer versioning
 - **ImportAstCSG** (`importers/importASTCSG.py`) is the active AST-based importer.
-  - Current version: `0.7.0`  (set via `__version__` at top of file)
+  - Current version: `0.7.1`  (set via `__version__` at top of file)
   - Increment `__version__` on **every code change**: bug fix → patch (0.7.0 → 0.7.1),
     significant new feature → minor (0.7.x → 0.8.0).
   - Version is printed twice to the Report View: at start and end of `processCSG()`.

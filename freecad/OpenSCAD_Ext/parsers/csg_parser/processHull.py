@@ -40,7 +40,8 @@ def collect_primitives(children, primitives_out, matrices_out, parent_matrix=Non
             else (child.matrix if hasattr(child, "matrix") else parent_matrix)
         )
 
-        if child.node_type == "group":
+        if child.node_type in ("group", "color"):
+            # color is a transparent wrapper — recurse into children, ignoring colour
             if not collect_primitives(child.children, primitives_out, matrices_out, matrix):
                 return False
 
