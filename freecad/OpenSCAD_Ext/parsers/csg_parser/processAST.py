@@ -777,23 +777,49 @@ def process_AST_node(node):
         all_2d = all(s.ShapeType == "Face" for s in shapes)
 
         if all_2d:
+            # Bake each shape's Placement into its geometry coordinates before
+            # calling the 2D boolean functions.  Part.make2DCut / make2DCommon
+            # call OCC BRepAlgoAPI_* directly; while FreeCAD maps Placement →
+            # TopLoc_Location (which OCC does respect), baking it in explicitly
+            # avoids any double-application edge cases and makes the geometry
+            # positions unambiguous.
+            baked = []
+            for s in shapes:
+                b = s.copy()
+                if b.Placement != App.Placement():
+                    b.transformShape(b.Placement.Matrix)
+                    b.Placement = App.Placement()
+                baked.append(b)
+            shapes = baked
+
             result = shapes[0]
             for s in shapes[1:]:
                 if node_type == "union":
                     try:
                         result = Part.make2DFuse([result, s])
-                    except Exception:
+                    except Exception as e:
+                        write_log("Boolean", f"make2DFuse failed ({e}), using Compound")
                         result = Part.Compound([result, s])
                 elif node_type == "difference":
                     try:
                         result = Part.make2DCut(result, s)
-                    except Exception:
-                        write_log("Boolean", "2D cut failed, skipping")
+                    except Exception as e:
+                        write_log("Boolean", f"make2DCut failed ({e}), trying .cut()")
+                        try:
+                            cut = result.cut(s)
+                            result = cut.Faces[0] if cut.Faces else result
+                        except Exception as e2:
+                            write_log("Boolean", f"2D cut also failed ({e2}), skipping")
                 elif node_type == "intersection":
                     try:
                         result = Part.make2DCommon(result, s)
-                    except Exception:
-                        write_log("Boolean", "2D common failed, skipping")
+                    except Exception as e:
+                        write_log("Boolean", f"make2DCommon failed ({e}), trying .common()")
+                        try:
+                            common = result.common(s)
+                            result = common.Faces[0] if common.Faces else result
+                        except Exception as e2:
+                            write_log("Boolean", f"2D common also failed ({e2}), skipping")
         else:
             # 3D Boolean operations
             result = shapes[0]
@@ -913,16 +939,29 @@ def process_AST_node(node):
             width = height = 1.0
             write_log("AST", f"Invalid square size {size}, defaulting to 1")
 
-        wire = Part.makePolygon([
-            Vector(0, 0, 0),
-            Vector(width, 0, 0),
-            Vector(width, height, 0),
-            Vector(0, height, 0),
-            Vector(0, 0, 0)
-        ])
-        wire.Placement = local_pl
+        center = params.get("center", False)
+        if isinstance(center, str):
+            center = center.lower() == "true"
+
+        if center:
+            verts = [
+                Vector(-width/2, -height/2, 0),
+                Vector( width/2, -height/2, 0),
+                Vector( width/2,  height/2, 0),
+                Vector(-width/2,  height/2, 0),
+                Vector(-width/2, -height/2, 0),
+            ]
+        else:
+            verts = [
+                Vector(0,     0,      0),
+                Vector(width, 0,      0),
+                Vector(width, height, 0),
+                Vector(0,     height, 0),
+                Vector(0,     0,      0),
+            ]
+        wire = Part.makePolygon(verts)
         face = Part.Face(wire)
-        return face, local_pl
+        return face, App.Placement()   # centering baked into vertices
 
 
     # -----------------------------
