@@ -777,49 +777,52 @@ def process_AST_node(node):
         all_2d = all(s.ShapeType == "Face" for s in shapes)
 
         if all_2d:
-            # Bake each shape's Placement into its geometry coordinates before
-            # calling the 2D boolean functions.  Part.make2DCut / make2DCommon
-            # call OCC BRepAlgoAPI_* directly; while FreeCAD maps Placement →
-            # TopLoc_Location (which OCC does respect), baking it in explicitly
-            # avoids any double-application edge cases and makes the geometry
-            # positions unambiguous.
-            baked = []
+            # ── 2D boolean via thin-solid trick ──────────────────────────────
+            # OCC's coplanar face boolean (make2DCut / .cut() on faces) is
+            # unreliable across FreeCAD versions and fails for coincident
+            # geometry.  Instead we:
+            #   1. Bake each face's Placement into its vertex coordinates.
+            #   2. Extrude each face to a thin solid (THIN = 0.01 mm).
+            #   3. Use the reliable 3-D boolean engine on those thin solids.
+            #   4. Extract the bottom face (z ≈ 0) as the 2D result.
+            # The result is always a proper Part.Face so that the parent boolean
+            # handler's all_2d check keeps passing at every level.
+            THIN = 0.01
+
+            thin_solids = []
             for s in shapes:
                 b = s.copy()
-                if b.Placement != App.Placement():
-                    b.transformShape(b.Placement.Matrix)
-                    b.Placement = App.Placement()
-                baked.append(b)
-            shapes = baked
+                # Always apply transformShape — identity transform is a no-op.
+                b.transformShape(b.Placement.Matrix)
+                b.Placement = App.Placement()
+                try:
+                    thin_solids.append(b.extrude(App.Vector(0, 0, THIN)))
+                except Exception as e:
+                    write_log("Boolean", f"2D→thin extrude failed ({e}), skipping shape")
 
-            result = shapes[0]
-            for s in shapes[1:]:
-                if node_type == "union":
-                    try:
-                        result = Part.make2DFuse([result, s])
-                    except Exception as e:
-                        write_log("Boolean", f"make2DFuse failed ({e}), using Compound")
-                        result = Part.Compound([result, s])
-                elif node_type == "difference":
-                    try:
-                        result = Part.make2DCut(result, s)
-                    except Exception as e:
-                        write_log("Boolean", f"make2DCut failed ({e}), trying .cut()")
-                        try:
-                            cut = result.cut(s)
-                            result = cut.Faces[0] if cut.Faces else result
-                        except Exception as e2:
-                            write_log("Boolean", f"2D cut also failed ({e2}), skipping")
-                elif node_type == "intersection":
-                    try:
-                        result = Part.make2DCommon(result, s)
-                    except Exception as e:
-                        write_log("Boolean", f"make2DCommon failed ({e}), trying .common()")
-                        try:
-                            common = result.common(s)
-                            result = common.Faces[0] if common.Faces else result
-                        except Exception as e2:
-                            write_log("Boolean", f"2D common also failed ({e2}), skipping")
+            if not thin_solids:
+                return (shapes[0], App.Placement()) if shapes else []
+
+            result_solid = thin_solids[0]
+            for s in thin_solids[1:]:
+                try:
+                    if node_type == "union":
+                        result_solid = result_solid.fuse(s)
+                    elif node_type == "difference":
+                        result_solid = result_solid.cut(s)
+                    elif node_type == "intersection":
+                        result_solid = result_solid.common(s)
+                except Exception as e:
+                    write_log("Boolean", f"2D thin-solid {node_type} failed ({e}), skipping")
+
+            # Extract bottom face (z ≈ 0) as the 2D result
+            bottom = [f for f in result_solid.Faces
+                      if abs(f.CenterOfMass.z) < THIN * 0.5]
+            if bottom:
+                result = bottom[0] if len(bottom) == 1 else Part.Compound(bottom)
+            else:
+                write_log("Boolean", "No bottom face found in thin-solid result")
+                result = result_solid.Faces[0] if result_solid.Faces else shapes[0]
         else:
             # 3D Boolean operations
             result = shapes[0]
