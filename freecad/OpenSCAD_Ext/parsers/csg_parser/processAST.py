@@ -763,11 +763,11 @@ def process_AST_node(node):
                 if shape is None:
                     continue
                 s = shape.copy()
-                # Compose the parent placement (pl) with any existing placement
-                # already on the shape (e.g. centering offsets from cube/cylinder/
-                # linear_extrude with center=True).  Simple assignment `s.Placement = pl`
-                # would replace the existing placement, discarding those offsets.
-                s.Placement = pl.multiply(s.Placement)
+                # Part.Shape.copy() resets the OCC TopLoc_Location, so setting
+                # s.Placement afterwards would be lost by any subsequent copy().
+                # transformShape() bakes the placement directly into vertex/edge
+                # geometry and IS preserved across copy() calls.
+                s.transformShape(pl.Matrix)
                 shapes.append(s)
 
         if not shapes:
@@ -790,19 +790,9 @@ def process_AST_node(node):
             THIN = 0.01
 
             thin_solids = []
-            for i, s in enumerate(shapes):
-                b = s.copy()
-                # Always apply transformShape — identity transform is a no-op.
-                b.transformShape(b.Placement.Matrix)
-                b.Placement = App.Placement()
-                write_log("Boolean2D", f"  shape[{i}] type={b.ShapeType} "
-                          f"area={b.Area:.3f} "
-                          f"wires={len(b.Wires) if hasattr(b,'Wires') else '?'} "
-                          f"pl={b.Placement}")
+            for s in shapes:
                 try:
-                    thin = b.extrude(App.Vector(0, 0, THIN))
-                    write_log("Boolean2D", f"  → thin solid: type={thin.ShapeType} "
-                              f"faces={len(thin.Faces)} vol={thin.Volume:.6f}")
+                    thin = s.extrude(App.Vector(0, 0, THIN))
                     thin_solids.append(thin)
                 except Exception as e:
                     write_log("Boolean", f"2D→thin extrude failed ({e}), skipping shape")
@@ -819,21 +809,13 @@ def process_AST_node(node):
                         result_solid = result_solid.cut(s)
                     elif node_type == "intersection":
                         result_solid = result_solid.common(s)
-                    write_log("Boolean2D", f"  after {node_type}: type={result_solid.ShapeType} "
-                              f"faces={len(result_solid.Faces)} vol={result_solid.Volume:.6f}")
                 except Exception as e:
                     write_log("Boolean", f"2D thin-solid {node_type} failed ({e}), skipping")
 
             # Extract bottom face (z ≈ 0) as the 2D result
-            all_faces = result_solid.Faces
-            bottom = [f for f in all_faces if abs(f.CenterOfMass.z) < THIN * 0.5]
-            write_log("Boolean2D", f"  result: total_faces={len(all_faces)} "
-                      f"bottom_faces={len(bottom)} "
-                      f"z_vals={[round(f.CenterOfMass.z,4) for f in all_faces]}")
+            bottom = [f for f in result_solid.Faces if abs(f.CenterOfMass.z) < THIN * 0.5]
             if bottom:
                 result = bottom[0] if len(bottom) == 1 else Part.Compound(bottom)
-                write_log("Boolean2D", f"  → 2D result type={result.ShapeType} "
-                          f"area={result.Area:.3f}")
             else:
                 write_log("Boolean", "No bottom face found in thin-solid result")
                 result = result_solid.Faces[0] if result_solid.Faces else shapes[0]
