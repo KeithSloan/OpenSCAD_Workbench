@@ -29,7 +29,7 @@
 __title__="FreeCAD OpenSCAD Workbench - AST / CSG importer"
 __author__ = "Keith Sloan <keith@sloan-home.co.uk>"
 __url__ = ["http://www.sloan-home.co.uk/ImportCSG"]
-__version__ = "0.7.1"
+__version__ = "0.7.2"
 
 import FreeCADGui
 from pathlib import Path
