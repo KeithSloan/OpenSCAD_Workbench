@@ -26,9 +26,10 @@
 #*                                                                         *
 #*                                                                         *
 #***************************************************************************
-__title__="FreeCAD OpenSCAD Workbench - CSG importer"
+__title__="FreeCAD OpenSCAD Workbench - CSG importer (Legacy)"
 __author__ = "Keith Sloan <keith@sloan-home.co.uk>"
 __url__ = ["http://www.sloan-home.co.uk/ImportCSG"]
+__version__ = "0.6a"
 #
 # For SCAD files first process via OpenSCAD to creae CSG file then import
 #
@@ -163,7 +164,7 @@ def processCSG(docSrc, filename, fnmax_param = None):
     #from tokrules import tokens
     #print(f"tokens {tokens}")
 
-    if printverbose: print ('ImportCSG Version 0.6a')
+    FreeCAD.Console.PrintMessage(f'ImportAltCSG Version {__version__}\n')
     # Build the lexer
     if printverbose: write_log("INFO","Start Lex")
     lex.lex(module=tokrules)

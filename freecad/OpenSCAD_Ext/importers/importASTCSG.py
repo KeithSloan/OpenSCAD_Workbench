@@ -29,6 +29,7 @@
 __title__="FreeCAD OpenSCAD Workbench - AST / CSG importer"
 __author__ = "Keith Sloan <keith@sloan-home.co.uk>"
 __url__ = ["http://www.sloan-home.co.uk/ImportCSG"]
+__version__ = "0.7.0"
 
 import FreeCADGui
 from pathlib import Path
@@ -196,10 +197,9 @@ def processCSG(docSrc, filename, fnmax_param = None):
     doc = docSrc
 
     name = Path(filename).stem
+    FreeCAD.Console.PrintMessage(f'ImportAstCSG Version {__version__}\n')
     write_log("Info","Using OpenSCAD AST / CSG Importer")
     write_log("Info",f"Doc {doc.Name} useMaxFn {fnmax}")
-    if printverbose: 
-        print ('ImportCSG Version 0.6a')
     raw_ast_nodes = parse_csg_file_to_AST_nodes(filename)
     ast_nodes = raw_ast_nodes
     #ast_nodes = normalize_ast(raw_ast_nodes)
@@ -212,8 +212,7 @@ def processCSG(docSrc, filename, fnmax_param = None):
 
     #add_shapes_to_document(doc, name, shapes)
     FreeCADGui.SendMsgToActiveView("ViewFit")
-    if printverbose:
-        print ('ImportCSG Version 0.6a')
+    FreeCAD.Console.PrintMessage(f'ImportAstCSG Version {__version__}\n')
     FreeCAD.Console.PrintMessage('End processing CSG file\n')
     doc.recompute()
 
