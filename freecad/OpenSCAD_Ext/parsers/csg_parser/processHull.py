@@ -56,6 +56,25 @@ def collect_primitives(children, primitives_out, matrices_out, parent_matrix=Non
             print(f"type {child.node_type} params {child.params} csg_params {child.csg_params}")
             matrices_out.append(matrix if matrix else Matrix())
 
+        elif child.node_type == "intersection":
+            # An intersection clips a primitive to a sub-region.  For convex-hull
+            # purposes the clipped shape contributes the same boundary points as
+            # the full primitive (removing interior material never expands the hull).
+            # Find the first child branch that yields a known primitive; ignore the
+            # rest (the clipping geometry, e.g. linear_extrude of a sector polygon).
+            found = False
+            for sub in child.children:
+                sub_prims, sub_mats = [], []
+                if collect_primitives([sub], sub_prims, sub_mats, matrix):
+                    if sub_prims:
+                        primitives_out.extend(sub_prims)
+                        matrices_out.extend(sub_mats)
+                        found = True
+                        break
+            if not found:
+                write_log("Hull", "intersection: no primitive child found, fallback.")
+                return False
+
         else:
             write_log("Hull", f"unsupported node inside hull: {child.node_type}")
             return False
