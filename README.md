@@ -341,6 +341,15 @@ freecad/OpenSCAD_Ext/
 
 ---
 
+## Development Branches
+
+| Branch | Status | Description |
+|---|---|---|
+| `main` | Stable | Current release |
+| `Extract_Variables` | In progress — untested | Variable export to `App::VarSet`; Lark parser trailing-comment capture; strategy-pattern exporter; Library Browser integration. See `Developer_Notes/Extract_Variables_Analysis.md` for design rationale and testing checklist. |
+
+---
+
 ## License
 
 LGPL-2.1-or-later — see [LICENSE](LICENSE).
