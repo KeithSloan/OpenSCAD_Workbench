@@ -331,9 +331,12 @@
          </widget>
         </item>
         <item>
-         <widget class="Line" name="line_2">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
+         <widget class="QFrame" name="line_2">
+          <property name="frameShape">
+           <enum>QFrame::VLine</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Sunken</enum>
           </property>
          </widget>
         </item>
