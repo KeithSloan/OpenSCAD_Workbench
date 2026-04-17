@@ -46,7 +46,7 @@ handled: `group`, `color`, `multmatrix`.
 
 ## Importer versioning
 - **ImportAstCSG** (`importers/importASTCSG.py`) is the active AST-based importer.
-  - Current version: `0.7.5`  (set via `__version__` at top of file)
+  - Current version: `0.7.6`  (set via `__version__` at top of file)
   - Increment `__version__` on **every code change**: bug fix → patch (0.7.0 → 0.7.1),
     significant new feature → minor (0.7.x → 0.8.0).
   - Version is printed twice to the Report View: at start and end of `processCSG()`.
@@ -56,6 +56,13 @@ handled: `group`, `color`, `multmatrix`.
   - Reports itself as `ImportAltCSG Version 0.6a` in the Report View.
 - **newImportCSG** (`importers/newImportCSG.py`) is a transitional importer — to be removed
   once ImportAstCSG is complete.
+
+## CSG parameter parsing (`parse_csg_to_AST.py`)
+Named parameters (e.g. `center = false`, `center = true`) are parsed via
+`parse_scad_argument()`, which handles OpenSCAD's lowercase `true`/`false`.
+Do **not** use `ast.literal_eval()` directly for named parameter values —
+Python rejects lowercase booleans and falls back to a raw string, which is
+truthy in Python and silently misapplies centering to every primitive.
 
 ## Test file
 /Users/ksloan/github/CAD_Files_Git/OpenSCAD/Ab_Tools/test-2.csg
