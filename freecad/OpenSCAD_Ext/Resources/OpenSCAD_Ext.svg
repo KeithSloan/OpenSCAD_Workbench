@@ -1,127 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  OpenSCAD_Ext.svg — Workbench Icon
-  64×64 px  |  OpenSCAD_Ext workbench
-
-  Design: Golden isometric cube with a cylindrical bore (CSG difference
-  operation), reflecting OpenSCAD's scripting-driven, CSG-based 3-D modelling.
-
-  Isometric cube geometry  (dx=24 dy=14 h=26):
-    T  = (32,  4)   top apex
-    R  = (56, 18)   right
-    F  = (32, 32)   front
-    L  = ( 8, 18)   left
-    BL = ( 8, 44)   bottom-left
-    BF = (32, 58)   bottom-front
-    BR = (56, 44)   bottom-right
-
-  Canvas coverage: 48 px wide (75 %), 54 px tall (84 %) — fills the viewBox
-  to the same degree as standard FreeCAD workbench icons.
-
-  Colour palette matches command-icon set:
-    Gold highlight  #fce94f
-    Gold mid        #edd400 / #c4a000
-    Gold shadow     #8a6d00 / #4a3800
-    Outline         #302b00
-
-  Author: OpenSCAD_Ext project  |  LGPL 2+
+  OpenSCAD_Ext.svg — Workbench Icon  64×64 px
+  Flat-colour isometric cube (Qt SVG renderer compatible — no gradients).
+  Top face bright orange, left face mid-orange, right face dark brown.
+  Matches the OpenSCAD colour palette.
 -->
 <svg xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink"
      width="64" height="64" viewBox="0 0 64 64">
-  <defs>
 
-    <!-- Top face: bright highlight (light from upper-left) -->
-    <linearGradient id="gTop" x1="10%" y1="0%" x2="90%" y2="100%">
-      <stop offset="0%"   stop-color="#fce94f"/>
-      <stop offset="60%"  stop-color="#edd400"/>
-      <stop offset="100%" stop-color="#c4a000"/>
-    </linearGradient>
+  <!-- Drop shadow -->
+  <ellipse cx="32" cy="61" rx="22" ry="3" fill="#000000" fill-opacity="0.25"/>
 
-    <!-- Left face: medium gold -->
-    <linearGradient id="gLeft" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%"   stop-color="#c4a000"/>
-      <stop offset="100%" stop-color="#8a6d00"/>
-    </linearGradient>
-
-    <!-- Right face: dark gold (shadow side) -->
-    <linearGradient id="gRight" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%"   stop-color="#6e5200"/>
-      <stop offset="100%" stop-color="#4a3800"/>
-    </linearGradient>
-
-    <!-- Hole bore interior — deep, dark centre -->
-    <radialGradient id="gHoleBore" cx="38%" cy="32%" r="72%">
-      <stop offset="0%"   stop-color="#3a2e00"/>
-      <stop offset="100%" stop-color="#080600"/>
-    </radialGradient>
-
-    <!-- Hole rim — subtle gold bevel -->
-    <radialGradient id="gHoleRim" cx="38%" cy="25%" r="65%">
-      <stop offset="0%"   stop-color="#c4a000" stop-opacity="0.9"/>
-      <stop offset="100%" stop-color="#302b00" stop-opacity="0"/>
-    </radialGradient>
-
-    <!-- Drop shadow -->
-    <radialGradient id="gShadow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%"   stop-color="#000000" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
-    </radialGradient>
-
-  </defs>
-
-  <!-- 1. Drop shadow -->
-  <ellipse cx="32" cy="61" rx="24" ry="4"
-           fill="url(#gShadow)"/>
-
-  <!-- 2. Right face (shadow side — drawn first) -->
+  <!-- Right face (dark — shadow side) -->
   <polygon points="32,32 56,18 56,44 32,58"
-           fill="url(#gRight)"
-           stroke="#302b00" stroke-width="1.8" stroke-linejoin="round"/>
+           fill="#7A4400" stroke="#1A1200" stroke-width="1.5" stroke-linejoin="round"/>
 
-  <!-- Right-face edge highlight -->
-  <line x1="32" y1="32" x2="56" y2="18"
-        stroke="#c4a000" stroke-width="0.7" stroke-opacity="0.6"/>
-
-  <!-- 3. Left face (mid tone) -->
+  <!-- Left face (mid tone) -->
   <polygon points="8,18 32,32 32,58 8,44"
-           fill="url(#gLeft)"
-           stroke="#302b00" stroke-width="1.8" stroke-linejoin="round"/>
+           fill="#B07000" stroke="#1A1200" stroke-width="1.5" stroke-linejoin="round"/>
 
-  <!-- 4. Hole bore depth (drawn before top face) -->
-  <ellipse cx="32" cy="25" rx="10" ry="6"
-           fill="url(#gHoleBore)"/>
-
-  <!-- 5. Top face (highlight — drawn over bore) -->
+  <!-- Top face (highlight) -->
   <polygon points="32,4 56,18 32,32 8,18"
-           fill="url(#gTop)"
-           stroke="#302b00" stroke-width="1.8" stroke-linejoin="round"/>
+           fill="#F0A800" stroke="#1A1200" stroke-width="1.5" stroke-linejoin="round"/>
 
-  <!-- Top-face glint line (left edge, brightest) -->
+  <!-- Top-face glint line (left edge) -->
   <line x1="32" y1="4" x2="8" y2="18"
-        stroke="#fce94f" stroke-width="1.0" stroke-opacity="0.7"/>
+        stroke="#FFCE50" stroke-width="1.0" stroke-opacity="0.7"/>
 
-  <!-- 6. Hole opening on top face -->
-  <ellipse cx="32" cy="18" rx="10" ry="6"
-           fill="#080600"
-           stroke="#302b00" stroke-width="1.8"/>
+  <!-- Cylindrical bore — opening on top face -->
+  <ellipse cx="32" cy="18" rx="9" ry="5.5"
+           fill="#160E00" stroke="#1A1200" stroke-width="1.5"/>
 
-  <!-- Bore rim — gold bevel -->
-  <ellipse cx="32" cy="18" rx="10" ry="6"
-           fill="url(#gHoleRim)" fill-opacity="0.55"/>
+  <!-- Bore depth (visible below top face) -->
+  <ellipse cx="32" cy="24" rx="9" ry="5.5"
+           fill="#0A0600"/>
 
-  <!-- Inner bore highlight arc -->
-  <path d="M 23.5,16 Q 32,11.5 40.5,16"
-        fill="none"
-        stroke="#fce94f" stroke-width="1.0"
+  <!-- Bore rim highlight -->
+  <path d="M 24,16 Q 32,12 40,16"
+        fill="none" stroke="#F0A800" stroke-width="1.0"
         stroke-linecap="round" stroke-opacity="0.5"/>
 
-  <!-- 7. Vertical cube edges -->
+  <!-- Vertical edges -->
   <line x1="8"  y1="18" x2="8"  y2="44"
-        stroke="#302b00" stroke-width="1.8" stroke-linecap="round"/>
+        stroke="#1A1200" stroke-width="1.5" stroke-linecap="round"/>
   <line x1="56" y1="18" x2="56" y2="44"
-        stroke="#302b00" stroke-width="1.8" stroke-linecap="round"/>
+        stroke="#1A1200" stroke-width="1.5" stroke-linecap="round"/>
   <line x1="32" y1="32" x2="32" y2="58"
-        stroke="#302b00" stroke-width="1.8" stroke-linecap="round"/>
+        stroke="#1A1200" stroke-width="1.5" stroke-linecap="round"/>
 
 </svg>

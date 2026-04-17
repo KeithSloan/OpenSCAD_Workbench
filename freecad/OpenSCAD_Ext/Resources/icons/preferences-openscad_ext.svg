@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  preferences-openscad_ext.svg — icon for the FreeCAD Preferences dialog entry
+  48×48 px, flat colour, Qt SVG renderer compatible.
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="48" height="48" viewBox="0 0 48 48">
+
+  <!-- Drop shadow -->
+  <ellipse cx="24" cy="46" rx="16" ry="2.5" fill="#000000" fill-opacity="0.22"/>
+
+  <!-- Right face (dark) -->
+  <polygon points="24,24 42,14 42,34 24,44"
+           fill="#7A4400" stroke="#1A1200" stroke-width="1.2" stroke-linejoin="round"/>
+
+  <!-- Left face (mid) -->
+  <polygon points="6,14 24,24 24,44 6,34"
+           fill="#B07000" stroke="#1A1200" stroke-width="1.2" stroke-linejoin="round"/>
+
+  <!-- Top face (highlight) -->
+  <polygon points="24,4 42,14 24,24 6,14"
+           fill="#F0A800" stroke="#1A1200" stroke-width="1.2" stroke-linejoin="round"/>
+
+  <!-- Bore opening -->
+  <ellipse cx="24" cy="14" rx="7" ry="4"
+           fill="#160E00" stroke="#1A1200" stroke-width="1.2"/>
+
+  <!-- Vertical edges -->
+  <line x1="6"  y1="14" x2="6"  y2="34" stroke="#1A1200" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="42" y1="14" x2="42" y2="34" stroke="#1A1200" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="24" y1="24" x2="24" y2="44" stroke="#1A1200" stroke-width="1.2" stroke-linecap="round"/>
+
+</svg>

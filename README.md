@@ -30,7 +30,7 @@ scanner.
 
 | Dependency | Version | Purpose |
 |---|---|---|
-| FreeCAD | ≥ 1.0 | Host application |
+| FreeCAD | ≥ 1.1 | Host application (`App::VarSet` required for variable export) |
 | OpenSCAD (CLI) | any | Mesh/STL generation fallback |
 | `lark` | ≥ 1.1 | SCAD source parser (usually pre-installed) |
 | `tinydb` | ≥ 4.8 | Persistent metadata cache |
@@ -85,13 +85,38 @@ Then restart FreeCAD.
 
 Open **FreeCAD | Preferences | OpenSCAD_Ext** and set:
 
+### General OpenSCAD Settings
+
 | Preference | Description |
 |---|---|
+| **OpenSCAD executable** | Path to `openscad` binary (auto-detected on most systems) |
+| **External Editor** | Editor launched by the *Edit SCAD* command |
+| **OpenSCAD Studio** | Path to `openscad-studio` binary |
 | **Default Directory** | Directory where generated `.scad` module files are written. **Must be set** before creating module objects from the library browser. |
-| OpenSCAD Executable | Path to `openscad` binary (auto-detected on most systems) |
-| External Editor | Editor launched by the *Edit SCAD* command |
-| Timeout | OpenSCAD CLI timeout in seconds |
-| FN Max | Maximum polygon resolution (`$fn`) |
+
+### OpenSCAD Import
+
+| Preference | Description |
+|---|---|
+| Print debug information | Verbose console output during import |
+| Maximum faces for polygons (fn) | Cylinders/circles with more faces than this are treated as true circles |
+
+### Variable Export
+
+Controls where extracted OpenSCAD variables are stored in the FreeCAD document.
+
+| Preference | Description |
+|---|---|
+| **Prompt for export option each time** | Ask which target to use on every extraction (default: on) |
+| **Default export target** | Target used when prompt is off |
+
+#### Export targets
+
+| Target | Status | Description |
+|---|---|---|
+| **VarSet** | Active | Creates an `App::VarSet` document object with typed properties for each variable. Properties can be expression-bound to other FreeCAD objects. Requires FreeCAD ≥ 1.1. |
+| **Vars** | Future | Integration with [Frank David Martinez's Vars extension](https://github.com/mnesarco/Vars) — deferred pending stable Vars API. |
+| **Spreadsheet** | Future | Creates a FreeCAD `Spreadsheet::Sheet` object. Limited: no type metadata, vectors awkward, re-import risk. Placeholder only. |
 
 ---
 
@@ -304,6 +329,7 @@ freecad/OpenSCAD_Ext/
 └── Resources/
     ├── OpenSCAD_Ext.svg            # Workbench icon (64×64)
     ├── icons/                      # Toolbar command icons (64×64 SVG)
+    │   ├── preferences-openscad_ext.svg  # Preferences dialog entry icon
     │   ├── newScadFileObj.svg
     │   ├── editScadFileObj.svg
     │   ├── editStudioScadFileObj.svg

@@ -289,7 +289,7 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_21">
         <item>
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="label_fragsize">
           <property name="text">
            <string>Maximum fragment size</string>
           </property>
@@ -338,7 +338,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="label_4">
+         <widget class="QLabel" name="label_fs">
           <property name="toolTip">
            <string>Minimum size of a fragment</string>
           </property>
@@ -401,14 +401,14 @@
       <item>
        <layout class="QGridLayout" name="gridLayout_2">
         <item row="0" column="0">
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="label_meshfallback">
           <property name="text">
            <string>Mesh fallback</string>
           </property>
          </widget>
         </item>
         <item row="0" column="2">
-         <widget class="QLabel" name="label_4">
+         <widget class="QLabel" name="label_deflection">
           <property name="toolTip">
            <string>Deflection</string>
           </property>
@@ -469,6 +469,9 @@
         <property name="text">
          <string>Prompt for export option each time</string>
         </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
         <property name="prefEntry" stdset="0">
          <cstring>varExportPrompt</cstring>
         </property>
@@ -503,8 +506,8 @@ Vars: placeholder — not yet implemented.</string>
            <cstring>Mod/OpenSCAD</cstring>
           </property>
           <item><property name="text"><string>VarSet</string></property></item>
-          <item><property name="text"><string>Spreadsheet (future)</string></property></item>
           <item><property name="text"><string>Vars (future)</string></property></item>
+          <item><property name="text"><string>Spreadsheet (future)</string></property></item>
          </widget>
         </item>
        </layout>
