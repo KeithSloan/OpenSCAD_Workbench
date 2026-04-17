@@ -5,6 +5,7 @@
   <description>External OpenSCAD Workbench — replacement for legacy OpenSCAD tools.</description>
   <maintainer email="you@example.com">Keith Sloan</maintainer>
   <license>LGPL-2.1-or-later</license>
+  <freecadmin>1.1.0</freecadmin>
   <url type="repository">https://github.com/KeithSloan/OpenSCAD_Workbench</url>
   '''
   <!-- Python packages required by the workbench -->

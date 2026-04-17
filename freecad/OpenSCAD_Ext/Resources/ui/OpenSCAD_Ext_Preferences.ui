@@ -452,6 +452,68 @@
     </widget>
    </item>
 
+   <!-- Variable Export -->
+   <item>
+    <widget class="QGroupBox" name="groupBox_varexport">
+     <property name="title">
+      <string>Variable Export</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_varexport">
+
+      <!-- Prompt each time -->
+      <item>
+       <widget class="Gui::PrefCheckBox" name="checkBox_varexport_prompt">
+        <property name="toolTip">
+         <string>Ask which export target to use each time variables are extracted</string>
+        </property>
+        <property name="text">
+         <string>Prompt for export option each time</string>
+        </property>
+        <property name="prefEntry" stdset="0">
+         <cstring>varExportPrompt</cstring>
+        </property>
+        <property name="prefPath" stdset="0">
+         <cstring>Mod/OpenSCAD</cstring>
+        </property>
+       </widget>
+      </item>
+
+      <!-- Default export target -->
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_varexport_target">
+        <item>
+         <widget class="QLabel" name="label_varexport_target">
+          <property name="text">
+           <string>Default export target</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="Gui::PrefComboBox" name="comboBox_varexport_target">
+          <property name="toolTip">
+           <string>Where extracted OpenSCAD variables are stored in the FreeCAD document.
+VarSet: creates an App::VarSet object (recommended, requires FreeCAD 1.1+).
+Spreadsheet: placeholder — not yet implemented.
+Vars: placeholder — not yet implemented.</string>
+          </property>
+          <property name="prefEntry" stdset="0">
+           <cstring>varExportTarget</cstring>
+          </property>
+          <property name="prefPath" stdset="0">
+           <cstring>Mod/OpenSCAD</cstring>
+          </property>
+          <item><property name="text"><string>VarSet</string></property></item>
+          <item><property name="text"><string>Spreadsheet (future)</string></property></item>
+          <item><property name="text"><string>Vars (future)</string></property></item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+
+     </layout>
+    </widget>
+   </item>
+
    <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
