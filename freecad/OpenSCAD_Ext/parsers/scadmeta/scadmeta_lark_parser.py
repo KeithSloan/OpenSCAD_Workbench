@@ -223,6 +223,23 @@ def parse_scad_file(path: str) -> ScadMeta:
     return meta
 
 
+_TRAILING_COMMENT_RE = re.compile(r"//\s*(.*)")
+
+
+def _extract_trailing_comment(source_lines: List[str], name_token) -> str:
+    """Return the text of a trailing // comment on the same line as *name_token*, or ''."""
+    if not hasattr(name_token, "line"):
+        return ""
+    idx = name_token.line - 1  # 0-based
+    if idx < 0 or idx >= len(source_lines):
+        return ""
+    line = source_lines[idx]
+    # Strip any string literals so we don't match // inside a string value
+    stripped = re.sub(r'"[^"\\]*(?:\\.[^"\\]*)*"', '""', line)
+    m = _TRAILING_COMMENT_RE.search(stripped)
+    return m.group(1).strip() if m else ""
+
+
 def _walk_top_level(tree: Tree, source_lines: List[str], meta: ScadMeta) -> None:
     """Process only the direct children of ``start``."""
     for node in tree.children:
@@ -244,17 +261,15 @@ def _dispatch_statement(node: Tree, source_lines: List[str], meta: ScadMeta,
         meta.uses.append(_token_str(angle))
 
     elif name == "assign_stmt":
-        tokens = [c for c in node.children if isinstance(c, Token)]
-        exprs = [c for c in node.children if isinstance(c, Tree) or
-                 (isinstance(c, Token) and c.type in ("NUMBER", "ESCAPED_STRING", "BOOL", "NAME"))]
-        var_name = str(tokens[0]) if tokens else None
-        # children layout: NAME token, then expr tree/token
         children = list(node.children)
         if len(children) >= 2 and isinstance(children[0], Token):
             var_name = str(children[0])
             val = _expr_to_str(children[1]) if len(children) > 1 else ""
             if var_name and top_level:
                 meta.variables[var_name] = val
+                desc = _extract_trailing_comment(source_lines, children[0])
+                if desc:
+                    meta.variable_descriptions[var_name] = desc
 
     elif name == "module_def":
         _handle_module_def(node, source_lines, meta)
@@ -361,6 +376,12 @@ def _regex_fallback(source: str, source_lines: List[str], meta: ScadMeta) -> Non
         name, val = m.group(1).strip(), m.group(2).strip()
         if name not in meta.variables:
             meta.variables[name] = val
+            line_no = source[:m.start()].count("\n")
+            if line_no < len(source_lines):
+                line = source_lines[line_no]
+                tc = _TRAILING_COMMENT_RE.search(re.sub(r'"[^"\\]*(?:\\.[^"\\]*)*"', '""', line))
+                if tc:
+                    meta.variable_descriptions[name] = tc.group(1).strip()
 
     for m in _RE_MODULE.finditer(source):
         mod = ScadModuleMeta(

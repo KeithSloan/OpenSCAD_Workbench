@@ -1,4 +1,4 @@
-# scadmeta_parser.py
+# scadmeta_parse_scad_file.py
 
 import re
 import os
@@ -7,6 +7,9 @@ import FreeCADGui
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 
 # Regex patterns
+actual_include_re = re.compile(r"^\s*include\s*<([^>]+)>")
+actual_use_re = re.compile(r"^\s*use\s*<([^>]+)>")
+
 var_re = re.compile(
     r"""
     (?:\/\/\s*@var\s+)?      # optional // @var
@@ -46,10 +49,27 @@ def parse_scad_meta(scad_filepath):
         current_set = None
 
         for line in scad_lines:
-            line = line.strip()
+            stripped = line.strip()
 
-            # Skip empty lines and comments
-            if not line or line.startswith('//'):
+            # Actual include <path> / use <path> statements
+            m = actual_include_re.match(stripped)
+            if m:
+                path = m.group(1).strip()
+                if path not in meta.includes:
+                    meta.includes.append(path)
+                continue
+
+            m = actual_use_re.match(stripped)
+            if m:
+                path = m.group(1).strip()
+                if path not in meta.uses:
+                    meta.uses.append(path)
+                continue
+
+            line = stripped  # keep rest of loop using stripped form
+
+            # Skip empty lines and comments (but still check for @annotations)
+            if not line or (line.startswith('//') and not line.startswith('// @')):
                 pass
 
             # Match variable sets: e.g., // @set setname

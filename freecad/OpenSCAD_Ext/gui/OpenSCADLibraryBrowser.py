@@ -8,6 +8,7 @@ from PySide.QtGui import QBrush, QColor
 from freecad.OpenSCAD_Ext.libraries.ensure_openSCADPATH import ensure_openSCADPATH
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.core.create_scad_object_interactive import create_scad_object_interactive
+from freecad.OpenSCAD_Ext.core.exporters import export_variables
 
 # Lark-based scanner – single import for all metadata needs
 from freecad.OpenSCAD_Ext.parsers.scadmeta import scan_scad_file, ScadFileType
@@ -298,25 +299,11 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
             self.status.setText("No active document — open or create one first.")
             return
 
-        sheet_name = Path(self.selected_scad).stem + "_Vars"
-        sheet = doc.getObject(sheet_name)
-        if sheet is None:
-            sheet = doc.addObject("Spreadsheet::Sheet", sheet_name)
-            sheet.Label = sheet_name
-
-        sheet.set("A1", '="Name"')
-        sheet.set("B1", '="Expression"')
-        row = 2
-        for var_name, expr in meta.variables.items():
-            sheet.set(f"A{row}", f'="{var_name}"')
-            sheet.set(f"B{row}", str(expr))
-            row += 1
-
-        doc.recompute()
+        label = Path(self.selected_scad).stem
+        export_variables(doc, meta, label)
         self.status.setText(
-            f"Extracted {len(meta.variables)} variables → spreadsheet '{sheet_name}'"
+            f"Exported {len(meta.variables)} variable(s) from '{label}'"
         )
-        write_log("Info", f"Variables spreadsheet '{sheet_name}' created.")
 
     def _scan_modules(self):
         if not self.selected_scad or not os.path.isfile(self.selected_scad):

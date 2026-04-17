@@ -20,8 +20,9 @@ scanner.
 - **Persistent metadata cache** – TinyDB + Watchdog keeps parsed metadata
   fresh without re-parsing unchanged files; automatic invalidation on
   file-system changes
-- **Spreadsheet integration** – extract top-level SCAD variables into a
-  FreeCAD spreadsheet for parametric workflows
+- **Variable Export** – extract top-level SCAD variables into a FreeCAD
+  `App::VarSet` (with typed properties) or a Spreadsheet, controlled by
+  preferences; inline `// trailing comments` are captured as property tooltips
 - **DXF support** – import/export `.dxf` files via OpenSCAD
 
 ---
@@ -175,7 +176,7 @@ displayed with a **colour-coded file-type label and icon**:
 |---|---|---|
 | **Create SCAD Object** | Any `.scad` file selected | Creates a base SCAD file object in the active document |
 | **Scan Modules** | File has ≥ 1 module | Opens the Module Inspector dialog |
-| **Extract Variables** | File has top-level variables | Populates a FreeCAD spreadsheet |
+| **Extract Variables** | File has top-level variables | Exports variables to the configured target (VarSet by default) |
 | **Refresh** | Any `.scad` file selected | Drops all caches and re-scans the file immediately |
 
 #### Automatic cache refresh
@@ -203,6 +204,49 @@ After clicking **Scan Modules**:
 The created object stores all module parameters as typed FreeCAD properties
 and writes a minimal `.scad` file that `include`s the library and calls the
 module with the current parameter values.
+
+### Extract Variables
+
+Variables can be extracted from any SCAD object two ways:
+
+- **Toolbar command** – select a SCAD file object in the model tree, then click
+  the *Extract Variables* (teal spreadsheet icon) toolbar button.
+- **Library Browser** – select a `.scad` file in the browser and click
+  **Extract Variables**.
+
+Both paths go through the same exporter and respect the **Variable Export**
+preferences (see [Configuration](#configuration)).
+
+#### How variables are captured
+
+The Lark parser extracts all top-level assignment statements:
+
+```openscad
+width  = 20;       // overall width
+height = 10;       // overall height
+label  = "part";   // part label string
+sizes  = [1,2,3];  // vector — stored as string
+```
+
+Inline `//` trailing comments are stored as property tooltips on the
+generated `App::VarSet`.  The property type is inferred from the expression:
+
+| Expression | FreeCAD property |
+|---|---|
+| `true` / `false` | `App::PropertyBool` |
+| Integer literal | `App::PropertyInteger` |
+| Float literal | `App::PropertyFloat` |
+| Everything else (vectors, strings, identifiers) | `App::PropertyString` |
+
+#### Export targets
+
+Configured via **Preferences → Variable Export → Default export target**:
+
+| Target | Status | Notes |
+|---|---|---|
+| **VarSet** *(default)* | Active | `App::VarSet` named `Vars_<stem>`; properties are expression-bindable |
+| **Spreadsheet** | Stub | Placeholder — not yet implemented |
+| **Vars** | Stub | Future integration with the Vars extension |
 
 ---
 
@@ -304,7 +348,7 @@ freecad/OpenSCAD_Ext/
 │   ├── renderSCAD.py       #   Render to Shape
 │   ├── varsSCAD.py         #   Extract Variables
 │   └── librarySCAD.py      #   Library Browser
-├── core/                   # Geometry utilities, spreadsheet helpers
+├── core/                   # Geometry utilities; exporters.py (variable export strategies)
 ├── exporters/              # SCAD / CSG / DXF export
 ├── gui/                    # Dialogs
 │   ├── OpenSCADLibraryBrowser.py   # Library Browser dialog
