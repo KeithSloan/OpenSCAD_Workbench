@@ -79,10 +79,7 @@ def parse_csg_params(param_str):
             k, v = tok.split("=", 1)
             k = k.strip()
             v = v.strip()
-            try:
-                val = ast.literal_eval(v)
-            except Exception:
-                val = v
+            val = parse_scad_argument(v)
             params[k] = val
         else:
             positional_tokens.append(tok)
