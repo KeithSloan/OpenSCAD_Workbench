@@ -50,6 +50,8 @@ class ScadModuleMeta:
     synopsis: str = ""
     usage: List[str] = field(default_factory=list)
     line_number: int = 0
+    param_descriptions: Dict[str, str] = field(default_factory=dict)
+    excluded_params: List[str] = field(default_factory=list)  # params after // --- separator
 
 
 @dataclass
@@ -83,7 +85,8 @@ class ScadMeta:
     comment_includes: List[str] = field(default_factory=list)  # from BOSL2 header
 
     # --- Definitions ---
-    variables: Dict[str, str] = field(default_factory=dict)          # name -> expr
+    variables: Dict[str, str] = field(default_factory=dict)                 # name -> expr
+    variable_descriptions: Dict[str, str] = field(default_factory=dict)     # name -> trailing comment
     modules: List[ScadModuleMeta] = field(default_factory=list)
     functions: List[ScadFunctionMeta] = field(default_factory=list)
 

@@ -1,355 +1,177 @@
-# Extract Variables — Implementation Analysis
+# Extract Variables — Implementation Notes
 
-_Reviewed against codebase state: 2026-04-16_
-
----
-
-## Branch Status — `Extract_Variables` (2026-04-17)
-
-Initial implementation committed to branch `Extract_Variables`. Untested in FreeCAD.
-
-| Item | Status |
-|---|---|
-| `variable_descriptions` field on `ScadMeta` | Done |
-| Trailing `// comment` capture (Lark parser + regex fallback) | Done |
-| Real `include <path>` scanning in legacy parser | Done |
-| `core/exporters.py` — strategy pattern, `VarSetExporter` active | Done |
-| `SpreadsheetExporter`, `VarsExporter` | Stubs only |
-| `varsSCAD.py` rewritten — Lark parser + `export_variables()` | Done |
-| Library Browser "Extract Variables" button — delegates to `export_variables()` | Done |
-| `core/varset_utils.py` — `create_varset()` for typed `App::VarSet` | Done |
-| Duplicate detection / update-or-create dialog | **Not yet** |
-| Trigger variable export on "Create SCAD Object" | **Not yet** |
-| Parametric re-evaluation in `SCADModuleObject` | **Not yet** (see `Property_Change_Handling.md`) |
-| Recursive `include <path>` scanning | **Not yet** |
-
-See `Extract_Variables_Analysis.md` (this file) for the full design rationale,
-and `Developer_Notes/Extract_Variables_Analysis.md` in the branch for a detailed
-testing checklist.
+Branch: `Extract_Variables`  
+Status: Initial implementation committed; untested in FreeCAD.
 
 ---
 
-## 1. Current State
+## What was built
 
-The infrastructure for variable extraction is substantially in place. The key pieces:
+### 1. `ScadMeta` model — `parsers/scadmeta/scadmeta_model.py`
 
-| Layer | File | Status |
+Added `variable_descriptions: Dict[str, str]` alongside the existing
+`variables: Dict[str, str]`.  Populated by the parser from inline trailing
+comments:
+
+```openscad
+width = 20;    // overall width   → variable_descriptions["width"] = "overall width"
+height = 10;   // overall height
+```
+
+### 2. Lark parser — `parsers/scadmeta/scadmeta_lark_parser.py`
+
+- New helper `_extract_trailing_comment(source_lines, name_token)` — uses the
+  line number from `propagate_positions` to read the raw source line and strip
+  any `// ...` suffix (ignores `//` inside string literals).
+- Wired into `assign_stmt` handler (top-level variables only).
+- Same logic applied in `_regex_fallback()` so the fallback path also captures
+  descriptions.
+
+### 3. Legacy parser — `parsers/scadmeta/scadmeta_parse_scad_file.py`
+
+The old parser only recognised `// @include` annotations.  Added real
+`include <path>` and `use <path>` line scanning at the top of the parse loop
+so actual dependency statements are captured alongside the annotation style.
+
+### 4. Export strategy — `core/exporters.py` *(new file)*
+
+Strategy pattern with a common `export_variables(doc, meta, label)` entry
+point that:
+
+1. Reads `varExportTarget` (int, default 0) and `varExportPrompt` (bool,
+   default True) from `User parameter:BaseApp/Preferences/Mod/OpenSCAD_Ext`.
+2. If prompt is on, shows a `QMessageBox.question` listing the first 10
+   variables before proceeding.
+3. Dispatches to the appropriate exporter class.
+
+| Class | Target index | Status |
 |---|---|---|
-| Lark parser | `parsers/scadmeta/scadmeta_lark_parser.py` | Active |
-| Grammar | `parsers/scadmeta/scadmeta_grammar.py` | Active |
-| Data model | `parsers/scadmeta/scadmeta_model.py` | Active |
-| Scanner / orchestrator | `parsers/scadmeta/scadmeta_scanner.py` | Active |
-| Two-level cache | `parsers/scadmeta/scadmeta_cache.py` | Active |
-| Extract command | `commands/varsSCAD.py` | Partial |
-| VarSet utilities | `core/varset_utils.py` | Written, not wired |
-| Spreadsheet creation | `core/createSpreadSheet.py` | Active |
-| Library browser | `gui/OpenSCADLibraryBrowser.py` | Active |
-| Module dialog | `gui/SCAD_Module_Dialog.py` | Active |
-| Module properties | `objects/SCADModuleObject.py` | Active |
-| Export option preference | `Resources/ui/OpenSCAD_Ext_Preferences.ui` | **Missing** |
+| `VarSetExporter` | 0 | **Active** |
+| `VarsExporter` | 1 | Stub — prints warning |
+| `SpreadsheetExporter` | 2 | Stub — prints warning |
 
-The parser already extracts top-level variables, module parameters, function definitions,
-and `include`/`use` directives. `SCADModuleObject` already maps module parameters to
-FreeCAD Properties. The gap is wiring, UI, and parametric re-evaluation.
+`VarSetExporter.export()` creates (or updates) an `App::VarSet` named
+`Vars_<label>` where `<label>` is the SCAD file stem.  Property type is
+inferred from the raw expression string:
 
----
+| Expression | Property type |
+|---|---|
+| `true` / `false` | `App::PropertyBool` |
+| Integer literal | `App::PropertyInteger` |
+| Float literal | `App::PropertyFloat` |
+| Everything else | `App::PropertyString` |
 
-## 2. Where OpenSCAD Variables Live
+`variable_descriptions` values become the property tooltip (third arg to
+`addProperty`).
 
-The `Extract Variables.md` note lists the locations correctly. In practice these split
-into two distinct concerns:
+### 5. `commands/varsSCAD.py` — rewritten
 
-### 2a. Top-level (file-scope) variables
-
-```scad
-can_h = 20;          // scalar
-can = [can_h, can_d]; // vector — depends on other variables
-txb_b = true;        // boolean
-txb_n = "trunc_diamonds"; // string
-tol = 0.1;
-```
-
-These are the "parameters" a user would customise before generating geometry. The Lark
-parser already captures them as `ScadMeta.variables: Dict[str, str]` (name → raw
-expression string).
-
-**Key consideration:** expressions can be *dependent* (`can = [can_h, can_d]`). Storing
-only the raw expression string is correct — do **not** try to evaluate them in Python;
-let OpenSCAD do that. FreeCAD Spreadsheet cells can hold the raw expression for display
-and editing, but the canonical evaluated value must come from a fresh OpenSCAD run.
-
-### 2b. Variables inside comment blocks (the tricky part)
-
-OpenSCAD has no formal parameter-documentation syntax. Conventions observed in the wild:
-
-- **BOSL2-style block comments** — structured annotations above module definitions
-  (`// Arguments:`, `// Description:` etc.). The grammar already handles these.
-- **Free-form comments** adjacent to assignments — e.g. `can_h = 20; // height of can`.
-  These are not captured today.
-- **Library headers** — descriptive comments at the top of a file describing the whole
-  library and its variables.
-
-**Recommendation:** capture inline trailing comments (`// ...`) during parsing and store
-them as a `description` field on each variable. This gives the user something useful to
-display in the Preferences panel or spreadsheet "Description" column without requiring
-structured annotation.
-
----
-
-## 3. Export Target Options
-
-### 3a. FreeCAD Spreadsheet
-
-**Pros:** built-in, no dependencies, cells can drive expressions elsewhere in the model,
-user-familiar.
-
-**Cons (noted in `Extract Variables.md`):**
-- No type metadata — everything is a cell value; FreeCAD doesn't know a cell is a
-  "length" vs. "count".
-- Bidirectional sync is fragile: if the user edits the spreadsheet and then re-imports,
-  changes are overwritten.
-- Vector-valued variables (`can = [20, 10, 1.2]`) have no natural single-cell representation.
-- The spreadsheet is a document object — creating one per SCAD file pollutes the model
-  tree for complex assemblies.
-
-**Suggested mitigation:** use the spreadsheet as a *read-only display* only; edits flow
-back to SCAD through properties (see §5).
-
-### 3b. VarSets (App::FeaturePython with properties)
-
-`core/varset_utils.py` already has `add_scad_vars_to_varset()`. VarSets store variables
-as typed FreeCAD Properties (`App::PropertyFloat`, `App::PropertyString`, etc.), which:
-
-- participate in the undo/redo stack,
-- appear in the Property Panel with correct type widgets,
-- can be referenced by other features via expressions (`=VarSet.can_h`),
-- survive file save/load as part of the document.
-
-**Cons:**
-- Requires FreeCAD ≥ 0.21 for the VarSet API to be stable.
-- Type inference from raw OpenSCAD expression strings is imperfect for vectors and
-  computed values.
-
-**This is the recommended primary target** for parametric use cases.
-
-### 3c. Vars Extension (mnesarco/Vars)
-
-Frank David Martinez's extension adds a dedicated Variables workbench with a
-formula-capable variable store. It is more powerful than Spreadsheet for managing many
-interrelated variables.
-
-**Cons:**
-- External dependency — users must install it separately.
-- API surface is not stable / not widely deployed.
-- Adds a hard dependency that may not survive FreeCAD version bumps.
-
-**Recommendation:** treat Vars as a stretch goal. Design the export layer as a pluggable
-backend (see §4) so it can be added without touching the core.
-
----
-
-## 4. Preference and Export Architecture
-
-The `Extract Variables.md` note proposes:
-- A preference to pick the default export target.
-- An optional "prompt each time" mode.
-
-### Recommended design
-
-```
-Preferences → OpenSCAD_Ext → Variable Export
-    [x] Prompt for export option each time
-    Default export target: [VarSet ▾]  (VarSet | Spreadsheet | Vars)
-```
-
-Implement as a simple strategy pattern in `commands/varsSCAD.py`:
+Old code used the legacy `parse_scad_meta()` + `create_scad_vars_spreadsheet()`
+path.  Replaced with:
 
 ```python
-def get_exporter(target: str):
-    if target == "VarSet":    return VarSetExporter()
-    if target == "Spreadsheet": return SpreadsheetExporter()
-    if target == "Vars":      return VarsExporter()   # future
-    raise ValueError(target)
+meta = parse_scad_file(scad_file)          # Lark parser
+export_variables(doc, meta, label)          # strategy dispatch
 ```
 
-Each exporter implements:
+Validates that the selected object is a `Part::FeaturePython` with a
+`SCADfileBase` proxy and a valid `sourceFile` before proceeding.
+
+### 6. `gui/OpenSCADLibraryBrowser.py` — Extract Variables button
+
+The browser's `_extract_variables()` method previously hard-coded a
+`Spreadsheet::Sheet` creation, ignoring preferences.  Replaced with the same
+`export_variables(doc, meta, label)` call so both entry points (toolbar
+command and library browser button) behave identically.
+
+### 7. `core/varset_utils.py` — updated
+
+Added `create_varset(doc, variables, descriptions, name)` which creates a
+typed `App::VarSet`.  The legacy `add_scad_vars_to_varset()` and
+`mirror_varset_to_spreadsheet()` helpers are kept for backwards compatibility
+but new code should use `create_varset()` or `export_variables()`.
+
+---
+
+## What is deferred / stubbed
+
+### Spreadsheet exporter
+
+`SpreadsheetExporter` in `core/exporters.py` currently just prints a warning.
+When implemented it should mirror `variables` into a `Spreadsheet::Sheet`
+named `Vars_<label>`, with Name/Expression columns.  The old browser code
+(now removed) is a reasonable starting point.  Key decision: whether to also
+write a Description column from `variable_descriptions`.
+
+### Vars exporter
+
+`VarsExporter` is a stub pending a stable API from Frank David Martinez's
+[Vars extension](https://github.com/mnesarco/Vars).
+
+### VarSet update behaviour
+
+Currently re-running Extract Variables on the same file calls `addProperty`
+only for names not already present, and `setattr` updates existing values.
+Property *type* is not updated if the expression changes (e.g. `10` → `"text"`).
+If this becomes a problem the fix is to remove and re-add the property.
+
+### include <path> recursive scanning
+
+The Lark parser captures `include <path>` and `use <path>` lines in
+`meta.includes` / `meta.uses` but does **not** recursively scan included
+files for additional variables.  If a SCAD file delegates all variables to an
+included file, `meta.variables` will be empty.  Recursive scanning is a
+future enhancement.
+
+---
+
+## Testing checklist
+
+These should be verified manually in FreeCAD before merging to main:
+
+- [ ] Select a SCAD file object → Extract Variables toolbar button
+  - [ ] Prompt dialog appears listing variables (when `varExportPrompt = True`)
+  - [ ] Clicking Yes creates `App::VarSet` named `Vars_<stem>` in model tree
+  - [ ] VarSet properties have correct types (bool/int/float/string)
+  - [ ] Trailing comment appears as tooltip on each property
+  - [ ] Re-running updates values without duplicating properties
+- [ ] Set `varExportPrompt = False` in prefs — extraction runs silently
+- [ ] Set `varExportTarget = 2` (Spreadsheet) — warning printed, no crash
+- [ ] Library Browser → select a SCAD file with variables → Extract Variables
+  - [ ] Same VarSet is created (not a spreadsheet)
+  - [ ] Status bar updates with variable count
+- [ ] Library Browser → file with no variables → info dialog, no crash
+- [ ] Library Browser → no active document → status bar message, no crash
+- [ ] SCAD file with `include <other.scad>` — `meta.includes` populated
+
+---
+
+## Outstanding decision — SCADModuleObject property change handling
+
+`freecad/OpenSCAD_Ext/objects/SCADModuleObject.py` has `execute()` as `pass`.
+When a VarSet property is expression-bound to a module parameter and the user
+changes the value, FreeCAD will call `execute()` to recompute the shape.
+Three options were discussed but a decision has not yet been made:
+
+### Option 1 — Manual trigger (no code change)
+The existing `execute` bool flip already works: user toggles it to force a
+recompute.  Zero implementation cost.
+
+### Option 2 — `liveUpdate` PropertyBool (~10 lines)
+Add an opt-in `liveUpdate: App::PropertyBool = False` to `SCADModuleObject`.
+When True, `onChanged()` calls `execute()` immediately on any property change.
+
 ```python
-class BaseExporter:
-    def export(self, doc, scad_meta: ScadMeta, obj_name: str) -> None: ...
-    def update(self, doc, scad_meta: ScadMeta, obj_name: str) -> None: ...
-    def exists(self, doc, obj_name: str) -> bool: ...
+def onChanged(self, fp, prop):
+    if getattr(fp, "liveUpdate", False) and prop != "liveUpdate":
+        self.execute(fp)
 ```
 
-This keeps the UI and storage concerns separated, and makes adding the Vars backend
-later a localised change.
+### Option 3 — Task Panel (~60 lines)
+Double-click on the object opens a sidebar form showing all parameters.
+User edits values and clicks OK; a single OpenSCAD run recomputes the shape.
+Most FreeCAD-idiomatic approach; avoids triggering a recompute on every
+keystroke.  Requires implementing `setEdit()` / `unsetEdit()` on the ViewProvider.
 
----
-
-## 5. When Variables Are Created / Re-created
-
-The `Extract Variables.md` note lists three trigger points. Considerations for each:
-
-### 5a. On "Create SCAD Object"
-
-When a `.scad` file is imported as a SCADfileObject, scan for top-level variables and
-create the export object (VarSet / Spreadsheet) automatically **only if variables exist**.
-Skip silently if none are found.
-
-**Edge case:** if the user imports the same file twice, `exists()` (see §4) must detect
-the already-created VarSet and offer to update rather than duplicate.
-
-### 5b. For each Module (via Library Browser → Create SCAD Module)
-
-`SCADModuleObject` already creates one Property per parameter. The gap is that these
-properties do not currently trigger a re-evaluation of the geometry when changed.
-
-### 5c. Extract Variables button in Library Browser
-
-This is the explicit, user-initiated path — already partially implemented in
-`commands/varsSCAD.py`. Add the export-target logic here.
-
----
-
-## 6. Parametric Re-evaluation (the hard problem)
-
-This is the most architecturally significant item in the note:
-
-> _The following changes will cause re-evaluation of OpenSCAD Object Shape:
-> Direct change of Property / Change of Variable Set / Change of Spreadsheet_
-
-### Current situation
-
-`SCADModuleObject.onChanged()` is called when any property changes, but it does not
-currently trigger a new OpenSCAD invocation. The shape is static after import.
-
-### What needs to happen
-
-When a parameter property changes:
-1. Collect all current property values.
-2. Write a temporary `.scad` wrapper that overrides the changed variables and calls the module.
-3. Run OpenSCAD → CSG → AST → Shape (the existing import pipeline).
-4. Replace the object's `Shape`.
-
-**Debounce / avoiding recalc on every keystroke:** the note raises this correctly. Use
-a `bool` property (e.g. `AutoRecompute: Bool = False`) that the user toggles to opt in
-to live updates, or provide an explicit "Recompute" button. FreeCAD's `execute: Bool`
-property pattern (already on `SCADfileBase`) is the right model — flip it to trigger
-a one-shot recompute.
-
-### VarSet / Spreadsheet → Shape feedback loop
-
-If variables live in a VarSet, changes to VarSet properties must propagate back to the
-SCAD object. FreeCAD's expression binding (the `=VarSet.can_h` formula in a property)
-does this automatically when both objects are in the same document. The SCAD object's
-`onChanged()` fires whenever a bound expression recomputes.
-
----
-
-## 7. Type Inference from Raw Expressions
-
-OpenSCAD expressions are strings like `"20"`, `"true"`, `"[20, 10]"`, `"can_h * 2"`.
-
-| Pattern | FreeCAD type | Notes |
-|---|---|---|
-| Integer literal | `App::PropertyInteger` | safe |
-| Float literal | `App::PropertyFloat` | safe |
-| `true` / `false` | `App::PropertyBool` | safe |
-| Quoted string | `App::PropertyString` | safe |
-| `[a, b, c]` (3 floats) | `App::PropertyVector` | assume 3D vector |
-| `[a, b]` | `App::PropertyString` | store as string |
-| Expression with operators | `App::PropertyString` | store raw, evaluate via OpenSCAD |
-| Variable reference | `App::PropertyString` | ditto |
-
-**Do not attempt to evaluate arbitrary expressions in Python.** Store raw strings for
-non-literal expressions; OpenSCAD is the evaluator.
-
----
-
-## 8. Handling Duplicate / Already-existing VarSets
-
-The note flags this: _"Need to check if already exists in current Document"_.
-
-Strategy:
-1. Before creating, call `exporter.exists(doc, obj_name)`.
-2. If it exists, prompt: **Update existing** / **Create new (rename)** / **Cancel**.
-3. On update: overwrite values for variables that still exist; warn about removed variables;
-   add new variables.
-
-Use a stable naming convention: `SCAD_<basename>_vars` for top-level, `SCAD_<basename>_<ModuleName>` for module parameters. This makes `exists()` deterministic.
-
----
-
-## 9. SCAD → FreeCAD Variable Export (Andreas scad export)
-
-The note mentions "Andreas scad export" for Variable Set / Variables / Spreadsheet. This
-is the reverse direction: taking FreeCAD values and injecting them into a generated SCAD
-file at render time.
-
-The `SCADModuleObject` already does this for module parameters — it generates a wrapper
-`.scad` that calls the module with current property values. Extending this to top-level
-variables means prepending variable assignments to the generated wrapper:
-
-```scad
-// Overrides from FreeCAD
-can_h = 25;
-can_d = 12;
-// ... rest of original file
-include </path/to/original.scad>;
-```
-
-This is a clean approach — no parsing of the original file at render time, just injection.
-
----
-
-## 10. Implementation Sequence (suggested)
-
-1. **Add export preference UI** to `OpenSCAD_Ext_Preferences.ui`: radio group
-   (VarSet / Spreadsheet / Vars) + "Prompt each time" checkbox.
-
-2. **Implement pluggable exporter** in `commands/varsSCAD.py` with `VarSetExporter` and
-   `SpreadsheetExporter` as initial backends.
-
-3. **Wire `VarSetExporter`** using existing `core/varset_utils.py` — it is already
-   written; it just needs to be called from `varsSCAD.py`.
-
-4. **Add inline comment capture** to the Lark grammar / parser so that trailing `// ...`
-   comments on variable lines are stored as descriptions.
-
-5. **Duplicate detection** — implement `exists()` check and update-or-create dialog.
-
-6. **Trigger on import** — call the exporter from `SCADfileBase.execute()` when
-   top-level variables are found.
-
-7. **Parametric re-evaluation** — add `AutoRecompute` property + debounce logic to
-   `SCADModuleObject.onChanged()`.
-
-8. **Vars extension backend** — add as step 8 once the architecture is stable.
-
----
-
-## 11. Open Questions
-
-| Question | Notes |
-|---|---|
-| Should vector variables become `PropertyVector` or `PropertyString`? | `PropertyVector` limits to 3D; many SCAD vectors are 2-element or longer. Safer to use String. |
-| Should the spreadsheet be read-only or editable? | Editable risks overwrite on re-import. Recommend read-only display; edits via Property Panel. |
-| Where should the VarSet appear in the model tree? | Under the SCAD Object as a child, or top-level? Child is cleaner. |
-| How to handle `include <...>` variables? | The included file's globals are invisible to the parser. For now, skip. Document limitation. |
-| Conflict if user renames a property? | Use the stable naming convention; add `scad_name` metadata attribute to each property to track original name. |
-
----
-
-## Summary
-
-The parser, data model, and caching infrastructure are production-ready. The main work
-remaining is:
-
-- **Pluggable exporter backends** (VarSet first, Spreadsheet second, Vars later).
-- **Preference UI** for export target selection.
-- **Duplicate detection and update logic**.
-- **Parametric re-evaluation** in `SCADModuleObject` (the architecturally hardest piece).
-- **Inline comment capture** for variable descriptions (small parser addition).
-
-The VarSet approach is the strongest integration point with FreeCAD's parametric model.
-Spreadsheet is a useful secondary option for users who want to drive dimensions from a
-table. The Vars extension should be deferred until the core is stable.
+**Recommendation:** Option 2 for now (simple, reversible), with Option 3
+as a follow-up once the basic pipeline is validated.
