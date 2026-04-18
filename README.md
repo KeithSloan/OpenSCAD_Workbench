@@ -176,7 +176,7 @@ displayed with a **colour-coded file-type label and icon**:
 |---|---|---|
 | **Create SCAD Object** | Any `.scad` file selected | Creates a base SCAD file object in the active document |
 | **Scan Modules** | File has ≥ 1 module | Opens the Module Inspector dialog |
-| **Extract Variables** | File has top-level variables | Exports variables to the configured target (VarSet by default) |
+| **Extract Variables** | File has modules or top-level variables | Creates module VarSets and/or a top-level VarSet (see [Extract Variables](#extract-variables)) |
 | **Refresh** | Any `.scad` file selected | Drops all caches and re-scans the file immediately |
 
 #### Automatic cache refresh
@@ -207,46 +207,98 @@ module with the current parameter values.
 
 ### Extract Variables
 
-Variables can be extracted from any SCAD object two ways:
+**Extract Variables** is available from the **Library Browser** — select a
+`.scad` file and click the button.  It is also available as a toolbar command
+when a SCAD file object is selected in the model tree.
 
-- **Toolbar command** – select a SCAD file object in the model tree, then click
-  the *Extract Variables* (teal spreadsheet icon) toolbar button.
-- **Library Browser** – select a `.scad` file in the browser and click
-  **Extract Variables**.
+If there is no active FreeCAD document when the button is pressed, a new
+document is created automatically, named after the `.scad` file stem
+(underscores replaced with hyphens, e.g. `linear_bearing.scad` →
+document `linear-bearing`).
 
-Both paths go through the same exporter and respect the **Variable Export**
-preferences (see [Configuration](#configuration)).
+#### What gets created
 
-#### How variables are captured
+The command produces up to two kinds of `App::VarSet` objects, silently and
+without a confirmation dialog:
 
-The Lark parser extracts all top-level assignment statements:
+---
+
+##### 1 — Module VarSets (one per module)
+
+For every module defined in the file that has at least one parameter with a
+default value, a VarSet is created whose name matches the module name.
 
 ```openscad
-width  = 20;       // overall width
-height = 10;       // overall height
-label  = "part";   // part label string
-sizes  = [1,2,3];  // vector — stored as string
+// Arguments:
+//   d = Diameter of linear bearing. (Default: 15)
+//   l = Length of linear bearing. (Default: 24)
+//   ---
+//   anchor = ...    ← excluded (after --- separator)
+//   spin   = ...    ← excluded
+module linear_bearing_housing(d=15, l=24, ..., anchor=BOTTOM, spin=0)
 ```
 
-Inline `//` trailing comments are stored as property tooltips on the
-generated `App::VarSet`.  The property type is inferred from the expression:
+- Parameters **before** the `// ---` separator in the BOSL2 `// Arguments:`
+  block are included in the VarSet.
+- Parameters **after** `// ---` (typically BOSL2 attachment helpers such as
+  `anchor`, `spin`, `orient`) are excluded.
+- If the file does not use BOSL2-style comment blocks, all parameters with
+  defaults are included with generic descriptions.
+- Descriptions from `//   param = description` lines are stored as property
+  tooltips (visible on hover and at the bottom of the Properties panel).
 
-| Expression | FreeCAD property |
+Example — `linear_bearings.scad` produces three VarSets:
+```
+linear_bearing_housing   (d, l, tab, gap, wall, tabwall, screwsize)
+linear_bearing           (size, ...)
+lmXuu_housing            (size, ...)
+```
+
+---
+
+##### 2 — Top-level VarSet (one per file)
+
+If the file contains top-level variable assignments (the kind OpenSCAD's own
+Customizer picks up), a single VarSet is created named after the file stem.
+
+```openscad
+$fn     = 64;
+n       = 8;        // Rib count
+R_box   = 225;      // outer radius (= half diameter 450 mm) [mm]
+dome_h  = 100;      // dome height above cylinder top        [mm]
+```
+
+- Variables whose names start with `_` are skipped (they are internal library
+  guard constants, not user-facing parameters).
+- Trailing `//` comments on the same line as the assignment are stored as
+  property tooltips.
+- The VarSet is named after the file stem (e.g. `post_box_former`).
+
+This handles files that expose their parameters as top-level variables rather
+than module arguments — exactly the pattern OpenSCAD's Customizer targets.
+
+---
+
+#### Property type inference
+
+The property type for each variable or parameter is inferred from its default
+expression:
+
+| Expression | FreeCAD property type |
 |---|---|
 | `true` / `false` | `App::PropertyBool` |
 | Integer literal | `App::PropertyInteger` |
 | Float literal | `App::PropertyFloat` |
 | Everything else (vectors, strings, identifiers) | `App::PropertyString` |
 
-#### Export targets
+#### Cache and the Refresh button
 
-Configured via **Preferences → Variable Export → Default export target**:
-
-| Target | Status | Notes |
-|---|---|---|
-| **VarSet** *(default)* | Active | `App::VarSet` named `Vars_<stem>`; properties are expression-bindable |
-| **Spreadsheet** | Stub | Placeholder — not yet implemented |
-| **Vars** | Stub | Future integration with the Vars extension |
+The Library Browser caches parsed metadata in TinyDB, keyed by SHA-256 file
+hash.  If the **parser code** itself changes (not just the `.scad` file),
+existing cache entries will not contain the new fields.  In that case use the
+**Refresh** button to force a full re-scan of the selected file, bypassing
+both the session cache and the TinyDB cache.  Normal file edits on disk are
+detected automatically and do not require a manual Refresh.
 
 ---
 

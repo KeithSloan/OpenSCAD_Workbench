@@ -122,23 +122,51 @@ def _extract_preceding_comments(source_lines: List[str], line_number: int) -> Li
 def _apply_bosl2_comments(obj, comments: List[str]) -> None:
     """
     Apply BOSL2-style comment annotations to a module or function meta object.
-    Recognises keys: Module:, Description:, Synopsis:, Usage:
+    Recognises keys: Module:, Description:, Synopsis:, Usage:, Arguments:
+    Within an Arguments: block, lines of the form ``param = description`` are
+    stored as param_descriptions (modules only).  A bare ``---`` line marks the
+    separator: params appearing after it are added to excluded_params.
     """
+    in_arguments = False
+    past_separator = False
+
     for cmt in comments:
         lower = cmt.lower()
+
         if lower.startswith("module:"):
+            in_arguments = False
             obj.name = cmt.split(":", 1)[1].strip()
         elif lower.startswith("description:"):
+            in_arguments = False
             obj.description = cmt.split(":", 1)[1].strip()
         elif lower.startswith("synopsis:"):
-            obj.synopsis = cmt.split(":", 1)[1].strip()
+            in_arguments = False
+            if hasattr(obj, "synopsis"):
+                obj.synopsis = cmt.split(":", 1)[1].strip()
         elif isinstance(obj, ScadModuleMeta) and lower.startswith("usage:"):
+            in_arguments = False
             obj.usage.append(cmt.split(":", 1)[1].strip())
+        elif lower.startswith("arguments:"):
+            in_arguments = True
+            past_separator = False
+        elif lower in ("example:", "example(s):", "examples:", "see also:", "topics:", "syntags:"):
+            in_arguments = False
+        elif in_arguments and isinstance(obj, ScadModuleMeta):
+            if cmt.strip() == "---":
+                past_separator = True
+            elif "=" in cmt:
+                param_name, _, desc = cmt.partition("=")
+                param_name = param_name.strip()
+                if param_name:
+                    obj.param_descriptions[param_name] = desc.strip()
+                    if past_separator:
+                        obj.excluded_params.append(param_name)
         else:
-            if obj.description:
-                obj.description += " " + cmt
-            else:
-                obj.description = cmt
+            if not in_arguments:
+                if obj.description:
+                    obj.description += " " + cmt
+                else:
+                    obj.description = cmt
 
 
 def _parse_bosl2_header_includes(source_lines: List[str]) -> List[str]:

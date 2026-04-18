@@ -50,6 +50,8 @@ class ScadModuleMeta:
     synopsis: str = ""
     usage: List[str] = field(default_factory=list)
     line_number: int = 0
+    param_descriptions: Dict[str, str] = field(default_factory=dict)
+    excluded_params: List[str] = field(default_factory=list)  # params after // --- separator
 
 
 @dataclass

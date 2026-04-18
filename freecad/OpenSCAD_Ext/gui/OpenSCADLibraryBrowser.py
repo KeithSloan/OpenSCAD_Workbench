@@ -9,6 +9,7 @@ from freecad.OpenSCAD_Ext.libraries.ensure_openSCADPATH import ensure_openSCADPA
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.core.create_scad_object_interactive import create_scad_object_interactive
 from freecad.OpenSCAD_Ext.core.exporters import export_variables
+from freecad.OpenSCAD_Ext.core.varset_utils import create_module_varsets, create_toplevel_varset
 
 # Lark-based scanner – single import for all metadata needs
 from freecad.OpenSCAD_Ext.parsers.scadmeta import scan_scad_file, ScadFileType
@@ -253,7 +254,7 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
             has_variables = bool(meta.variables)
 
             self.create_btn.setEnabled(True)
-            self.extract_btn.setEnabled(has_variables)
+            self.extract_btn.setEnabled(has_modules or has_variables)
             self.scan_btn.setEnabled(has_modules)
             self.refresh_btn.setEnabled(True)
 
@@ -288,22 +289,27 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         write_log("Info", f"Extracting variables from {self.selected_scad}")
         meta = self._get_meta(self.selected_scad)
 
-        if not meta.variables:
-            QtWidgets.QMessageBox.information(
-                self, "Extract Variables", "No top-level variables found."
-            )
-            return
+        label = Path(self.selected_scad).stem
 
         doc = FreeCAD.ActiveDocument
         if not doc:
-            self.status.setText("No active document — open or create one first.")
-            return
+            doc_name = label.replace("_", "-")
+            doc = FreeCAD.newDocument(doc_name)
+            write_log("Info", f"Created new document '{doc_name}'")
 
-        label = Path(self.selected_scad).stem
-        export_variables(doc, meta, label)
-        self.status.setText(
-            f"Exported {len(meta.variables)} variable(s) from '{label}'"
-        )
+        n_modules = create_module_varsets(doc, meta)
+        has_toplevel = create_toplevel_varset(doc, meta, label)
+        doc.recompute()
+
+        parts = []
+        if n_modules:
+            parts.append(f"{n_modules} module VarSet(s)")
+        if has_toplevel:
+            parts.append(f"top-level VarSet '{label}'")
+        if parts:
+            self.status.setText(f"Extracted from '{label}': " + ", ".join(parts))
+        else:
+            self.status.setText(f"Nothing to extract from '{label}'")
 
     def _scan_modules(self):
         if not self.selected_scad or not os.path.isfile(self.selected_scad):
@@ -370,7 +376,7 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         )
 
         # Update button states after refresh
-        self.extract_btn.setEnabled(bool(meta.variables))
+        self.extract_btn.setEnabled(meta.module_count > 0 or bool(meta.variables))
         self.scan_btn.setEnabled(meta.module_count > 0)
 
 
