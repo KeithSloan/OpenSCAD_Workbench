@@ -54,15 +54,17 @@ def create_scad_object(title, newFile, sourceFile, scadName="SCAD_Object"):
         scadObj.editFile(sourceFile)
 
 # Shared between SCADObject and SCADModule
-def createMesh(srcObj, wrkSrc):
+def createMesh(srcObj, wrkSrc, d_params=None):
     print(f"Create Mesh {srcObj.Name} {wrkSrc}")
+    if d_params:
+        print(f"  -D overrides: {d_params}")
     try:
         tmpDir = tempfile.gettempdir()
         tmpOutFile = os.path.join(tmpDir, srcObj.Name+'.stl')
         print(f"Call OpenSCAD - Input file {wrkSrc} Output file {tmpOutFile}")
         tmpFileName=callopenscad(wrkSrc, \
             outputfilename=tmpOutFile, outputext='stl', \
-            timeout=int(srcObj.timeout))
+            timeout=int(srcObj.timeout), d_params=d_params)
         if os.path.exists(tmpFileName): # If Timeout no file
             print(f"STL File name {tmpFileName}")
             mesh = Mesh.Mesh()
@@ -92,9 +94,11 @@ def createMesh(srcObj, wrkSrc):
         srcObj.execute = False
 
 # Source may be processed
-def createBrep(srcObj, mode, tmpDir, wrkSrc):
+def createBrep(srcObj, mode, tmpDir, wrkSrc, d_params=None):
 
     print(f"Create Brep {srcObj.scadName} {srcObj.fnmax}")
+    if d_params:
+        print(f"  -D overrides: {d_params}")
     actDoc = FreeCAD.activeDocument().Name
     print(f"Active Document {actDoc}")
     wrkDoc = FreeCAD.newDocument("work")
@@ -106,7 +110,7 @@ def createBrep(srcObj, mode, tmpDir, wrkSrc):
         print("Call OpenSCAD to create csg file from scad")
         tmpFileName=callopenscad(wrkSrc, \
 			outputfilename=csgOutFile, outputext='csg', \
-			timeout=int(srcObj.timeout))
+			timeout=int(srcObj.timeout), d_params=d_params)
         if hasattr(srcObj, "source"):
             source = srcObj.scadName
         if hasattr(srcObj, "sourceFile"):
@@ -203,28 +207,27 @@ def createBrep(srcObj, mode, tmpDir, wrkSrc):
 def shapeFromSourceFile(srcObj, module=False, modules=False):
     print(f"shapeFrom Source File : keepWork {srcObj.keep_work_doc}")
     tmpDir = tempfile.gettempdir()
-    #if modules == True:
-    #    wrkSrc = os.path.join(tmpDir, srcObj.Name+'.scad')
-    #    #   wrkSrcFp = fopen(wrkSrc)
-    #    #   scanForModules(wrkSrcFp, module)
-    #else:
-    #    wrkSrc = srcObj.sourceFile
     wrkSrc = srcObj.sourceFile
 
     print(f"source name {srcObj.Label} mode {srcObj.mode}")
 
-    #srcObj.mode = "Mesh"
+    # Build -D overrides from linked VarSet (if any)
+    d_params = None
+    varset = getattr(srcObj, 'linked_varset', None)
+    if varset is not None:
+        from freecad.OpenSCAD_Ext.core.varset_utils import varset_to_D_params
+        d_params = varset_to_D_params(varset) or None
+        if d_params:
+            write_log("SCADfileBase", f"Applying {len(d_params)} VarSet override(s)")
 
     if srcObj.mode in ["Brep", "AST-Brep"]:
-        brepShape = createBrep(srcObj, srcObj.mode, tmpDir, wrkSrc)
+        brepShape = createBrep(srcObj, srcObj.mode, tmpDir, wrkSrc, d_params=d_params)
         print(f"Active Document {FreeCAD.ActiveDocument.Name}")
         return brepShape
-        #return brepObj.Shape
 
     elif srcObj.mode == "Mesh":
         print(f"wrkSrc {wrkSrc}")
-        return createMesh(srcObj, wrkSrc)
-        #return createMesh(srcObj, tmpDir, wrkSrc)
+        return createMesh(srcObj, wrkSrc, d_params=d_params)
 
 # Cannot put in self as SCADlexer is not JSON serializable
 # How to make static ???
@@ -432,6 +435,8 @@ class SCADfileBase:
         obj.keep_work_doc = keep
         obj.addProperty("App::PropertyInteger","timeout","OpenSCAD","OpenSCAD process timeout (secs)")
         obj.timeout = timeout
+        obj.addProperty("App::PropertyLink","linked_varset","OpenSCAD",
+                        "VarSet whose properties override SCAD variables via -D on execution")
 
     def onChanged(self, fp, prop):
         print(f"{fp.Label} State : {fp.State} prop : {prop}")
@@ -469,8 +474,18 @@ class SCADfileBase:
 
 
     def execute(self, fp):
-        '''Do something when doing a recomputation, this method is mandatory'''
-        print(f"execute")
+        '''Called by FreeCAD recompute. Auto-executes when a VarSet is linked.'''
+        if "Restore" in fp.State:
+            return
+        if getattr(self, '_executing', False):
+            return
+        if hasattr(fp, 'linked_varset') and fp.linked_varset is not None:
+            write_log("SCADfileBase", f"VarSet-driven recompute: {fp.Name}")
+            self._executing = True
+            try:
+                self.executeFunction(fp)
+            finally:
+                self._executing = False
 
 
     # use name render for new workbench

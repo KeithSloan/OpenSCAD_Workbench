@@ -2,6 +2,9 @@
 #
 # Utilities for mapping OpenSCAD variables into FreeCAD objects.
 
+# Property groups recognised as SCAD parameter groups when building -D overrides
+_SCAD_GROUPS = {"Variables", "Parameters", "SCAD Variables"}
+
 import FreeCAD
 
 
@@ -19,6 +22,8 @@ def create_varset(doc, variables: dict, descriptions: dict = None,
         descriptions = {}
 
     varset = doc.getObject(name)
+    if varset is not None and getattr(varset, "TypeId", "") != "App::VarSet":
+        varset = None
     if varset is None:
         varset = doc.addObject("App::VarSet", name)
         varset.Label = name
@@ -96,6 +101,8 @@ def create_module_varsets(doc, meta) -> int:
             continue
 
         varset = doc.getObject(mod.name)
+        if varset is not None and getattr(varset, "TypeId", "") != "App::VarSet":
+            varset = None
         if varset is None:
             varset = doc.addObject("App::VarSet", mod.name)
             varset.Label = mod.name
@@ -118,7 +125,45 @@ def create_module_varsets(doc, meta) -> int:
     return count
 
 
-def create_toplevel_varset(doc, meta, label: str) -> bool:
+def varset_to_D_params(varset) -> list:
+    """
+    Read an App::VarSet and return a list of (name, value_str) tuples
+    suitable for passing as OpenSCAD ``-D`` overrides.
+
+    Only properties in recognised SCAD groups are included.
+    """
+    if varset is None:
+        return []
+    params = []
+    for prop_name in varset.PropertiesList:
+        try:
+            group = varset.getGroupOfProperty(prop_name)
+        except Exception:
+            continue
+        if group not in _SCAD_GROUPS:
+            continue
+        value = getattr(varset, prop_name, None)
+        if value is None:
+            continue
+        # Format for OpenSCAD: booleans lowercase, strings passed as-is
+        # (stored value may already include surrounding quotes for string types)
+        if isinstance(value, bool):
+            params.append((prop_name, "true" if value else "false"))
+        elif isinstance(value, int):
+            params.append((prop_name, str(value)))
+        elif isinstance(value, float):
+            params.append((prop_name, str(value)))
+        else:
+            # Only pass simple quoted string literals (e.g. '"print"').
+            # Skip complex SCAD expressions (vectors, comprehensions, arithmetic)
+            # — those should remain in the .scad file and recompute there.
+            s = str(value)
+            if s.startswith('"') and s.endswith('"') and '\n' not in s:
+                params.append((prop_name, s))
+    return params
+
+
+def create_toplevel_varset(doc, meta, label: str):
     """
     Create (or update) a single App::VarSet from the file-level variables in
     *meta*.  The VarSet is named after *label* (the SCAD file stem).
@@ -129,14 +174,16 @@ def create_toplevel_varset(doc, meta, label: str) -> bool:
     Descriptions come from trailing ``//`` comments on the same line as the
     assignment, captured in ``meta.variable_descriptions``.
 
-    Returns True if a VarSet was created/updated, False if there was nothing
+    Returns the VarSet object if created/updated, None if there was nothing
     to export.
     """
     user_vars = {k: v for k, v in meta.variables.items() if not k.startswith("_")}
     if not user_vars:
-        return False
+        return None
 
     varset = doc.getObject(label)
+    if varset is not None and getattr(varset, "TypeId", "") != "App::VarSet":
+        varset = None  # don't reuse a non-VarSet object with the same name
     if varset is None:
         varset = doc.addObject("App::VarSet", label)
         varset.Label = label
@@ -154,7 +201,7 @@ def create_toplevel_varset(doc, meta, label: str) -> bool:
         except Exception:
             pass
 
-    return True
+    return varset
 
 
 # ---------------------------------------------------------------------------

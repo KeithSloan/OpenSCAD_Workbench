@@ -168,11 +168,16 @@ def callopenscad(
     outputext='csg',
     keepname=False,
     timeout=None,
-    check_syntax=False
+    check_syntax=False,
+    d_params=None,
 ):
     '''call the open scad binary
     returns the filename of the result (or None),
-    please delete the file afterwards'''
+    please delete the file afterwards.
+
+    d_params: optional list of (name, value_str) tuples injected as
+              OpenSCAD -D overrides, e.g. [("can_h", "25"), ("can_d", "12")].
+    '''
     import FreeCAD,os,subprocess,tempfile,time
     from subprocess import TimeoutExpired
 
@@ -212,7 +217,12 @@ def callopenscad(
             else:
                 outputfilename=os.path.join(dir1,'%s.%s' % \
                     (next(tempfilenamegen),outputext))
-        check_output2([osfilename,'-o',outputfilename, inputfilename])
+        cmd = [osfilename]
+        if d_params:
+            for name, value in d_params:
+                cmd += ['-D', f'{name}={value}']
+        cmd += ['-o', outputfilename, inputfilename]
+        check_output2(cmd)
         return outputfilename
     else:
         raise OpenSCADError('OpenSCAD executable unavailable')

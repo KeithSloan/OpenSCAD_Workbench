@@ -304,9 +304,17 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
             self.tree.setCurrentItem(parent)
             self._on_item_clicked(parent, 0)
         else:
-            # Already at root level
+            # Current item is a top-level directory — go back to root view
+            self.tree.clearSelection()
             self.up_btn.setEnabled(False)
             self.path_label.setText(self._root_path or "")
+            self.selected_dir = None
+            self.selected_scad = None
+            self.create_btn.setEnabled(False)
+            self.extract_btn.setEnabled(False)
+            self.scan_btn.setEnabled(False)
+            self.refresh_btn.setEnabled(False)
+            self.status.setText("")
 
     # ------------------------------------------------------------------
     # Item click handler
@@ -319,8 +327,8 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
 
         full_path = item.full_path
 
-        # Enable Up button whenever we are not at the root level
-        self.up_btn.setEnabled(item.parent() is not None)
+        # Enable Up button whenever the selected path is not the root
+        self.up_btn.setEnabled(full_path != self._root_path)
         self.path_label.setText(full_path)
 
         if os.path.isdir(full_path):
@@ -399,17 +407,22 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         )
 
         if obj is not None:
-            # Auto-create VarSet for file-level variables
+            # Auto-create VarSet and link it to the SCAD object
             if has_variables:
                 doc = FreeCAD.ActiveDocument
                 if doc:
-                    label = Path(self.selected_scad).stem
-                    create_toplevel_varset(doc, meta, label)
+                    stem = Path(self.selected_scad).stem
+                    varset_name = f"{stem}_Vars"
+                    varset = create_toplevel_varset(doc, meta, varset_name)
+                    if varset is not None and hasattr(obj, 'linked_varset'):
+                        obj.linked_varset = varset
+                        write_log("Info",
+                            f"Linked VarSet '{varset.Name}' → SCAD object '{obj.Name}'")
                     doc.recompute()
 
             self.status.setText(
                 f"Created: {params['scadName']}"
-                + (" + VarSet" if has_variables else "")
+                + (" + VarSet (linked)" if has_variables else "")
             )
 
             if params.get("closeAfter", True):
@@ -431,14 +444,14 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
             write_log("Info", f"Created new document '{doc_name}'")
 
         n_modules = create_module_varsets(doc, meta)
-        has_toplevel = create_toplevel_varset(doc, meta, label)
+        toplevel_varset = create_toplevel_varset(doc, meta, label)
         doc.recompute()
 
         parts = []
         if n_modules:
             parts.append(f"{n_modules} module VarSet(s)")
-        if has_toplevel:
-            parts.append(f"top-level VarSet '{label}'")
+        if toplevel_varset is not None:
+            parts.append(f"top-level VarSet '{toplevel_varset.Label}'")
         if parts:
             self.status.setText(f"Extracted from '{label}': " + ", ".join(parts))
         else:
