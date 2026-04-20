@@ -161,6 +161,9 @@ class OpenSCADeditOptions(QtWidgets.QDialog):
         self.keepOption = BooleanValue("Keep File", False)
         self.layout.addWidget(self.keepOption)
 
+        self.closeAfter = BooleanValue("Close Library Browser after creation", True)
+        self.layout.addWidget(self.closeAfter)
+
         # ---------- OK / Cancel ----------
         self.buttonBox = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
@@ -183,6 +186,7 @@ class OpenSCADeditOptions(QtWidgets.QDialog):
             "fnMax": self.fnMax.getVal(),
             "timeOut": self.timeOut.getVal(),
             "keepOption": self.keepOption.getVal(),
+            "closeAfter": self.closeAfter.getVal(),
             "newFile": self.newFile,
             "sourceFile": self.sourceFile,
         }

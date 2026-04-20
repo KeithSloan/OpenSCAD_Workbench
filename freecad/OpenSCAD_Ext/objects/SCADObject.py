@@ -506,7 +506,10 @@ class SCADfileBase:
         #    obj.ViewObject.DisplayMode = u"Wireframe"
         #if obj.mode == 'Brep':
         #    obj.ViewObject.DisplayMode = u"Shaded"
-        obj.ViewObject.DisplayMode = u"Shaded"
+        try:
+            obj.ViewObject.DisplayMode = u"Shaded"
+        except (ValueError, AttributeError):
+            pass
         end = timer()
         print(f"==== Create Shape took {end-start} secs ====")    
         obj.recompute()

@@ -35,6 +35,7 @@ except ImportError:
 
 FILE_TYPE_LABELS: dict = {
     ScadFileType.PURE_SCAD:      "Model",        # produces geometry when rendered
+    ScadFileType.CUSTOMIZER:     "Customizer",   # model with parameter variables
     ScadFileType.LIBRARY:        "Library",       # include/use aggregator
     ScadFileType.VARIABLE:       "Config",        # only variable definitions
     ScadFileType.MODULES_ONLY:   "Modules",       # reusable module defs
@@ -45,6 +46,7 @@ FILE_TYPE_LABELS: dict = {
 
 FILE_TYPE_TIPS: dict = {
     ScadFileType.PURE_SCAD:      "Model — produces 3D geometry when rendered directly",
+    ScadFileType.CUSTOMIZER:     "Customizer — model with parameter variables; VarSet will be created on import",
     ScadFileType.LIBRARY:        "Library — include/use aggregator; no own geometry",
     ScadFileType.VARIABLE:       "Config — variable / constant definitions only",
     ScadFileType.MODULES_ONLY:   "Modules — reusable module definitions",
@@ -55,8 +57,9 @@ FILE_TYPE_TIPS: dict = {
 
 # Hex colour codes used for text in Qt widgets
 FILE_TYPE_COLOURS: dict = {
-    ScadFileType.PURE_SCAD:      "#27AE60",   # green  — runnable model
-    ScadFileType.LIBRARY:        "#E67E22",   # orange — aggregator
+    ScadFileType.PURE_SCAD:      "#27AE60",   # green        — runnable model
+    ScadFileType.CUSTOMIZER:     "#1A8049",   # darker green  — customizer model
+    ScadFileType.LIBRARY:        "#E67E22",   # orange        — aggregator
     ScadFileType.VARIABLE:       "#E74C3C",   # red    — configuration
     ScadFileType.MODULES_ONLY:   "#2980B9",   # blue   — reusable modules
     ScadFileType.FUNCTIONS_ONLY: "#16A085",   # teal   — functions
@@ -100,6 +103,15 @@ _SVG: dict = {
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
   <circle cx="8" cy="8" r="7" fill="#27AE60"/>
   <polygon points="6,4 12,8 6,12" fill="white"/>
+</svg>""",
+
+    ScadFileType.CUSTOMIZER: """\
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+  <circle cx="8" cy="8" r="7" fill="#1A8049"/>
+  <polygon points="5,4 11,8 5,12" fill="white"/>
+  <circle cx="13" cy="3" r="3.5" fill="#E74C3C"/>
+  <text x="13" y="5.5" font-family="monospace" font-size="5" font-weight="bold"
+        text-anchor="middle" fill="white">P</text>
 </svg>""",
 
     ScadFileType.LIBRARY: """\

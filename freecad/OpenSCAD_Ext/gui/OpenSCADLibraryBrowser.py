@@ -1,15 +1,17 @@
 import os
 from pathlib import Path
 import FreeCAD
+import FreeCADGui
 from PySide import QtWidgets
 from PySide.QtCore import QSize
 from PySide.QtGui import QBrush, QColor
 
 from freecad.OpenSCAD_Ext.libraries.ensure_openSCADPATH import ensure_openSCADPATH
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
-from freecad.OpenSCAD_Ext.core.create_scad_object_interactive import create_scad_object_interactive
+from freecad.OpenSCAD_Ext.core.create_scad_object import create_scad_object
 from freecad.OpenSCAD_Ext.core.exporters import export_variables
 from freecad.OpenSCAD_Ext.core.varset_utils import create_module_varsets, create_toplevel_varset
+from freecad.OpenSCAD_Ext.gui.OpenSCADeditOptions import OpenSCADeditOptions
 
 # Lark-based scanner – single import for all metadata needs
 from freecad.OpenSCAD_Ext.parsers.scadmeta import scan_scad_file, ScadFileType
@@ -25,6 +27,52 @@ from freecad.OpenSCAD_Ext.gui.scad_type_display import (
     get_file_type_color,
 )
 
+
+# ---------------------------------------------------------------------------
+# Variable preview dialog
+# ---------------------------------------------------------------------------
+
+class _VarPreviewDialog(QtWidgets.QDialog):
+    """Show variables found in a SCAD file before creating an object."""
+
+    def __init__(self, meta, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("File Variables — Customizer Parameters")
+        self.resize(520, 300)
+        layout = QtWidgets.QVBoxLayout(self)
+
+        layout.addWidget(QtWidgets.QLabel(
+            f"<b>{len(meta.variables)}</b> parameter variable(s) found — "
+            "a VarSet will be created automatically."
+        ))
+
+        table = QtWidgets.QTableWidget(len(meta.variables), 3)
+        table.setHorizontalHeaderLabels(["Name", "Default", "Description"])
+        table.horizontalHeader().setStretchLastSection(True)
+        table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        table.verticalHeader().setVisible(False)
+
+        for row, (name, expr) in enumerate(meta.variables.items()):
+            table.setItem(row, 0, QtWidgets.QTableWidgetItem(name))
+            table.setItem(row, 1, QtWidgets.QTableWidgetItem(expr))
+            desc = meta.variable_descriptions.get(name, "")
+            table.setItem(row, 2, QtWidgets.QTableWidgetItem(desc))
+
+        table.resizeColumnToContents(0)
+        table.resizeColumnToContents(1)
+        layout.addWidget(table)
+
+        btns = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
+        )
+        btns.accepted.connect(self.accept)
+        btns.rejected.connect(self.reject)
+        layout.addWidget(btns)
+
+
+# ---------------------------------------------------------------------------
+# Main browser dialog
+# ---------------------------------------------------------------------------
 
 class OpenSCADLibraryBrowser(QtWidgets.QDialog):
     """
@@ -47,13 +95,14 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("OpenSCAD Library Browser")
-        self.resize(780, 540)
+        self.resize(820, 560)
         self.selected_item = None
         self.selected_scad = None
         self.selected_dir = None
 
         # session cache: path -> (mtime: float, meta: ScadMeta)
         self._meta_cache: dict = {}
+        self._root_path = None
 
         self._setup_ui()
         self._populate_tree()
@@ -65,13 +114,27 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
     def _setup_ui(self):
         layout = QtWidgets.QVBoxLayout(self)
 
-        # Tree – columns: Name | Type | Mods | Fns
+        # Navigation row: Up button + breadcrumb path label
+        nav_layout = QtWidgets.QHBoxLayout()
+        self.up_btn = QtWidgets.QPushButton("▲ Up")
+        self.up_btn.setFixedWidth(60)
+        self.up_btn.setToolTip("Navigate to parent directory")
+        self.up_btn.setEnabled(False)
+        self.up_btn.clicked.connect(self._navigate_up)
+        self.path_label = QtWidgets.QLabel("")
+        self.path_label.setStyleSheet("color: #555; font-size: 11px;")
+        nav_layout.addWidget(self.up_btn)
+        nav_layout.addWidget(self.path_label, 1)
+        layout.addLayout(nav_layout)
+
+        # Tree – columns: Name | Type | Mods | Funcs | Vars
         self.tree = QtWidgets.QTreeWidget()
-        self.tree.setHeaderLabels(["Name", "File Type", "Mods", "Fns"])
-        self.tree.setColumnWidth(0, 400)
+        self.tree.setHeaderLabels(["Name", "File Type", "Mods", "Funcs", "Vars"])
+        self.tree.setColumnWidth(0, 380)
         self.tree.setColumnWidth(1, 130)
         self.tree.setColumnWidth(2, 50)
         self.tree.setColumnWidth(3, 50)
+        self.tree.setColumnWidth(4, 50)
         self.tree.setIconSize(QSize(16, 16))
         self.tree.itemClicked.connect(self._on_item_clicked)
         layout.addWidget(self.tree)
@@ -119,6 +182,8 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         """Populate the tree starting at *path* (defaults to OPENSCADPATH root)."""
         if path is None:
             path = ensure_openSCADPATH()
+            self._root_path = path
+            self.path_label.setText(path)
             write_log("Info", f"Displaying SCAD library directory: {path}")
 
         try:
@@ -135,7 +200,7 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
             full_path = os.path.join(path, name)
 
             if os.path.isdir(full_path):
-                item = QtWidgets.QTreeWidgetItem([name, "Directory", "", ""])
+                item = QtWidgets.QTreeWidgetItem([name, "Directory", "", "", ""])
                 if dir_icon:
                     item.setIcon(0, dir_icon)
                 item.setForeground(1, QBrush(QColor(DIR_COLOUR)))
@@ -156,8 +221,9 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
 
         mod_count = str(meta.module_count)   if meta.module_count   else ""
         fn_count  = str(meta.function_count) if meta.function_count else ""
+        var_count = str(len(meta.variables)) if meta.variables      else ""
 
-        item = QtWidgets.QTreeWidgetItem([name, label, mod_count, fn_count])
+        item = QtWidgets.QTreeWidgetItem([name, label, mod_count, fn_count, var_count])
         if icon:
             item.setIcon(1, icon)
         if color:
@@ -177,6 +243,7 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         item.setText(1, label)
         item.setText(2, str(meta.module_count)   if meta.module_count   else "")
         item.setText(3, str(meta.function_count) if meta.function_count else "")
+        item.setText(4, str(len(meta.variables)) if meta.variables      else "")
         if icon:
             item.setIcon(1, icon)
         if color:
@@ -224,6 +291,24 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         self._meta_cache.pop(path, None)
 
     # ------------------------------------------------------------------
+    # Navigation
+    # ------------------------------------------------------------------
+
+    def _navigate_up(self):
+        """Navigate to the parent of the currently selected tree item."""
+        current = self.tree.currentItem()
+        if current is None:
+            return
+        parent = current.parent()
+        if parent is not None:
+            self.tree.setCurrentItem(parent)
+            self._on_item_clicked(parent, 0)
+        else:
+            # Already at root level
+            self.up_btn.setEnabled(False)
+            self.path_label.setText(self._root_path or "")
+
+    # ------------------------------------------------------------------
     # Item click handler
     # ------------------------------------------------------------------
 
@@ -233,6 +318,10 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
             return
 
         full_path = item.full_path
+
+        # Enable Up button whenever we are not at the root level
+        self.up_btn.setEnabled(item.parent() is not None)
+        self.path_label.setText(full_path)
 
         if os.path.isdir(full_path):
             item.takeChildren()
@@ -262,9 +351,9 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
             self.status.setText(
                 f"{os.path.basename(full_path)}  "
                 f"[{label}]  "
-                f"modules={meta.module_count}  "
-                f"functions={meta.function_count}  "
-                f"variables={len(meta.variables)}"
+                f"mods={meta.module_count}  "
+                f"funcs={meta.function_count}  "
+                f"vars={len(meta.variables)}"
             )
 
     # ------------------------------------------------------------------
@@ -274,13 +363,57 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
     def _create_scad_object(self):
         if not self.selected_scad:
             return
+
+        meta = self._get_meta(self.selected_scad)
+        has_variables = bool(meta.variables)
+
+        # Show variable preview if file has customizer-style variables
+        if has_variables:
+            preview = _VarPreviewDialog(meta, parent=self)
+            if preview.exec_() != QtWidgets.QDialog.Accepted:
+                return
+
         write_log("Info", f"Create SCAD Object: {self.selected_scad}")
-        create_scad_object_interactive(
+
+        dlg = OpenSCADeditOptions(
             "Create SCAD Object",
             newFile=False,
             scadName=Path(self.selected_scad).stem,
             sourceFile=self.selected_scad,
         )
+        if dlg.exec_() != QtWidgets.QDialog.Accepted:
+            return
+
+        params = dlg.getValues()
+        if not params.get("scadName"):
+            return
+
+        obj = create_scad_object(
+            scadName=params["scadName"],
+            geometryType=params["geometryType"],
+            fnMax=params["fnMax"],
+            timeOut=params["timeOut"],
+            keepOption=params["keepOption"],
+            newFile=params["newFile"],
+            sourceFile=params["sourceFile"],
+        )
+
+        if obj is not None:
+            # Auto-create VarSet for file-level variables
+            if has_variables:
+                doc = FreeCAD.ActiveDocument
+                if doc:
+                    label = Path(self.selected_scad).stem
+                    create_toplevel_varset(doc, meta, label)
+                    doc.recompute()
+
+            self.status.setText(
+                f"Created: {params['scadName']}"
+                + (" + VarSet" if has_variables else "")
+            )
+
+            if params.get("closeAfter", True):
+                self.close()
 
     def _extract_variables(self):
         if not self.selected_scad:
@@ -370,9 +503,9 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         label = FILE_TYPE_LABELS.get(meta.file_type, "?")
         self.status.setText(
             f"{os.path.basename(path)}  [{label}]  "
-            f"modules={meta.module_count}  "
-            f"functions={meta.function_count}  "
-            f"variables={len(meta.variables)}  (re-scanned)"
+            f"mods={meta.module_count}  "
+            f"funcs={meta.function_count}  "
+            f"vars={len(meta.variables)}  (re-scanned)"
         )
 
         # Update button states after refresh
@@ -389,5 +522,3 @@ def _add_to_tree(tree: QtWidgets.QTreeWidget, parent, item):
         parent.addChild(item)
     else:
         tree.addTopLevelItem(item)
-
-

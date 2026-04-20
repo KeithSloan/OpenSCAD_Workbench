@@ -11,6 +11,8 @@ class ScadFileType(Enum):
 
     PURE_SCAD      – Has top-level geometry / executable statements (produces
                      output when run directly with OpenSCAD).
+    CUSTOMIZER     – Like PURE_SCAD but also defines parameter variables,
+                     suitable for the OpenSCAD Customizer.
     LIBRARY        – Only include/use aggregation with no own definitions and
                      no top-level geometry (a "meta-library" wrapper).
     VARIABLE       – Only variable definitions; no modules, functions, or
@@ -24,6 +26,7 @@ class ScadFileType(Enum):
     """
 
     PURE_SCAD = "pure_scad"
+    CUSTOMIZER = "customizer"
     LIBRARY = "library"
     VARIABLE = "variable"
     MODULES_ONLY = "modules_only"
@@ -109,19 +112,22 @@ def classify_file_type(meta: ScadMeta) -> ScadFileType:
 
     Priority order (first match wins):
 
-    1. Has top-level geometry calls → PURE_SCAD
-    2. Has both modules and functions → MIXED
-    3. Has modules only             → MODULES_ONLY
-    4. Has functions only           → FUNCTIONS_ONLY
-    5. Has variables only           → VARIABLE
-    6. Has only include/use lines   → LIBRARY
-    7. Otherwise                    → UNKNOWN
+    1. Has top-level geometry + variables → CUSTOMIZER
+    2. Has top-level geometry calls       → PURE_SCAD
+    3. Has both modules and functions     → MIXED
+    4. Has modules only                   → MODULES_ONLY
+    5. Has functions only                 → FUNCTIONS_ONLY
+    6. Has variables only                 → VARIABLE
+    7. Has only include/use lines         → LIBRARY
+    8. Otherwise                          → UNKNOWN
     """
     has_modules = len(meta.modules) > 0
     has_functions = len(meta.functions) > 0
     has_variables = len(meta.variables) > 0
     has_deps = len(meta.includes) > 0 or len(meta.uses) > 0
 
+    if meta.has_top_level_calls and has_variables:
+        return ScadFileType.CUSTOMIZER
     if meta.has_top_level_calls:
         return ScadFileType.PURE_SCAD
     if has_modules and has_functions:

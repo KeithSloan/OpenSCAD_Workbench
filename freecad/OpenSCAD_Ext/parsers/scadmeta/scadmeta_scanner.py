@@ -84,6 +84,7 @@ def _serialise(meta: ScadMeta) -> Dict:
         "uses": meta.uses,
         "comment_includes": meta.comment_includes,
         "variables": meta.variables,
+        "variable_descriptions": meta.variable_descriptions,
         "modules": [_module(m) for m in meta.modules],
         "functions": [_function(f) for f in meta.functions],
         "has_top_level_calls": meta.has_top_level_calls,
@@ -118,6 +119,7 @@ def _deserialise(d: Dict) -> ScadMeta:
         uses=d.get("uses", []),
         comment_includes=d.get("comment_includes", []),
         variables=d.get("variables", {}),
+        variable_descriptions=d.get("variable_descriptions", {}),
         modules=[_module(m) for m in d.get("modules", [])],
         functions=[_function(f) for f in d.get("functions", [])],
         has_top_level_calls=d.get("has_top_level_calls", False),
@@ -165,7 +167,11 @@ def scan_scad_file(path: str, use_cache: bool = True, watch: bool = True) -> Sca
         cached = cache.get(path)
         if cached is not None:
             write_log("Info", f"[scadmeta] cache hit: {os.path.basename(path)}")
-            return _deserialise(cached)
+            meta = _deserialise(cached)
+            # Always re-classify so new ScadFileType variants take effect
+            # without needing to invalidate the cache manually.
+            meta.file_type = classify_file_type(meta)
+            return meta
 
     # --- parse ---
     write_log("Info", f"[scadmeta] parsing: {os.path.basename(path)}")
