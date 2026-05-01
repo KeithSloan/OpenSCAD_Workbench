@@ -694,7 +694,7 @@ def process_AST_node(node):
                 f"{result.BoundBox.ZMin:.4f} → {result.BoundBox.ZMax:.4f}"
             )
 
-        return (result, local_pl)
+            return (result, local_pl)
 
         if node_type == "rotate_extrude":
             write_log("Extrusion", node_type)
