@@ -972,36 +972,113 @@ def process_AST_node(node):
     return results
 
 
+def _make_compound_from_results(shape_pl_list):
+    """
+    Bake each (shape, placement) pair into geometry and return a Part.Compound.
+
+    Used when an inner group() leaks its children as a flat list of shapes —
+    they should all appear as one document object, not many separate ones.
+    Returns None if the compound cannot be built.
+    """
+    solids = []
+    for shape, pl in shape_pl_list:
+        try:
+            s = shape.copy()
+            s.transformShape(pl.Matrix)
+            solids.append(s)
+        except Exception as e:
+            write_log("AST", f"_make_compound: copy/transform failed: {e}")
+    if not solids:
+        return None
+    try:
+        return Part.makeCompound(solids)
+    except Exception as e:
+        write_log("AST", f"_make_compound: makeCompound failed: {e}")
+        return None
+
+
 def process_AST(nodes, mode="multiple"):
     """
     Process a list of AST nodes.
 
     Returns:
         List of (name, shape, placement) tuples
+
+    Top-level group expansion
+    ─────────────────────────
+    OpenSCAD wraps every CSG export in a single top-level group().  We want
+    each *direct child* of that group (usually one multmatrix per assembly
+    panel) to become a separate FreeCAD document object.
+
+    Naively passing the group through process_AST_node returns a flat list of
+    ALL shapes from every descendant group() in the file (the group() handler
+    passes children up as a flat list so they can be collected by boolean
+    operators).  Any inner group() with multiple children (e.g. 7 ISA card
+    retainer clips inside a teal color group) leaks its shapes as stray extra
+    document objects.
+
+    Fix: detect the top-level group, iterate its direct children, and if any
+    child produces multiple shapes (inner group leak), bundle them into a
+    single Part.Compound before adding to the document.
     """
     results = []
 
     for node in nodes:
         node_name = type(node).__name__
+
+        # ── Top-level group: expand into direct children ──────────────────────
+        if (hasattr(node, 'node_type')
+                and node.node_type in ('group', 'root')
+                and getattr(node, 'children', None)):
+
+            for child in node.children:
+                child_name = type(child).__name__
+                child_processed = process_AST_node(child)
+                if not child_processed:
+                    continue
+                if not isinstance(child_processed, list):
+                    child_processed = [child_processed]
+
+                if len(child_processed) > 1:
+                    # Inner group() leaked multiple shapes — bundle into one
+                    # compound document object instead of creating stray extras.
+                    compound = _make_compound_from_results(child_processed)
+                    if compound is not None:
+                        write_log("AST",
+                            f"Compounded {len(child_processed)} shapes from "
+                            f"'{child_name}' into one document object")
+                        results.append((child_name, compound, App.Placement()))
+                    else:
+                        # makeCompound failed — fall back to individual objects
+                        write_log("AST",
+                            f"makeCompound failed for '{child_name}' "
+                            f"— adding {len(child_processed)} shapes separately")
+                        for shape, placement in child_processed:
+                            results.append((child_name, shape, placement))
+                else:
+                    shape, placement = child_processed[0]
+                    results.append((child_name, shape, placement))
+
+            write_log("AST",
+                f"Top-level group → {len(node.children)} direct children "
+                f"→ {len(results)} document object(s)")
+            continue
+
+        # ── Non-group top-level node ──────────────────────────────────────────
         processed = process_AST_node(node)
 
         if not processed:
             continue
 
-        # Normalize to list
-
-        write_log("Dump",f"processed type {type(processed)}")
-        write_log("Dump",f"{processed}")
+        write_log("Dump", f"processed type {type(processed)}")
+        write_log("Dump", f"{processed}")
         if not isinstance(processed, list):
             processed = [processed]
 
         for shape, placement in processed:
             results.append((node_name, shape, placement))
 
-        write_log(
-            "AST",
-            f"Processed {node_name} → {len(processed)} shape(s)"
-        )
+        write_log("AST", f"Processed {node_name} → {len(processed)} shape(s)")
 
     if mode == "single":
         return results[0] if results else None

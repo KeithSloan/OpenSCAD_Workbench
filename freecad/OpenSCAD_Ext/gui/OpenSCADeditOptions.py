@@ -104,6 +104,9 @@ class OpenSCADeditOptions(QtWidgets.QDialog):
         self.newFile = bool(kwargs.get("newFile", True))
         self.scadNameVal = kwargs.get("scadName", "")
         self.sourceFile = kwargs.get("sourceFile", None)
+        # Only show the "Close Library Browser" checkbox when opened from the
+        # Library Browser.  All other callers omit this kwarg (defaults False).
+        self._showCloseOption = bool(kwargs.get("showCloseOption", False))
 
         write_log("EditOpt", f"INIT scadName={self.scadNameVal}")
 
@@ -162,6 +165,7 @@ class OpenSCADeditOptions(QtWidgets.QDialog):
         self.layout.addWidget(self.keepOption)
 
         self.closeAfter = BooleanValue("Close Library Browser after creation", True)
+        self.closeAfter.setVisible(self._showCloseOption)
         self.layout.addWidget(self.closeAfter)
 
         # ---------- OK / Cancel ----------

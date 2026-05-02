@@ -83,11 +83,24 @@ def insert(filename, docName):
             newFile = False,
 			sourceFile = filename,
 	)
-		
+
+	if obj is None:
+		write_log("FileSCAD", "import cancelled by user")
+		return
+
+	# Auto-attach a VarSet if the source file has customizer variables.
+	# Done before executeFunction so the first run can pick up -D overrides
+	# if the VarSet happens to be linked (linked_varset is set inside
+	# attach_customizer_varset when the property exists on obj).
+	from freecad.OpenSCAD_Ext.core.attach_varset import attach_customizer_varset
+	attach_customizer_varset(obj, filename)
+
 	obj.Proxy.executeFunction(obj)
 
-	#FreeCAD.ActiveDocument.recompute()
-	#obj.recompute()
-	doc.recompute()
-	FreeCADGui.SendMsgToActiveView("ViewFit")
-	#view.sendMessage("ViewFit")
+	# For Mesh mode: collapse the FeaturePython+companion pair into a single
+	# Mesh::Feature so only one object appears in the model tree.
+	if getattr(obj, 'mode', '') == "Mesh":
+		from freecad.OpenSCAD_Ext.core.scad_mesh_utils import finalize_scad_mesh_object
+		obj = finalize_scad_mesh_object(obj)
+
+	FreeCAD.Console.PrintMessage("FileSCAD: import complete\n")

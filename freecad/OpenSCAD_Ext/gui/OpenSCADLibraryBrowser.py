@@ -11,6 +11,7 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.core.create_scad_object import create_scad_object
 from freecad.OpenSCAD_Ext.core.exporters import export_variables
 from freecad.OpenSCAD_Ext.core.varset_utils import create_module_varsets, create_toplevel_varset
+from freecad.OpenSCAD_Ext.core.attach_varset import attach_customizer_varset
 from freecad.OpenSCAD_Ext.gui.OpenSCADeditOptions import OpenSCADeditOptions
 
 # Lark-based scanner – single import for all metadata needs
@@ -388,6 +389,7 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
             newFile=False,
             scadName=Path(self.selected_scad).stem,
             sourceFile=self.selected_scad,
+            showCloseOption=True,
         )
         if dlg.exec_() != QtWidgets.QDialog.Accepted:
             return
@@ -407,22 +409,14 @@ class OpenSCADLibraryBrowser(QtWidgets.QDialog):
         )
 
         if obj is not None:
-            # Auto-create VarSet and link it to the SCAD object
-            if has_variables:
-                doc = FreeCAD.ActiveDocument
-                if doc:
-                    stem = Path(self.selected_scad).stem
-                    varset_name = f"{stem}_Vars"
-                    varset = create_toplevel_varset(doc, meta, varset_name)
-                    if varset is not None and hasattr(obj, 'linked_varset'):
-                        obj.linked_varset = varset
-                        write_log("Info",
-                            f"Linked VarSet '{varset.Name}' → SCAD object '{obj.Name}'")
-                    doc.recompute()
+            # Auto-create VarSet and link it to the SCAD object (shared helper)
+            varset = attach_customizer_varset(obj, self.selected_scad, meta=meta)
+            if varset is not None:
+                FreeCAD.ActiveDocument.recompute()
 
             self.status.setText(
                 f"Created: {params['scadName']}"
-                + (" + VarSet (linked)" if has_variables else "")
+                + (f" + VarSet '{varset.Label}' (linked)" if varset is not None else "")
             )
 
             if params.get("closeAfter", True):

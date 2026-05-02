@@ -29,7 +29,7 @@
 __title__="FreeCAD OpenSCAD Workbench - AST / CSG importer"
 __author__ = "Keith Sloan <keith@sloan-home.co.uk>"
 __url__ = ["http://www.sloan-home.co.uk/ImportCSG"]
-__version__ = "0.7.7"
+__version__ = "0.8.3"
 
 import FreeCADGui
 from pathlib import Path
@@ -77,6 +77,60 @@ except AttributeError:
         return QtGui.QApplication.translate(context, text, None)
 
 
+def _customizer_intercept(filename, doc):
+    """
+    Scan a .scad file for customizer variables.  If found, ask the user
+    whether to import as a live parametric object or as static geometry.
+
+    Returns True  — caller should return immediately (parametric path taken
+                    or user cancelled).
+    Returns False — caller should continue with the normal CSG import.
+    """
+    from freecad.OpenSCAD_Ext.parsers.scadmeta import scan_scad_file, ScadFileType
+    meta = scan_scad_file(filename)
+
+    if meta.file_type != ScadFileType.CUSTOMIZER:
+        return False  # not a customizer file — nothing to intercept
+
+    write_log("Info", f"Customizer file detected: {filename} ({len(meta.variables)} variable(s))")
+
+    from freecad.OpenSCAD_Ext.gui.customizer_import_dialog import ask_customizer_import_mode
+    choice = ask_customizer_import_mode(filename, meta)
+
+    if choice is None:
+        write_log("Info", "Customizer import cancelled by user")
+        return True  # cancelled — stop, do nothing
+
+    if choice == "static":
+        write_log("Info", "User chose static geometry import")
+        return False  # fall through to normal CSG path
+
+    # choice == "parametric"
+    write_log("Info", "User chose parametric import — delegating to SCADfileBase path")
+    from freecad.OpenSCAD_Ext.core.create_scad_object_interactive import create_scad_object_interactive
+    obj = create_scad_object_interactive(
+        title="Import OpenSCAD Customizer File",
+        newFile=False,
+        sourceFile=filename,
+    )
+    if obj is not None:
+        from freecad.OpenSCAD_Ext.core.attach_varset import attach_customizer_varset
+        attach_customizer_varset(obj, filename, meta=meta)
+        obj.Proxy.executeFunction(obj)
+
+        # For Mesh mode: collapse the FeaturePython+companion pair into a
+        # single Mesh::Feature so only one object appears in the model tree.
+        if getattr(obj, 'mode', '') == "Mesh":
+            from freecad.OpenSCAD_Ext.core.scad_mesh_utils import finalize_scad_mesh_object
+            obj = finalize_scad_mesh_object(obj)
+
+        # Do NOT call doc.recompute() here.  The shape is already set by
+        # executeFunction().  An explicit recompute would trigger execute()
+        # again (because linked_varset is not None) causing a second OpenSCAD
+        # run and the FreeCAD 1.1.x busy-cursor hang.
+    return True  # handled
+
+
 def open(filename):
     "called when freecad opens a file."
     global doc
@@ -86,6 +140,10 @@ def open(filename):
     doc = FreeCAD.newDocument(docname)
     if filename.lower().endswith('.scad'):
         from freecad.OpenSCAD_Ext.core.OpenSCADUtils import callopenscad_with_overrides, workaroundforissue128needed
+
+        # Check for customizer variables and offer parametric import
+        if _customizer_intercept(filename, doc):
+            return doc
 
         write_log("Info","Calling OpenSCAD")
         tmpfile=callopenscad_with_overrides(filename)
@@ -114,14 +172,19 @@ def insert(filename,docname):
         doc=FreeCAD.newDocument(docname)
     #importgroup = doc.addObject("App::DocumentObjectGroup",groupname)
     if filename.lower().endswith('.scad'):
-        from OpenSCADUtils import callopenscad_with_overrides, workaroundforissue128needed
+        from freecad.OpenSCAD_Ext.core.OpenSCADUtils import callopenscad_with_overrides, workaroundforissue128needed
+
+        # Check for customizer variables and offer parametric import
+        if _customizer_intercept(filename, doc):
+            return
+
         tmpfile=callopenscad_with_overrides(filename)
         if workaroundforissue128needed():
             pathName = '' #https://github.com/openscad/openscad/issues/128
             #pathName = os.getcwd() #https://github.com/openscad/openscad/issues/128
         else:
             pathName = os.path.dirname(os.path.normpath(filename))
-        write_log("Info,",f"Processing : {filename}")
+        write_log("Info",f"Processing : {filename}")
         processCSG(doc, tmpfile)
         try:
             os.unlink(tmpfile)
@@ -208,11 +271,16 @@ def processCSG(docSrc, filename, fnmax_param = None):
     for sp in shapePlaceList:
         write_log("Import",f"{sp}")
         obj=add_shape_to_doc(doc,sp[1],sp[2],sp[0])
-        obj.recompute()
+        # obj.recompute() per-object is redundant — setting obj.Shape already
+        # marks it for display; calling it here just adds an extra tessellation
+        # pass per shape before doc.recompute() runs at the end.
 
     #add_shapes_to_document(doc, name, shapes)
-    FreeCADGui.SendMsgToActiveView("ViewFit")
     FreeCAD.Console.PrintMessage(f'ImportAstCSG Version {__version__}\n')
     FreeCAD.Console.PrintMessage('End processing CSG file\n')
     doc.recompute()
+    # ViewFit deferred — calling it synchronously here hangs in FreeCAD 1.1.x
+    # because the shape tessellation hasn't completed yet.
+    from PySide.QtCore import QTimer
+    QTimer.singleShot(500, lambda: FreeCADGui.SendMsgToActiveView("ViewFit"))
 

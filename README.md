@@ -364,6 +364,52 @@ When running outside FreeCAD the cache defaults to:
 
 ---
 
+## Parametric SCAD Objects
+
+When a `.scad` or `.csg` file is imported as a **SCAD File Object** (via
+*File → Import* or the *New SCAD File Object* toolbar command), FreeCAD creates
+a parametric object whose shape is driven by the SCAD source file.  If the file
+contains OpenSCAD Customizer variables, a linked **VarSet** (`App::VarSet`) is
+also created automatically with a typed property for each variable.
+
+### Geometry mode
+
+Each SCAD object has a **mode** property that controls how the shape is built:
+
+| Mode | Description |
+|---|---|
+| **AST_BRep** | The CSG file is parsed to an AST and converted to native FreeCAD BRep shapes.  Highest accuracy; supports parametric expressions bound to the VarSet. |
+| **Mesh** | OpenSCAD renders the file to an STL mesh, which is imported as a `Mesh::Feature`.  Avoids FreeCAD 1.1's TNP element-map spinning-cursor problem on complex models. |
+
+The mode can be changed freely after import — select the SCAD object in the
+model tree, find the **mode** property in the Data panel, and change it.  The
+next Render will use the new mode.
+
+### Updating the shape after changing VarSet values
+
+> ⚠️ **Important — changes to VarSet properties do NOT automatically update the
+> shape.**
+>
+> After editing one or more VarSet variables you must explicitly run the
+> **Render SCAD File Object** command to regenerate the shape.
+
+**How to render:**
+
+1. Select either the SCAD object *or* its linked VarSet in the model tree.
+2. Click the **Render** toolbar button (orange ▶ play badge icon), or use
+   **OpenSCAD_Ext → Render SCAD File Object to Shape**.
+
+The Render command resolves the linked SCAD object automatically when the
+VarSet is selected, so you never need to hunt for and re-select the SCAD object
+after tweaking parameters.
+
+**Why not automatic?**  Running OpenSCAD is a subprocess call that can take
+several seconds on complex files.  Triggering it on every keystroke would make
+the Properties panel unusable.  The explicit Render step keeps the workbench
+responsive while making the update action obvious.
+
+---
+
 ## Import Strategy
 
 When importing a `.scad` or `.csg` file FreeCAD tries two strategies:
@@ -372,8 +418,8 @@ When importing a `.scad` or `.csg` file FreeCAD tries two strategies:
    FreeCAD Shapes.  Preserves parametric editing and high-accuracy geometry.
 
 2. **OpenSCAD fallback** — if native BRep fails, the OpenSCAD CLI generates
-   an STL which is imported as Mesh → Shape.  Tessellation (`$fn`, `$fa`,
-   `$fs`) is preserved per-node.
+   an STL which is imported as a mesh.  Tessellation (`$fn`, `$fa`, `$fs`) is
+   preserved per-node.
 
 ### Supported AST nodes
 
@@ -386,6 +432,11 @@ When importing a `.scad` or `.csg` file FreeCAD tries two strategies:
 | Translate, Rotate, Scale, MultMatrix | `process_transform()` | |
 | Linear/Rotate extrude | native or fallback | |
 | Other / unknown | `fallback_to_OpenSCAD()` | STL via CLI |
+
+> **Testing note:** In AST_BRep mode, complex `hull()` and `minkowski()` nodes
+> that cannot be solved natively fall back to running OpenSCAD and importing the
+> result as a mesh, mixed into an otherwise-BRep document.  This mixed-mode path
+> needs broader testing across real-world SCAD files.
 
 ---
 

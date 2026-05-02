@@ -55,6 +55,12 @@ def create_scad_object(title, newFile, sourceFile, scadName="SCAD_Object"):
 
 # Shared between SCADObject and SCADModule
 def createMesh(srcObj, wrkSrc, d_params=None):
+    """Run OpenSCAD to generate an STL and return a Mesh.Mesh object.
+
+    Returning Mesh.Mesh (not Part.Shape) keeps the result out of FreeCAD 1.1's
+    TNP element-map pipeline, which would otherwise spin indefinitely when
+    indexing the thousands of triangles in a complex mesh on every selection.
+    """
     print(f"Create Mesh {srcObj.Name} {wrkSrc}")
     if d_params:
         print(f"  -D overrides: {d_params}")
@@ -62,22 +68,18 @@ def createMesh(srcObj, wrkSrc, d_params=None):
         tmpDir = tempfile.gettempdir()
         tmpOutFile = os.path.join(tmpDir, srcObj.Name+'.stl')
         print(f"Call OpenSCAD - Input file {wrkSrc} Output file {tmpOutFile}")
-        tmpFileName=callopenscad(wrkSrc, \
-            outputfilename=tmpOutFile, outputext='stl', \
+        tmpFileName = callopenscad(wrkSrc,
+            outputfilename=tmpOutFile, outputext='stl',
             timeout=int(srcObj.timeout), d_params=d_params)
-        if os.path.exists(tmpFileName): # If Timeout no file
-            print(f"STL File name {tmpFileName}")
+        if os.path.exists(tmpFileName):
             mesh = Mesh.Mesh()
-            print(f"files {tmpOutFile} {tmpFileName}")
             mesh.read(tmpFileName)
-            #print(dir(mesh))
-            print(f"Mesh bound box {mesh.BoundBox}")
-            print(f"Count Facets {mesh.CountFacets}")
-            #print(f"Facets {mesh.Facets}")
-            print(f"Is Solid {mesh.isSolid()}")
-            shape = Part.Shape()
-            shape.makeShapeFromMesh(mesh.Topology, 0.1)
-            return shape
+            print(f"Mesh facets={mesh.CountFacets} solid={mesh.isSolid()}")
+            try:
+                os.unlink(tmpFileName)
+            except OSError:
+                pass
+            return mesh          # ← Mesh.Mesh, not Part.Shape
 
     except OpenSCADError as e:
         #print(f"OpenSCADError {e} {e.value}")
@@ -204,6 +206,26 @@ def createBrep(srcObj, mode, tmpDir, wrkSrc, d_params=None):
 #    appendFp.write(source)
 
 
+def _get_linked_varset(fp):
+    """
+    Resolve the linked VarSet for *fp*.
+
+    ``linked_varset`` is stored as a plain string (App::PropertyString) holding
+    the VarSet's internal FreeCAD object name.  This avoids the App::PropertyLink
+    dependency edge that causes FC 1.1+ TNP to flag the SCAD object as Touched
+    on every document graph walk, which would spin the cursor indefinitely.
+
+    Returns the App::VarSet object, or None if not set / not found.
+    """
+    name = getattr(fp, 'linked_varset', None)
+    if not name:
+        return None
+    try:
+        return fp.Document.getObject(name)
+    except Exception:
+        return None
+
+
 def shapeFromSourceFile(srcObj, module=False, modules=False):
     print(f"shapeFrom Source File : keepWork {srcObj.keep_work_doc}")
     tmpDir = tempfile.gettempdir()
@@ -213,7 +235,7 @@ def shapeFromSourceFile(srcObj, module=False, modules=False):
 
     # Build -D overrides from linked VarSet (if any)
     d_params = None
-    varset = getattr(srcObj, 'linked_varset', None)
+    varset = _get_linked_varset(srcObj)
     if varset is not None:
         from freecad.OpenSCAD_Ext.core.varset_utils import varset_to_D_params
         d_params = varset_to_D_params(varset) or None
@@ -399,10 +421,17 @@ def create_from_dialog(self, sourceFile, newFile=True):
     def onOk(self):
         self.result = 'ok'
         #QtGui.QGuiApplication.restoreOverrideCursor()
+# --- DIAG startup marker ---
+import datetime as _diag_dt
+with open("/tmp/scad_diag.log", "a") as _diag_f:
+    _diag_f.write(f"\n=== SCADObject module loaded {_diag_dt.datetime.now()} ===\n")
+    _diag_f.flush()
+
 class SCADfileBase:
     IMPORT_MODE = ["Mesh", "AST-Brep", "Brep"]
 
     def __init__(self, obj, scadName, sourceFile, mode="Mesh", fnmax=16, timeout=30, keep=False):
+        self._initializing = True   # suppress onChanged rendering during setup
         self.Object = obj
         obj.Proxy = self
 
@@ -417,6 +446,7 @@ class SCADfileBase:
         obj.mode = modeList
         obj.mode = modeIdx
         obj.mesh_recombine = False
+        self._initializing = False  # setup complete — onChanged may now render
 
     def _init_properties(self, obj, scadName, sourceFile, mode, fnmax, timeout, keep):
         super().__init__()
@@ -435,58 +465,68 @@ class SCADfileBase:
         obj.keep_work_doc = keep
         obj.addProperty("App::PropertyInteger","timeout","OpenSCAD","OpenSCAD process timeout (secs)")
         obj.timeout = timeout
-        obj.addProperty("App::PropertyLink","linked_varset","OpenSCAD",
-                        "VarSet whose properties override SCAD variables via -D on execution")
+        obj.addProperty("App::PropertyString","linked_varset","OpenSCAD",
+                        "Name of the VarSet whose properties override SCAD variables via -D on execution")
+        obj.addProperty("App::PropertyString","companion_mesh","OpenSCAD",
+                        "Name of companion Mesh::Feature used for Mesh-mode display (avoids TNP)")
 
     def onChanged(self, fp, prop):
-        print(f"{fp.Label} State : {fp.State} prop : {prop}")
+
+        if getattr(self, '_initializing', False):
+            return
 
         if "Restore" in fp.State:
             return
 
-        if prop in ["Shape"]:
-            print(f"OnChange Shape {fp.Shape}")
+        # DIAG: log every property change so we can see what FC 1.1 is touching
+        import datetime as _dt
+        _oc_line = (f"{_dt.datetime.now().strftime('%H:%M:%S.%f')} "
+                    f"onChanged obj={fp.Label} state={list(fp.State)} prop={prop}\n")
+        with open("/tmp/scad_diag.log", "a") as _f:
+            _f.write(_oc_line)
+            _f.flush()
+
+        if prop == "Shape":
             return
 
-        if prop in ['mode']:
-            print(f"Change of Mode")
-            self.renderFunction(fp)
+        # Mode changes are NOT auto-rendered — FreeCAD refreshes enumeration
+        # properties on selection which would trigger a spurious OpenSCAD run.
+        # Set execute=True to re-render after changing mode.
 
-        if prop in ["execute","mode"]:
-            if fp.execute == True:
-                self.executeFunction(fp)
-                fp.execute = False
-                FreeCADGui.SendMsgToActiveView("ViewFit")
-            else:
-                print(f"Touched execute Shape {fp.Shape}")
-                #obj.Shape = self.newShape
+        if prop == "execute" and fp.execute:
+            self.executeFunction(fp)
+            fp.execute = False
+            from PySide.QtCore import QTimer
+            QTimer.singleShot(200, lambda: FreeCADGui.SendMsgToActiveView("ViewFit"))
 
-
-        if prop in ["edit"]:
-            if fp.edit == True:
+        if prop == "edit":
+            if fp.edit:
                 self.editFile(fp.sourceFile)
                 fp.edit = False
             FreeCADGui.Selection.addSelection(fp)
 
-        if prop in ["message"]:
-            print("message changed")
-            FreeCADGui.updateGui()
+        # message: just log — updateGui() here causes re-entrant onChanged
+        # loops in FreeCAD 1.1.x by processing pending Qt events mid-handler.
 
 
     def execute(self, fp):
-        '''Called by FreeCAD recompute. Auto-executes when a VarSet is linked.'''
+        '''Called by FreeCAD recompute. Never runs OpenSCAD.'''
+        import traceback as _tb, datetime as _dt
+        _n = getattr(self, '_execute_count', 0) + 1
+        self._execute_count = _n
+        with open("/tmp/scad_diag.log", "a") as _f:
+            _f.write(f"{_dt.datetime.now().strftime('%H:%M:%S.%f')} "
+                     f"execute #{_n} {getattr(fp,'Name','?')} "
+                     f"state={list(fp.State)} "
+                     f"cached={getattr(self,'_cached_shape',None) is not None}\n")
+            _f.flush()
         if "Restore" in fp.State:
             return
-        if getattr(self, '_executing', False):
-            return
-        if hasattr(fp, 'linked_varset') and fp.linked_varset is not None:
-            write_log("SCADfileBase", f"VarSet-driven recompute: {fp.Name}")
-            self._executing = True
-            try:
-                self.executeFunction(fp)
-            finally:
-                self._executing = False
-
+        # Always set fp.Shape so FC clears the Touched flag.
+        # For Mesh mode _cached_shape is None → empty shape is fine;
+        # the companion Mesh::Feature holds the actual geometry.
+        cached = getattr(self, '_cached_shape', None)
+        fp.Shape = cached if cached is not None else Part.Shape()
 
     # use name render for new workbench
     # redirect for compatibility with old Alternate
@@ -497,50 +537,76 @@ class SCADfileBase:
 
 
     def executeFunction(self, obj):
+        import traceback as _tb, datetime as _dt
+        _fn = getattr(self, '_execfn_count', 0) + 1
+        self._execfn_count = _fn
+        _line = (f"{_dt.datetime.now().strftime('%H:%M:%S.%f')} "
+                 f"executeFunction #{_fn} obj={getattr(obj,'Name','?')}\n"
+                 + ''.join(_tb.format_stack(limit=8)))
+        with open("/tmp/scad_diag.log", "a") as _f:
+            _f.write(_line + "---\n")
+            _f.flush()
         from timeit import default_timer as timer
         write_log("SCADfileBase",f"Execute {obj.Name} Mode {obj.mode} keepWork {obj.keep_work_doc}")
         start = timer()
-        #print(dir(obj))
-        obj.message = ""
-        shp = shapeFromSourceFile(obj, modules = obj.modules)
-        if shp is not None:
-            print(f"Initial Shape {obj.Shape}")
-            print(f"Returned Shape {shp}")
-            #shp.check()
-            #newShp = shp.copy()
-            #print(f"New Shape {newShp}")
-            #print(f"Old Shape {shp}")
-            #obj.Shape = newShp
-            obj.Shape = shp
+
+        # Snapshot the VarSet params used for this run so execute() can detect
+        # whether the values have changed before deciding to re-run OpenSCAD.
+        # Stored before the run so that even a failed run suppresses redundant
+        # retries (the shape will be None, which is the other half of the guard).
+        _varset = _get_linked_varset(obj)
+        if _varset is not None:
+            from freecad.OpenSCAD_Ext.core.varset_utils import varset_to_D_params
+            self._last_d_params = sorted(varset_to_D_params(_varset))
         else:
-            print(f"Shape is None")
+            self._last_d_params = None
+
+        obj.message = ""
+        result = shapeFromSourceFile(obj, modules=obj.modules)
+
+        if isinstance(result, Mesh.Mesh):
+            # Mesh mode: store mesh on proxy and create/update companion Mesh::Feature.
+            # The FeaturePython itself keeps an EMPTY Part.Shape so FreeCAD's TNP
+            # never indexes mesh triangles → no spinning cursor on selection.
+            self._cached_mesh   = result
+            self._cached_shape  = None
+            obj.Shape = Part.Shape()        # empty — companion provides display
+            companion_name = getattr(obj, 'companion_mesh', '')
+            companion = obj.Document.getObject(companion_name) if companion_name else None
+            if companion is None:
+                companion       = obj.Document.addObject("Mesh::Feature", obj.Label)
+                obj.companion_mesh = companion.Name
+                # Hide the FeaturePython from the 3D view; companion shows geometry
+                try:
+                    obj.ViewObject.Visibility = False
+                except AttributeError:
+                    pass
+            companion.Mesh = result
+            try:
+                companion.ViewObject.DisplayMode = "Shaded"
+            except (ValueError, AttributeError):
+                pass
+
+        elif result is not None:
+            # Brep / AST-Brep: standard Part.Shape path
+            self._cached_shape = result
+            self._cached_mesh  = None
+            obj.Shape = result
+            try:
+                obj.ViewObject.DisplayMode = u"Shaded"
+            except (ValueError, AttributeError):
+                pass
+
+        else:
+            # OpenSCAD failed — clear everything
+            self._cached_shape = None
+            self._cached_mesh  = None
             obj.Shape = Part.Shape()
-        print(f"Function Object Shape {obj.Shape}")
+
         obj.execute = False
-        #if obj.mode == 'Mesh':
-        #    obj.ViewObject.DisplayMode = u"Wireframe"
-        #if obj.mode == 'Brep':
-        #    obj.ViewObject.DisplayMode = u"Shaded"
-        try:
-            obj.ViewObject.DisplayMode = u"Shaded"
-        except (ValueError, AttributeError):
-            pass
         end = timer()
-        print(f"==== Create Shape took {end-start} secs ====")    
-        obj.recompute()
-        #print(f"Active Document recompute {FreeCAD.ActiveDocument.Name}")
-        #FreeCAD.ActiveDocument.recompute()
+        print(f"==== Create Shape took {end-start} secs ====")
         FreeCADGui.Selection.addSelection(obj)
-        FreeCADGui.runCommand('Std_RandomColor',0)
-        FreeCADGui.SendMsgToActiveView("ViewFit")
-        # Need to update Gui for properties change
-        # try and catch as puts out warning
-        try:
-            obj.execute = False
-            FreeCADGui.updateGui()
-        except Exception as err:
-            print(f"Warning {err}")
-        #FreeCADGui.Selection.addSelection(obj)
 
 
     def editFunction(self):
@@ -641,12 +707,26 @@ class SCADfileBase:
     #        print(f"Shape is None")
 
     def __getstate__(self):
-        state = self.__dict__.copy()
-        state["Object"] = None   # remove FeaturePython reference
-        return state
+        # Only persist what FreeCAD needs to reconstruct the proxy.
+        # Transient runtime attributes must be excluded:
+        #   _cached_shape  — Part.Shape/Compound, not JSON serializable
+        #   _last_d_params — rebuilt by executeFunction on next run
+        #   _executing     — runtime re-entrancy flag
+        #   _initializing  — only meaningful during __init__
+        #   Object         — FreeCAD re-injects this; storing it causes cycles
+        _TRANSIENT = {"Object", "_cached_shape", "_cached_mesh", "_last_d_params",
+                      "_executing", "_initializing", "_execute_count", "_execfn_count"}
+        return {k: v for k, v in self.__dict__.items() if k not in _TRANSIENT}
 
     def __setstate__(self, state):
         self.__dict__.update(state)
+        # Ensure transient attributes exist with safe defaults so execute()
+        # and onChanged never raise AttributeError on a freshly restored proxy.
+        self._cached_shape  = None
+        self._cached_mesh   = None
+        self._last_d_params = None
+        self._executing     = False
+        self._initializing  = False
 
 class ViewSCADProvider:
     def __init__(self, obj):
