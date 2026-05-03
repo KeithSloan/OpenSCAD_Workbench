@@ -26,15 +26,18 @@ The workflow:
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 
 # Properties to migrate from FeaturePython → Mesh::Feature
+# Choices for the mode enumeration — must match SCADfileBase.IMPORT_MODE
+_MODE_ENUM = ["Mesh", "AST-Brep", "Brep"]
+
 _SCAD_PROPS = [
-    ("App::PropertyFile",    "sourceFile",    "OpenSCAD", "SCAD source file"),
-    ("App::PropertyString",  "linked_varset", "OpenSCAD", "VarSet object name"),
-    ("App::PropertyString",  "mode",          "OpenSCAD", "Geometry mode"),
-    ("App::PropertyInteger", "fnmax",         "OpenSCAD", "Max polygon sides"),
-    ("App::PropertyInteger", "timeout",       "OpenSCAD", "OpenSCAD timeout (secs)"),
-    ("App::PropertyBool",    "keep_work_doc", "OpenSCAD", "Keep work document"),
-    ("App::PropertyBool",    "modules",       "OpenSCAD", "Uses SCAD modules"),
-    ("App::PropertyString",  "message",       "OpenSCAD", "Last OpenSCAD message"),
+    ("App::PropertyFile",        "sourceFile",    "OpenSCAD", "SCAD source file"),
+    ("App::PropertyString",      "linked_varset", "OpenSCAD", "VarSet object name"),
+    ("App::PropertyEnumeration", "mode",          "OpenSCAD", "Geometry mode"),
+    ("App::PropertyInteger",     "fnmax",         "OpenSCAD", "Max polygon sides"),
+    ("App::PropertyInteger",     "timeout",       "OpenSCAD", "OpenSCAD timeout (secs)"),
+    ("App::PropertyBool",        "keep_work_doc", "OpenSCAD", "Keep work document"),
+    ("App::PropertyBool",        "modules",       "OpenSCAD", "Uses SCAD modules"),
+    ("App::PropertyString",      "message",       "OpenSCAD", "Last OpenSCAD message"),
 ]
 
 
@@ -70,6 +73,10 @@ def finalize_scad_mesh_object(fp_obj):
         if not hasattr(companion, prop_name):
             try:
                 companion.addProperty(prop_type, prop_name, group, desc)
+                # PropertyEnumeration needs its choices set immediately after
+                # addProperty, before a value can be assigned.
+                if prop_type == "App::PropertyEnumeration" and prop_name == "mode":
+                    setattr(companion, prop_name, _MODE_ENUM)
             except Exception as e:
                 write_log("MeshUtils", f"addProperty {prop_name}: {e}")
         val = getattr(fp_obj, prop_name, None)
@@ -78,6 +85,15 @@ def finalize_scad_mesh_object(fp_obj):
                 setattr(companion, prop_name, val)
             except Exception as e:
                 write_log("MeshUtils", f"setattr {prop_name}={val!r}: {e}")
+
+    # Preserve read-only status for output-only properties
+    # (mirrors the setEditorMode calls on the FeaturePython in SCADObject.py)
+    _READ_ONLY_PROPS = ("message",)
+    for prop_name in _READ_ONLY_PROPS:
+        try:
+            companion.setEditorMode(prop_name, 1)
+        except Exception as e:
+            write_log("MeshUtils", f"setEditorMode {prop_name} read-only: {e}")
 
     # Give companion the same user-visible label as the FeaturePython
     companion.Label = fp_obj.Label
