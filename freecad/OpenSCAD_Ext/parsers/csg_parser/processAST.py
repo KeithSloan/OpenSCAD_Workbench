@@ -45,6 +45,88 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.processMinkowski import (
     )    
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_text import process_text 
 
+# ---------------------------------------------------------------------------
+# Fallback tracking
+# ---------------------------------------------------------------------------
+# Set to True whenever fallback_to_OpenSCAD() is called.
+# Reset by importASTCSG.processCSG() before each import run so that
+# createBrep() can decide whether to return a Part.Shape or Mesh.Mesh.
+_fallback_used = False
+
+# Set to True when a node fails AND the per-node OpenSCAD fallback also
+# fails — meaning some geometry is genuinely missing from the result.
+# importASTCSG.processCSG() checks this after processing to decide whether
+# to trigger a whole-file OpenSCAD fallback.
+_nodes_failed = False
+
+# ---------------------------------------------------------------------------
+# Facet threshold for polygon/cylinder treatment.
+# Set by importASTCSG.processCSG() from the useMaxFN preference before each run.
+# 0  = treat everything as true BRep geometry regardless of $fn.
+# N  = shapes whose $fn <= N are built as N-sided prisms/polygons;
+#      shapes whose $fn > N (or $fn == 0, i.e. unspecified) use true BRep.
+# Default 0 (BRep-only) is safe; the importer overrides this at runtime.
+_fnmax = 0
+
+
+def _use_brep(fn_val):
+    """
+    Return True if the $fn value means we should use true BRep geometry
+    (Part.makeCylinder / Part.makeCircle) rather than an N-sided approximation.
+
+    Rules (matching OpenSCAD / legacy importAltCSG behaviour):
+      • fn_val is 0 or missing → always BRep (OpenSCAD uses its own $fn default)
+      • _fnmax == 0            → BRep for everything (threshold disabled)
+      • fn_val > _fnmax        → BRep (circle/cylinder is "smooth enough")
+      • fn_val <= _fnmax       → N-sided prism/polygon
+    """
+    n = int(round(float(fn_val))) if fn_val else 0
+    return n < 3 or _fnmax == 0 or n > _fnmax
+
+
+def _make_prism(r, h, n):
+    """N-sided prism inscribed in a circle of radius *r*, height *h*."""
+    import math
+    verts = [Vector(r * math.cos(2 * math.pi * k / n),
+                    r * math.sin(2 * math.pi * k / n), 0)
+             for k in range(n)]
+    verts.append(verts[0])   # close the polygon
+    wire = Part.makePolygon(verts)
+    face = Part.Face(wire)
+    return face.extrude(Vector(0, 0, h))
+
+
+def _make_frustum(r1, r2, h, n):
+    """N-sided frustum (truncated pyramid) between bottom radius *r1* and top radius *r2*."""
+    import math
+
+    def _ngon_wire(r, z):
+        verts = [Vector(r * math.cos(2 * math.pi * k / n),
+                        r * math.sin(2 * math.pi * k / n), z)
+                 for k in range(n)]
+        verts.append(verts[0])
+        return Part.Wire(Part.makePolygon(verts))
+
+    if r1 == 0:
+        # Bottom is a point — degenerate pyramid; loft still works with a tiny circle
+        w_bot = _ngon_wire(1e-6, 0)
+    else:
+        w_bot = _ngon_wire(r1, 0)
+    w_top = _ngon_wire(r2, h)
+    return Part.makeLoft([w_bot, w_top], True, True)
+
+
+def _make_ngon_face(r, n):
+    """N-sided polygon face (2-D) inscribed in a circle of radius *r*."""
+    import math
+    verts = [Vector(r * math.cos(2 * math.pi * k / n),
+                    r * math.sin(2 * math.pi * k / n), 0)
+             for k in range(n)]
+    verts.append(verts[0])
+    wire = Part.makePolygon(verts)
+    return Part.Face(wire)
+
+
 def generate_stl_from_scad(scad_str, timeout_sec=60):
     write_log("AST","Generate STL from SCAD string")
     return call_openscad_scad_string(scad_str, export_type='stl', timeout_sec=timeout_sec)
@@ -183,6 +265,9 @@ def fallback_to_OpenSCAD(node, operation_type="Hull", tolerance=1.0, timeout=60)
     - Imports STL into FreeCAD with timeout
     - Caches result in node._shape
     """
+    global _fallback_used
+    _fallback_used = True
+
     # Return cached shape if already processed
     if hasattr(node, "_shape"):
         write_log(operation_type, f"Using cached Shape for node {node.node_type}")
@@ -381,6 +466,8 @@ def process_AST_node(node):
 
     """
 
+    global _nodes_failed   # must be declared before any assignment in this function
+
     results = []
     local_pl = App.Placement()
 
@@ -425,16 +512,24 @@ def process_AST_node(node):
         r1 = params.get("r1", params.get("r", 1))
         r2 = params.get("r2", r1)
         center = params.get("center", False)
+        fn = params.get("$fn", 0)
 
-        if r1 == r2:
-            shape = Part.makeCylinder(r1, h)
-        elif r1 == 0 or r2 == 0:
-            shape = Part.makeCone(r1, r2, h)  # true cone
+        if _use_brep(fn):
+            # True BRep geometry — smooth circle/cylinder
+            if r1 == r2:
+                shape = Part.makeCylinder(r1, h)
+            else:
+                shape = Part.makeCone(r1, r2, h)
         else:
-            shape = Part.makeCone(r1, r2, h)
+            # N-sided prism or frustum (OpenSCAD polygon approximation)
+            n = int(round(float(fn)))
+            if r1 == r2:
+                shape = _make_prism(r1, h, n)
+            else:
+                shape = _make_frustum(r1, r2, h, n)
 
         if center:
-            # Same pattern as cube: encode centering in local_pl
+            # Encode centering in local_pl (not via shape.translate)
             local_pl = App.Placement(App.Vector(0, 0, -h/2), App.Rotation())
 
         return (shape, local_pl)
@@ -759,7 +854,33 @@ def process_AST_node(node):
 
         for child in node.children:
             lst = _as_list(process_AST_node(child))
-            for shape, pl in _as_list(lst):
+
+            # If the child produced nothing, escalate to running OpenSCAD on
+            # the ENTIRE boolean node rather than trying to combine a mesh
+            # fallback with BRep shapes — OCC booleans on mixed mesh+BRep
+            # shapes are unreliable.  Returning a single coherent mesh for the
+            # whole operation is safer than a hybrid result.
+            #
+            # TODO: when a proper mesh→BRep conversion or mesh boolean path is
+            # available, we could fall back per-child and combine here instead.
+            if not lst:
+                child_type = getattr(child, 'node_type', '?')
+                write_log("Boolean",
+                    f"{node_type}: child '{child_type}' returned nothing "
+                    f"— escalating to whole-node OpenSCAD fallback to avoid "
+                    f"mixing mesh and BRep in boolean")
+                result = fallback_to_OpenSCAD(
+                    node, operation_type="Boolean", tolerance=1.0, timeout=60)
+                if result is None:
+                    write_log("Boolean",
+                        f"{node_type}: whole-node fallback also failed "
+                        f"— geometry will be missing, flagging for whole-file fallback")
+                    _nodes_failed = True
+                    return []
+                # Wrap in tuple — process_AST_node must return (shape, placement)
+                return (result, App.Placement())
+
+            for shape, pl in lst:
                 if shape is None:
                     continue
                 s = shape.copy()
@@ -822,6 +943,7 @@ def process_AST_node(node):
         else:
             # 3D Boolean operations
             result = shapes[0]
+            _boolean_ok = True
             for s in shapes[1:]:
                 try:
                     if node_type == "union":
@@ -831,7 +953,26 @@ def process_AST_node(node):
                     elif node_type == "intersection":
                         result = result.common(s)
                 except Exception as e:
-                    write_log("Boolean", f"3D {node_type} failed: {e}")
+                    # OCC boolean failed — don't silently continue with an
+                    # incorrect partial result (e.g. a body with the dogleg
+                    # subtraction silently dropped).  Escalate to whole-node
+                    # OpenSCAD fallback so the full correct shape is returned.
+                    write_log("Boolean",
+                        f"3D {node_type} OCC operation failed: {e} "
+                        f"— escalating to whole-node OpenSCAD fallback")
+                    _boolean_ok = False
+                    break
+
+            if not _boolean_ok:
+                fallback = fallback_to_OpenSCAD(
+                    node, operation_type="Boolean", tolerance=1.0, timeout=60)
+                if fallback is not None:
+                    return (fallback, App.Placement())
+                _nodes_failed = True
+                write_log("Boolean",
+                    f"{node_type}: whole-node fallback also failed "
+                    f"— flagging for whole-file fallback")
+                return []
 
         return (result, App.Placement())
 
@@ -914,7 +1055,12 @@ def process_AST_node(node):
                 r = 1.0
                 write_log("AST", "Circle missing radius, defaulting to 1")
 
-        face = Part.Face(Part.Wire([Part.makeCircle(r)]))
+        fn = params.get("$fn", 0)
+        if _use_brep(fn):
+            face = Part.Face(Part.Wire([Part.makeCircle(r)]))
+        else:
+            n = int(round(float(fn)))
+            face = _make_ngon_face(r, n)
         return face, local_pl
 
 
@@ -1021,6 +1167,8 @@ def process_AST(nodes, mode="multiple"):
     child produces multiple shapes (inner group leak), bundle them into a
     single Part.Compound before adding to the document.
     """
+    global _nodes_failed   # must be declared before any assignment in this function
+
     results = []
 
     for node in nodes:
@@ -1032,10 +1180,25 @@ def process_AST(nodes, mode="multiple"):
                 and getattr(node, 'children', None)):
 
             for child in node.children:
-                child_name = type(child).__name__
+                child_name = getattr(child, 'node_type', type(child).__name__)
                 child_processed = process_AST_node(child)
+
+                # If a top-level child produced nothing, try OpenSCAD fallback
+                # rather than silently dropping it from the document.
                 if not child_processed:
-                    continue
+                    write_log("AST",
+                        f"Top-level child '{child_name}' returned nothing "
+                        f"— trying OpenSCAD fallback")
+                    fallback = fallback_to_OpenSCAD(
+                        child, operation_type="TopLevel-child", tolerance=1.0, timeout=60)
+                    if fallback is not None:
+                        child_processed = [(fallback, App.Placement())]
+                    else:
+                        write_log("AST",
+                            f"OpenSCAD fallback also failed for '{child_name}' "
+                            f"— flagging for whole-file fallback")
+                        _nodes_failed = True
+                        continue
                 if not isinstance(child_processed, list):
                     child_processed = [child_processed]
 

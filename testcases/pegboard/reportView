@@ -1,0 +1,1820 @@
+19:28:33  OpenGL version is: 2.1 (2.1 Metal - 90.5)
+19:28:35  Run Gui init script
+19:28:35  Init: Running FreeCADGuiInit.py start script...
+19:28:35  Init:   Searching modules
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Mesh... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Draft... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/ReverseEngineering... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Plot(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/test(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Fem... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Spreadsheet... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Web(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/TechDraw... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Assembly... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/MeshPart... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Show(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Sketcher... done
+19:28:35  Loading GUI of Start module… done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Start... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/OpenSCAD... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Surface... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Robot... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Inspection... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Idf(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/CAM... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/AddonManager/./... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Points... done
+19:28:35  Loading Material module… done
+19:28:35  Module: Part
+19:28:35  Loading Part module... done
+19:28:35  Loading Measure module… done
+19:28:35  Loading GUI of Measure module… done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Measure... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/BIM... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/PartDesign... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Tux... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Part... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Import... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Material... done
+19:28:35  Init:      Initializing /Applications/FreeCAD_1.1.1.app/Contents/Resources/Mod/Help... done
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/SearchBar/./... done
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/.DS_Store(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/freecad.gears/./(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/FC_Assembly_OpenFlexture_MicroScope(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/Woodworking/./... done
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/CfdOF/./... done
+19:28:35  Init:      Packaged workbench  specified icon            in class CfdOFWorkbench ... replacing with icon from package.xml data.
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/ExportSketchUpOpenStudio(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/IFC-to-gbXML-converter(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/Silk/./... done
+19:28:35  Init:      Packaged workbench Silk workbench specified icon            in class Silk ... replacing with icon from package.xml data.
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/CurvesWB/./(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/Gridfinity/./(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/GDML/./(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/manifest.json(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/FreeCAD-DFM-Workbench/.(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/OpenStudioWorkBench/./(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/fasteners/./... done
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/test3(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/SVG_FC_Object(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/test2(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/TestSubModules(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/Alternate_OpenSCAD/.(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/SvgWorkbench/./(InitGui.py not found)... ignore
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/OpenSCAD_Alt_Import/.(InitGui.py not found)... ignore
+19:28:35  Loading Sketcher module… done
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/FusedFilamentDesign/./... done
+19:28:35  Failed to get handle to ffDesignWB -- no icon                                can be generated,
+ check classname in package.xml
+19:28:35  Init:      Initializing /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/toSketch/./(InitGui.py not found)... ignore
+19:28:35  All modules with GUIs using InitGui.py are now initialized
+19:28:35  Init: Initializing freecad.toSketch
+19:28:35  Init: Initializing freecad.toSketch... done
+19:28:35  Init: Initializing freecad.OpenSCAD_Alt_Import
+19:28:35  Init: No init_gui module found in freecad.OpenSCAD_Alt_Import, skipping
+19:28:35  Init: Initializing freecad.svgwb
+19:28:35  Init: Initializing freecad.svgwb... done
+19:28:35  Init: Initializing freecad.svg_fc_object
+19:28:35  GUI Path to external editor /Applications/Inkscape.app/Contents/MacOS/inkscape
+19:28:35  <class 'str'>
+19:28:35  Init: Initializing freecad.svg_fc_object... done
+19:28:35  Init: Initializing freecad.openStudio
+19:28:35  Init: Initializing freecad.openStudio... done
+19:28:35  Init: Initializing freecad.DFM
+19:28:35  Init: Initializing freecad.DFM... done
+19:28:35  Init: Initializing freecad.gdml
+19:28:35  Loading GUI of Material module… done
+19:28:35  Loading GUI of Part module… done
+19:28:35  Loading GUI of Sketcher module… done
+19:28:35  Loading Mesh module... done
+19:28:35  Loading GUI of Mesh module… done
+19:28:35  Loading GUI of MeshPart module… done
+19:28:35  running with lxml.etree
+19:28:35  Init: Initializing freecad.gdml... done
+19:28:35  Init: Initializing freecad.OpenSCAD_Ext
+19:28:35  OpenSCAD_Ext logger active, log file: /Users/ksloan/Library/Application Support/FreeCAD/v1-1/OpenSCAD_Ext/workbench.log
+19:28:35  [INIT] Logging started for OpenSCAD_Ext
+19:28:35  [INIT] OpenSCAD_Ext logger successfully registered — output active
+19:28:35  OpenSCAD_Ext logger successfully registered — output active
+19:28:35  [INIT] OpenSCAD_Ext module loaded — logging active
+19:28:35  [OpenSCAD_Ext] Importers registered.
+19:28:35  [OpenSCAD_Ext] Exporters registered.
+19:28:35  [INIT] Logging started for OpenSCAD_Ext
+19:28:35  [INIT] OpenSCAD_Ext logger successfully registered — output active
+19:28:35  OpenSCAD_Ext logger successfully registered — output active
+19:28:35  ✅ OpenSCAD_Ext registered
+19:28:35  Init: Initializing freecad.OpenSCAD_Ext... done
+19:28:35  Init: Initializing freecad.gridfinity_workbench
+19:28:35  Init: Initializing freecad.gridfinity_workbench... done
+19:28:35  Init: Initializing freecad.Curves
+19:28:35  Init: Initializing freecad.Curves... done
+19:28:35  Init: Initializing freecad.gears
+19:28:35  Checking FreeCAD version
+19:28:35  Init: Initializing freecad.gears... done
+19:28:35  Init: Initializing freecad.importExport3DM
+19:28:35  ImportExport_3DM: preferences page registered
+19:28:35  Init: Initializing freecad.importExport3DM... done
+19:28:35  Init: Initializing freecad.vars
+19:28:35  Installing WorkbenchManipulator: Vars_WBM.
+19:28:35  Init: Initializing freecad.vars... done
+19:28:35  All modules with GUIs initialized using pkgutil are now initialized
+19:28:35  Init: Loading FreeCAD GUI
+19:28:35  Cannot find icon: /Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/OpenStudioWorkBench/./freecad/openStudio/Resources/icons/openStudio.svg
+19:28:35  (qt.qpa.fonts) Populating font family aliases took 43 ms. Replace uses of missing font family "Calibri" with one that exists to avoid this cost. 
+19:28:35  Init: Running FreeCADGuiInit.py start script... done
+19:28:37  Installing preferences page: make_preferences_page.<locals>.Page
+19:28:37  Installing preferences page: make_preferences_page.<locals>.Page
+19:28:37  Installing Resources: icons=/Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/SvgWorkbench/freecad/svgwb/resources/icons
+19:28:37  Installing Resources: translations=/Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/SvgWorkbench/freecad/svgwb/resources/translations
+19:28:37  Installing preferences page: make_preferences_page.<locals>.Page
+19:28:37  Installing Resources: icons=/Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/Vars/freecad/vars/resources/icons
+19:28:37  Installing Resources: translations=/Users/ksloan/Library/Application Support/FreeCAD/v1-1/Mod/Vars/freecad/vars/resources/translations
+19:28:38  Init: Activating default workbench PartDesignWorkbench
+19:28:38  Init: Showing main window
+19:28:38  Main window restored
+19:28:38  Show main window
+19:28:38  Toolbars restored
+19:28:38  Loading Part Design module… done
+19:28:38  Loading GUI of Part Design module… done
+19:28:38  Loading GUI of Spreadsheet module… done
+19:28:38  Init: Entering event loop
+19:28:38  Init: Executing event loop…
+19:28:38  Init: Processing command line files
+19:28:54  Verbose = False
+19:28:54  Verbose = False
+19:28:54  Creating SCAD File Object from : /Users/ksloan/Workbenches/OpenSCAD_Workbench/testcases/pegboard/pegboard.scad
+19:28:54  [FileSCAD] insert /Users/ksloan/Workbenches/OpenSCAD_Workbench/testcases/pegboard/pegboard.scad
+19:28:54  [info] LOADED create_scad_object_interactive v2
+19:28:54  [Interactive] RAW ARGS title=Import OpenSCAD File Objects newFile=False scadName=None sourceFile=/Users/ksloan/Workbenches/OpenSCAD_Workbench/testcases/pegboard/pegboard.scad
+19:28:54  [EditOpt] INIT scadName=None
+19:28:54  [EditOptions] pegboard
+19:29:03  Verbose = False
+19:29:03  [Info] create_scad_object - newFile = False sourceFile = /Users/ksloan/Workbenches/OpenSCAD_Workbench/testcases/pegboard/pegboard.scad newFile = False
+19:29:03  [Info] Created SCAD object: pegboard
+19:29:03  View Provider OnChanged : prop DisplayMode
+19:29:03  View Provider OnChanged : prop DisplayMode
+19:29:03  View Provider OnChanged : prop DisplayMode
+19:29:03  View Provider OnChanged : prop Proxy
+19:29:03  [Info] [scadmeta] cache hit: pegboard.scad
+19:29:03  [VarSet] Linked VarSet 'pegboard_Vars' → 'pegboard'
+19:29:03  [SCADfileBase] Execute pegboard Mode AST-Brep keepWork False
+19:29:03  shapeFrom Source File : keepWork False
+19:29:03  source name pegboard mode AST-Brep
+19:29:03  [SCADfileBase] Applying 18 VarSet override(s)
+19:29:03  Create Brep pegboard 16
+19:29:03    -D overrides: [('board_thickness', '5'), ('closed_bottom', '0.0'), ('corner_radius', '30'), ('epsilon', '0.1'), ('fn', '32'), ('holder_angle', '0.0'), ('holder_cutout_side', '0.0'), ('holder_height', '15'), ('holder_offset', '0.0'), ('holder_x_count', '1'), ('holder_x_size', '10'), ('holder_y_count', '2'), ('holder_y_size', '10'), ('hole_size', '6.0035'), ('hole_spacing', '25.4'), ('strength_factor', '0.66'), ('taper_ratio', '1.0'), ('wall_thickness', '1.85')]
+19:29:03  Active Document pegboard
+19:29:03  Source : pegboard
+19:29:03  SourceFile : /Users/ksloan/Workbenches/OpenSCAD_Workbench/testcases/pegboard/pegboard.scad
+19:29:03  Call OpenSCAD to create csg file from scad
+19:29:03  Process CSG File Mode AST-Brep name path  file /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/pegboard.csg
+19:29:03  ImportAstCSG Version 0.8.4
+19:29:03  [Info] Using OpenSCAD AST / CSG Importer
+19:29:03  [Info] Doc work useMaxFn 16
+19:29:03  [CSG_PARSE] Parsing CSG file: /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/pegboard.csg
+19:29:03  [CSG_PARSE] Parsed 1 top-level nodes
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,-1,0,0),(0,0,-1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,180)]
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [Boolean] difference
+19:29:03  [Boolean] union
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((0,0,1,0),(0,1,0,0),(-1,0,0,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[0, 0, 1, 0], [0, 1, 0, 0], [-1, 0, 0, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,90,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-0.1),(0,1,0,0),(0,0,1,-4.25),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -0.1], [0, 1, 0, 0], [0, 0, 1, -4.25], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-0.1,0,-4.25), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Hull node detected, children=4
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 32, '$fa': 12, '$fs': 2, 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': False} csg_params $fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false
+19:29:03  type cylinder params {'$fn': 32, '$fa': 12, '$fs': 2, 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': False} csg_params $fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false
+19:29:03  type cylinder params {'$fn': 32, '$fa': 12, '$fs': 2, 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': False} csg_params $fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false
+19:29:03  type cylinder params {'$fn': 32, '$fa': 12, '$fs': 2, 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': False} csg_params $fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false
+19:29:03  [cylinder] params {'$fn': 32, '$fa': 12, '$fs': 2, 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': False}
+19:29:03  [cylinder] params {'$fn': 32, '$fa': 12, '$fs': 2, 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': False}
+19:29:03  [cylinder] params {'$fn': 32, '$fa': 12, '$fs': 2, 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': False}
+19:29:03  [cylinder] params {'$fn': 32, '$fa': 12, '$fs': 2, 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': False}
+19:29:03  [Hull] Dispatching hull with 4 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (-4.00175, -12.7, 0.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': Vector (-4.00175, -12.7, 0.925)}, {'type': 'cylinder', 'base': Vector (-4.00175, 12.7, 0.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': Vector (-4.00175, 12.7, 0.925)}, {'type': 'cylinder', 'base': Vector (25.4, -12.7, 0.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': Vector (25.4, -12.7, 0.925)}, {'type': 'cylinder', 'base': Vector (25.4, 12.7, 0.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': Vector (25.4, 12.7, 0.925)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 4 vertices, r1=3.00175, r2=3.00175, z=[0.000,1.850]
+19:29:03  [Hull] _build_rounded_prism: 4 vertical edges to fillet with r=3.00175
+19:29:03  [Hull] _build_rounded_prism: success.
+19:29:03  [Transform] Return_pl Placement [Pos=(-0.1,0,-4.25), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-4.25,0,0.1), Yaw-Pitch-Roll=(0,90,0)]
+19:29:03  [Boolean] difference
+19:29:03  [AST] Hull node detected, children=2
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  [Hull] Nested hull detected — flattening into parent hull
+19:29:03  type cylinder params {'$fn': 32, '$fa': 12, '$fs': 2, 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': False} csg_params $fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false
+19:29:03  type cylinder params {'$fn': 32, '$fa': 12, '$fs': 2, 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': False} csg_params $fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false
+19:29:03  type cylinder params {'$fn': 32, '$fa': 12, '$fs': 2, 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': False} csg_params $fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false
+19:29:03  type cylinder params {'$fn': 32, '$fa': 12, '$fs': 2, 'h': 1.85, 'r1': 3.00175, 'r2': 3.00175, 'center': False} csg_params $fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false
+19:29:03  [Hull] intersection: clipping child has complex ops (difference/hull/extrude/…) — cannot safely approximate as primitive; falling back to OpenSCAD CLI.
+19:29:03  [Hull] collect_primitives failed — hull contains unsupported child node types
+19:29:03  [Hull] collect_primitives failed — hull contains unsupported child node types
+19:29:03  [AST] try_hull failed, falling back to OpenSCAD
+19:29:03  [Hull] Hull fallback to OpenSCAD
+19:29:03  [FLATTEN]     Flatten node: hull, children=2, csg_params=
+19:29:03  [FLATTEN]         Flatten node: group, children=1, csg_params=
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[0, 0, 1, 0], [0, 1, 0, 0], [-1, 0, 0, 0], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -0.1], [0, 1, 0, 0], [0, 0, 1, -4.25], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                 Flatten node: hull, children=4, csg_params=
+19:29:03  [FLATTEN]                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -4.00175], [0, 1, 0, -12.7], [0, 0, 1, 0], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                         Flatten node: cylinder, children=0, csg_params=$fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false
+19:29:03  [FLATTEN]                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -4.00175], [0, 1, 0, 12.7], [0, 0, 1, 0], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                         Flatten node: cylinder, children=0, csg_params=$fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false
+19:29:03  [FLATTEN]                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 25.4], [0, 1, 0, -12.7], [0, 0, 1, 0], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                         Flatten node: cylinder, children=0, csg_params=$fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false
+19:29:03  [FLATTEN]                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 25.4], [0, 1, 0, 12.7], [0, 0, 1, 0], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                         Flatten node: cylinder, children=0, csg_params=$fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false
+19:29:03  [FLATTEN]         Flatten node: intersection, children=2, csg_params=
+19:29:03  [FLATTEN]             Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -4.5505], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                 Flatten node: cube, children=0, csg_params=size = [29.25, 15.55, 30], center = true
+19:29:03  [FLATTEN]             Flatten node: group, children=1, csg_params=
+19:29:03  [FLATTEN]             Flatten node: group, children=1, csg_params=
+19:29:03  [FLATTEN]             Flatten node: group, children=2, csg_params=
+19:29:03  [FLATTEN]             Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -11.85], [0, 1, 0, 2.22045e-16], [0, 0, 1, 0], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -9.35], [0, 1, 0, 0], [0, 0, 1, -0.4965], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                         Flatten node: difference, children=3, csg_params=
+19:29:03  [FLATTEN]                             Flatten node: group, children=1, csg_params=
+19:29:03  [FLATTEN]                             Flatten node: group, children=1, csg_params=
+19:29:03  [FLATTEN]                             Flatten node: hull, children=8, csg_params=
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -1.75], [0, 1, 0, 1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 1.75], [0, 1, 0, 1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -1.75], [0, 1, 0, -1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 1.75], [0, 1, 0, -1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -1.75], [0, 1, 0, 1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 1.75], [0, 1, 0, 1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -1.75], [0, 1, 0, -1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 1.75], [0, 1, 0, -1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                             Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                 Flatten node: group, children=1, csg_params=
+19:29:03  [FLATTEN]                                 Flatten node: group, children=1, csg_params=
+19:29:03  [FLATTEN]                                 Flatten node: hull, children=8, csg_params=
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0.1], [0, 1, 0, -0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -0.1], [0, 1, 0, -0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0.1], [0, 1, 0, 0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -0.1], [0, 1, 0, 0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0.1], [0, 1, 0, -0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -0.1], [0, 1, 0, -0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0.1], [0, 1, 0, 0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -0.1], [0, 1, 0, 0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                             Flatten node: group, children=0, csg_params=
+19:29:03  [FLATTEN]             Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -1.33227e-15], [0, 1, 0, 2.22045e-16], [0, 0, 1, 0], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -9.35], [0, 1, 0, 0], [0, 0, 1, -0.4965], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                         Flatten node: difference, children=3, csg_params=
+19:29:03  [FLATTEN]                             Flatten node: group, children=1, csg_params=
+19:29:03  [FLATTEN]                             Flatten node: group, children=1, csg_params=
+19:29:03  [FLATTEN]                             Flatten node: hull, children=8, csg_params=
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -1.75], [0, 1, 0, 1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 1.75], [0, 1, 0, 1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -1.75], [0, 1, 0, -1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 1.75], [0, 1, 0, -1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -1.75], [0, 1, 0, 1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 1.75], [0, 1, 0, 1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -1.75], [0, 1, 0, -1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                 Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 1.75], [0, 1, 0, -1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                     Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                             Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                 Flatten node: group, children=1, csg_params=
+19:29:03  [FLATTEN]                                 Flatten node: group, children=1, csg_params=
+19:29:03  [FLATTEN]                                 Flatten node: hull, children=8, csg_params=
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0.1], [0, 1, 0, -0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -0.1], [0, 1, 0, -0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0.1], [0, 1, 0, 0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -0.1], [0, 1, 0, 0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0.1], [0, 1, 0, -0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -0.1], [0, 1, 0, -0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0.1], [0, 1, 0, 0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                                     Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, -0.1], [0, 1, 0, 0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]                                         Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [FLATTEN]                             Flatten node: group, children=0, csg_params=
+19:29:03  [CSG]     hull() {
+        multmatrix([[0, 0, 1, 0], [0, 1, 0, 0], [-1, 0, 0, 0], [0, 0, 0, 1]]) {
+            multmatrix([[1, 0, 0, -0.1], [0, 1, 0, 0], [0, 0, 1, -4.25], [0, 0, 0, 1]]) {
+                hull() {
+                    multmatrix([[1, 0, 0, -4.00175], [0, 1, 0, -12.7], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+                        cylinder($fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false);
+                    }
+                    multmatrix([[1, 0, 0, -4.00175], [0, 1, 0, 12.7], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+                        cylinder($fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false);
+                    }
+                    multmatrix([[1, 0, 0, 25.4], [0, 1, 0, -12.7], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+                        cylinder($fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false);
+                    }
+                    multmatrix([[1, 0, 0, 25.4], [0, 1, 0, 12.7], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+                        cylinder($fn = 32, $fa = 12, $fs = 2, h = 1.85, r1 = 3.00175, r2 = 3.00175, center = false);
+                    }
+                }
+            }
+        }
+        intersection() {
+            multmatrix([[1, 0, 0, -4.5505], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+                cube(size = [29.25, 15.55, 30], center = true);
+            }
+            multmatrix([[1, 0, 0, -11.85], [0, 1, 0, 2.22045e-16], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+                multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+                    multmatrix([[1, 0, 0, -9.35], [0, 1, 0, 0], [0, 0, 1, -0.4965], [0, 0, 0, 1]]) {
+                        difference() {
+                            hull() {
+                                multmatrix([[1, 0, 0, -1.75], [0, 1, 0, 1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                                multmatrix([[1, 0, 0, 1.75], [0, 1, 0, 1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                                multmatrix([[1, 0, 0, -1.75], [0, 1, 0, -1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                                multmatrix([[1, 0, 0, 1.75], [0, 1, 0, -1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                                multmatrix([[1, 0, 0, -1.75], [0, 1, 0, 1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                                multmatrix([[1, 0, 0, 1.75], [0, 1, 0, 1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                                multmatrix([[1, 0, 0, -1.75], [0, 1, 0, -1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                                multmatrix([[1, 0, 0, 1.75], [0, 1, 0, -1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                            }
+                            multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+                                hull() {
+                                    multmatrix([[1, 0, 0, 0.1], [0, 1, 0, -0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                    multmatrix([[1, 0, 0, -0.1], [0, 1, 0, -0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                    multmatrix([[1, 0, 0, 0.1], [0, 1, 0, 0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                    multmatrix([[1, 0, 0, -0.1], [0, 1, 0, 0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                    multmatrix([[1, 0, 0, 0.1], [0, 1, 0, -0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                    multmatrix([[1, 0, 0, -0.1], [0, 1, 0, -0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                    multmatrix([[1, 0, 0, 0.1], [0, 1, 0, 0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                    multmatrix([[1, 0, 0, -0.1], [0, 1, 0, 0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            multmatrix([[1, 0, 0, -1.33227e-15], [0, 1, 0, 2.22045e-16], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+                multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+                    multmatrix([[1, 0, 0, -9.35], [0, 1, 0, 0], [0, 0, 1, -0.4965], [0, 0, 0, 1]]) {
+                        difference() {
+                            hull() {
+                                multmatrix([[1, 0, 0, -1.75], [0, 1, 0, 1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                                multmatrix([[1, 0, 0, 1.75], [0, 1, 0, 1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                                multmatrix([[1, 0, 0, -1.75], [0, 1, 0, -1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                                multmatrix([[1, 0, 0, 1.75], [0, 1, 0, -1.75], [0, 0, 1, 6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                                multmatrix([[1, 0, 0, -1.75], [0, 1, 0, 1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                                multmatrix([[1, 0, 0, 1.75], [0, 1, 0, 1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                                multmatrix([[1, 0, 0, -1.75], [0, 1, 0, -1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                                multmatrix([[1, 0, 0, 1.75], [0, 1, 0, -1.75], [0, 0, 1, -6.75], [0, 0, 0, 1]]) {
+                                    cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true);
+                                }
+                            }
+                            multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+                                hull() {
+                                    multmatrix([[1, 0, 0, 0.1], [0, 1, 0, -0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                    multmatrix([[1, 0, 0, -0.1], [0, 1, 0, -0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                    multmatrix([[1, 0, 0, 0.1], [0, 1, 0, 0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                    multmatrix([[1, 0, 0, -0.1], [0, 1, 0, 0.1], [0, 0, 1, 6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                    multmatrix([[1, 0, 0, 0.1], [0, 1, 0, -0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                    multmatrix([[1, 0, 0, -0.1], [0, 1, 0, -0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                    multmatrix([[1, 0, 0, 0.1], [0, 1, 0, 0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                    multmatrix([[1, 0, 0, -0.1], [0, 1, 0, 0.1], [0, 0, 1, -6.84], [0, 0, 0, 1]]) {
+                                        cylinder($fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+19:29:03  [AST] Generate STL from SCAD string
+19:29:03  [OpenSCAD] Call OpenSCAD String via Temo File
+19:29:03  [OpenSCAD] temp file /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/tmpmdf1zcng.scad
+19:29:03  [OpenSCAD] Add $fn, $fa, $fs
+19:29:03  [OpenSCAD] Running: /Applications/OpenSCAD-2025.3.10.app/Contents/MacOS/OpenSCAD --export-format stl -D $fn=12 -D $fa=15.0 -D $fs=2.0 -o /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/tmpmdf1zcng.stl /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/tmpmdf1zcng.scad
+19:29:03  [OpenSCAD] Generated: /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/tmpmdf1zcng.stl
+19:29:03  stdout: 
+19:29:03  stderr: Geometries in cache: 32
+Geometry cache size in bytes: 244624
+CGAL Polyhedrons in cache: 6
+CGAL cache size in bytes: 1825504
+Total rendering time: 0:00:00.340
+Top level object is a 3D object (PolySet):
+   Convex:       yes
+   Triangles:    188
+19:29:03  
+19:29:03  returncode: 0
+19:29:03  [AST_Hull:Minkowski] Importing STL and converting to Part.Shape: /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/tmpmdf1zcng.stl
+19:29:03  [AST_Hull:Minkowski] Mesh facets=188, solid=True
+19:29:03  [AST_Hull:Minkowski] Solid created, valid=True
+19:29:03  [Hull] Hull fallback completed, shape cached
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=2
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-11.85),(0,1,0,2.22045e-16),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -11.85], [0, 1, 0, 2.22045e-16], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-11.85,2.22045e-16,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-9.35),(0,1,0,0),(0,0,1,-0.4965),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -9.35], [0, 1, 0, 0], [0, 0, 1, -0.4965], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Boolean] difference
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (0.1, -0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (0.1, -0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, -34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, -34.29)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, -34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, -34.29)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 4 vertices, r1=5.1, r2=5.1, z=[-38.100,38.100]
+19:29:03  [Hull] _build_rounded_prism: 4 vertical edges to fillet with r=5.1
+19:29:03  [Hull] _build_rounded_prism: success.
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-21.2,2.22045e-16,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-1.33227e-15),(0,1,0,2.22045e-16),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -1.33227e-15], [0, 1, 0, 2.22045e-16], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-1.33227e-15,2.22045e-16,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-9.35),(0,1,0,0),(0,0,1,-0.4965),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -9.35], [0, 1, 0, 0], [0, 0, 1, -0.4965], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Boolean] difference
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (0.1, -0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (0.1, -0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, -34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, -34.29)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, -34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, -34.29)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 4 vertices, r1=5.1, r2=5.1, z=[-38.100,38.100]
+19:29:03  [Hull] _build_rounded_prism: 4 vertical edges to fillet with r=5.1
+19:29:03  [Hull] _build_rounded_prism: success.
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,2.22045e-16,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Boolean] difference
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=2
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-11.85),(0,1,0,2.22045e-16),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -11.85], [0, 1, 0, 2.22045e-16], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-11.85,2.22045e-16,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-9.35),(0,1,0,0),(0,0,1,-0.4965),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -9.35], [0, 1, 0, 0], [0, 0, 1, -0.4965], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Boolean] difference
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (-1.75, 1.75, 6.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-1.75, 1.75, 6.75)}, {'type': 'cylinder', 'base': Vector (1.75, 1.75, 6.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (1.75, 1.75, 6.75)}, {'type': 'cylinder', 'base': Vector (-1.75, -1.75, 6.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-1.75, -1.75, 6.75)}, {'type': 'cylinder', 'base': Vector (1.75, -1.75, 6.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (1.75, -1.75, 6.75)}, {'type': 'cylinder', 'base': Vector (-1.75, 1.75, -7.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-1.75, 1.75, -6.75)}, {'type': 'cylinder', 'base': Vector (1.75, 1.75, -7.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (1.75, 1.75, -6.75)}, {'type': 'cylinder', 'base': Vector (-1.75, -1.75, -7.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-1.75, -1.75, -6.75)}, {'type': 'cylinder', 'base': Vector (1.75, -1.75, -7.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (1.75, -1.75, -6.75)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 4 vertices, r1=5.1, r2=5.1, z=[-7.500,7.500]
+19:29:03  [Hull] _build_rounded_prism: 4 vertical edges to fillet with r=5.1
+19:29:03  [Hull] _build_rounded_prism: success.
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (0.1, -0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (0.1, -0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, -6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, -6.84)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, -6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, -6.84)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 4 vertices, r1=5.1, r2=5.1, z=[-7.600,7.600]
+19:29:03  [Hull] _build_rounded_prism: 4 vertical edges to fillet with r=5.1
+19:29:03  [Hull] _build_rounded_prism: success.
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Group node_type=group, children=0
+19:29:03  [AST] EMPTY GROUP detected
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-21.2,2.22045e-16,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-1.33227e-15),(0,1,0,2.22045e-16),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -1.33227e-15], [0, 1, 0, 2.22045e-16], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-1.33227e-15,2.22045e-16,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-9.35),(0,1,0,0),(0,0,1,-0.4965),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -9.35], [0, 1, 0, 0], [0, 0, 1, -0.4965], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Boolean] difference
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.5, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (-1.75, 1.75, 6.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-1.75, 1.75, 6.75)}, {'type': 'cylinder', 'base': Vector (1.75, 1.75, 6.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (1.75, 1.75, 6.75)}, {'type': 'cylinder', 'base': Vector (-1.75, -1.75, 6.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-1.75, -1.75, 6.75)}, {'type': 'cylinder', 'base': Vector (1.75, -1.75, 6.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (1.75, -1.75, 6.75)}, {'type': 'cylinder', 'base': Vector (-1.75, 1.75, -7.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-1.75, 1.75, -6.75)}, {'type': 'cylinder', 'base': Vector (1.75, 1.75, -7.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (1.75, 1.75, -6.75)}, {'type': 'cylinder', 'base': Vector (-1.75, -1.75, -7.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-1.75, -1.75, -6.75)}, {'type': 'cylinder', 'base': Vector (1.75, -1.75, -7.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.5, 'r1': 5.1, 'r2': 5.1, 'center': Vector (1.75, -1.75, -6.75)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 4 vertices, r1=5.1, r2=5.1, z=[-7.500,7.500]
+19:29:03  [Hull] _build_rounded_prism: 4 vertical edges to fillet with r=5.1
+19:29:03  [Hull] _build_rounded_prism: success.
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (0.1, -0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (0.1, -0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, -6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, -6.84)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, -6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, -6.84)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 4 vertices, r1=5.1, r2=5.1, z=[-7.600,7.600]
+19:29:03  [Hull] _build_rounded_prism: 4 vertical edges to fillet with r=5.1
+19:29:03  [Hull] _build_rounded_prism: success.
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Group node_type=group, children=0
+19:29:03  [AST] EMPTY GROUP detected
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,2.22045e-16,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=2
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-11.85),(0,1,0,2.22045e-16),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -11.85], [0, 1, 0, 2.22045e-16], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-11.85,2.22045e-16,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-9.35),(0,1,0,0),(0,0,1,-0.4965),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -9.35], [0, 1, 0, 0], [0, 0, 1, -0.4965], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Boolean] difference
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (0.1, -0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (0.1, -0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, -34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, -34.29)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, -34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, -34.29)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 4 vertices, r1=5.1, r2=5.1, z=[-38.100,38.100]
+19:29:03  [Hull] _build_rounded_prism: 4 vertical edges to fillet with r=5.1
+19:29:03  [Hull] _build_rounded_prism: success.
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-21.2,2.22045e-16,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-1.33227e-15),(0,1,0,2.22045e-16),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -1.33227e-15], [0, 1, 0, 2.22045e-16], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-1.33227e-15,2.22045e-16,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-9.35),(0,1,0,0),(0,0,1,-0.4965),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -9.35], [0, 1, 0, 0], [0, 0, 1, -0.4965], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Boolean] difference
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 7.62, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (0.1, -0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, 30.48), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, 34.29)}, {'type': 'cylinder', 'base': Vector (0.1, -0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, -34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, -34.29)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, -34.29)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, -38.1), 'dir': Vector (0.0, 0.0, 1.0), 'h': 7.62, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, -34.29)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 4 vertices, r1=5.1, r2=5.1, z=[-38.100,38.100]
+19:29:03  [Hull] _build_rounded_prism: 4 vertical edges to fillet with r=5.1
+19:29:03  [Hull] _build_rounded_prism: success.
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,2.22045e-16,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((0,0,1,0),(0,1,0,0),(-1,0,0,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[0, 0, 1, 0], [0, 1, 0, 0], [-1, 0, 0, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,90,0)]
+19:29:03  [AST] Group node_type=group, children=2
+19:29:03  [AST] Group node_type=group, children=2
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,-12.7),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, -12.7], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,-12.7,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Group node_type=group, children=2
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((0.965926,-0.258819,0,0),(0.258819,0.965926,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[0.965926, -0.258819, 0, 0], [0.258819, 0.965926, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(15,0,0)]
+19:29:03  [List Item Types] <class 'Part.Solid'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,-3.8), Yaw-Pitch-Roll=(15,0,0)]
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((0,-1,0,0),(1,0,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[0, -1, 0, 0], [1, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(90,0,0)]
+19:29:03  [Boolean] intersection
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,5.9035),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 5.9035], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,5.9035), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Solid'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(-3.10175,-7.0035,-0.1), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,5.00175),(0,0,1,2.5),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 5.00175], [0, 0, 1, 2.5], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,5.00175,2.5), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((0,0,1,0),(0,1,0,0),(-1,0,0,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[0, 0, 1, 0], [0, 1, 0, 0], [-1, 0, 0, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,90,0)]
+19:29:03  [Extrusion] rotate_extrude
+19:29:03  [Extrusion] rotate_extrude
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,5),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 5], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(5,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Processing Circle: params={'$fn': 20, '$fa': 12, '$fs': 2, 'r': 2.85166}, csg=$fn = 20, $fa = 12, $fs = 2, r = 2.85166
+19:29:03  [List Item Types] <class 'Part.Face'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(5,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Solid'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,90,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(0,5.00175,2.5), Yaw-Pitch-Roll=(0,90,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,3.40175),(0,0,1,2.5),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 3.40175], [0, 0, 1, 2.5], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,3.40175,2.5), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,0.707107,-0.707107,0),(0,0.707107,0.707107,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 0.707107, -0.707107, 0], [0, 0.707107, 0.707107, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,45)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,3.6021),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 3.6021], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,3.6021), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Solid'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(-3.10175,-9.00525,0.60035), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-3.10175,-6.79218,-5.94316), Yaw-Pitch-Roll=(0,0,45)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-3.10175,-3.39043,-3.44316), Yaw-Pitch-Roll=(0,0,45)]
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(90,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(0,-12.7,-3.8), Yaw-Pitch-Roll=(15,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(0,-12.7,0), Yaw-Pitch-Roll=(90,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,25.4),(0,1,0,-12.7),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 25.4], [0, 1, 0, -12.7], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(25.4,-12.7,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((0.965926,-0.258819,0,0),(0.258819,0.965926,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[0.965926, -0.258819, 0, 0], [0.258819, 0.965926, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(15,0,0)]
+19:29:03  [List Item Types] <class 'Part.Solid'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,-3.8), Yaw-Pitch-Roll=(15,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(25.4,-12.7,-3.8), Yaw-Pitch-Roll=(15,0,0)]
+19:29:03  [AST] Group node_type=group, children=2
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,12.7),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 12.7], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,12.7,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Group node_type=group, children=2
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((0.965926,-0.258819,0,0),(0.258819,0.965926,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[0.965926, -0.258819, 0, 0], [0.258819, 0.965926, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(15,0,0)]
+19:29:03  [List Item Types] <class 'Part.Solid'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,-3.8), Yaw-Pitch-Roll=(15,0,0)]
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((0,-1,0,0),(1,0,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[0, -1, 0, 0], [1, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(90,0,0)]
+19:29:03  [Boolean] intersection
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,5.9035),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 5.9035], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,5.9035), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Solid'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(-3.10175,-7.0035,-0.1), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,5.00175),(0,0,1,2.5),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 5.00175], [0, 0, 1, 2.5], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,5.00175,2.5), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((0,0,1,0),(0,1,0,0),(-1,0,0,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[0, 0, 1, 0], [0, 1, 0, 0], [-1, 0, 0, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,90,0)]
+19:29:03  [Extrusion] rotate_extrude
+19:29:03  [Extrusion] rotate_extrude
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,5),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 5], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(5,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Processing Circle: params={'$fn': 20, '$fa': 12, '$fs': 2, 'r': 2.85166}, csg=$fn = 20, $fa = 12, $fs = 2, r = 2.85166
+19:29:03  [List Item Types] <class 'Part.Face'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(5,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Solid'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,90,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(0,5.00175,2.5), Yaw-Pitch-Roll=(0,90,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,3.40175),(0,0,1,2.5),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 3.40175], [0, 0, 1, 2.5], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,3.40175,2.5), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,0.707107,-0.707107,0),(0,0.707107,0.707107,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 0.707107, -0.707107, 0], [0, 0.707107, 0.707107, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,45)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,3.6021),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 3.6021], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,3.6021), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Solid'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(-3.10175,-9.00525,0.60035), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-3.10175,-6.79218,-5.94316), Yaw-Pitch-Roll=(0,0,45)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-3.10175,-3.39043,-3.44316), Yaw-Pitch-Roll=(0,0,45)]
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(90,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(0,12.7,-3.8), Yaw-Pitch-Roll=(15,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(0,12.7,0), Yaw-Pitch-Roll=(90,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,25.4),(0,1,0,12.7),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 25.4], [0, 1, 0, 12.7], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(25.4,12.7,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((0.965926,-0.258819,0,0),(0.258819,0.965926,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[0.965926, -0.258819, 0, 0], [0.258819, 0.965926, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(15,0,0)]
+19:29:03  [List Item Types] <class 'Part.Solid'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,-3.8), Yaw-Pitch-Roll=(15,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(25.4,12.7,-3.8), Yaw-Pitch-Roll=(15,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-3.8,-12.7,-8.43769e-16), Yaw-Pitch-Roll=(90,75,90)]
+19:29:03  [Transform] Return_pl Placement [Pos=(0,-12.7,0), Yaw-Pitch-Roll=(90,1.27222e-14,90)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-3.8,-12.7,-25.4), Yaw-Pitch-Roll=(90,75,90)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-3.8,12.7,-8.43769e-16), Yaw-Pitch-Roll=(90,75,90)]
+19:29:03  [Transform] Return_pl Placement [Pos=(0,12.7,0), Yaw-Pitch-Roll=(90,1.27222e-14,90)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-3.8,12.7,-25.4), Yaw-Pitch-Roll=(90,75,90)]
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=2
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-11.85),(0,1,0,2.22045e-16),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -11.85], [0, 1, 0, 2.22045e-16], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-11.85,2.22045e-16,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-9.35),(0,1,0,0),(0,0,1,-0.4965),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -9.35], [0, 1, 0, 0], [0, 0, 1, -0.4965], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Boolean] difference
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (0.1, -0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (0.1, -0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, -6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, -6.84)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, -6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, -6.84)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 4 vertices, r1=5.1, r2=5.1, z=[-7.600,7.600]
+19:29:03  [Hull] _build_rounded_prism: 4 vertical edges to fillet with r=5.1
+19:29:03  [Hull] _build_rounded_prism: success.
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-21.2,2.22045e-16,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-1.33227e-15),(0,1,0,2.22045e-16),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -1.33227e-15], [0, 1, 0, 2.22045e-16], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-1.33227e-15,2.22045e-16,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-9.35),(0,1,0,0),(0,0,1,-0.4965),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -9.35], [0, 1, 0, 0], [0, 0, 1, -0.4965], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Boolean] difference
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 1.52, r1 = 5.1, r2 = 5.1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (0.1, -0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, 6.08), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, 6.84)}, {'type': 'cylinder', 'base': Vector (0.1, -0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, -0.1, -6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, -0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, -0.1, -6.84)}, {'type': 'cylinder', 'base': Vector (0.1, 0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (0.1, 0.1, -6.84)}, {'type': 'cylinder', 'base': Vector (-0.1, 0.1, -7.6), 'dir': Vector (0.0, 0.0, 1.0), 'h': 1.52, 'r1': 5.1, 'r2': 5.1, 'center': Vector (-0.1, 0.1, -6.84)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 4 vertices, r1=5.1, r2=5.1, z=[-7.600,7.600]
+19:29:03  [Hull] _build_rounded_prism: 4 vertical edges to fillet with r=5.1
+19:29:03  [Hull] _build_rounded_prism: success.
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,0,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-9.35,2.22045e-16,-0.4965), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,-2.5),(0,1,0,-1),(0,0,1,-9.007),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, -2.5], [0, 1, 0, -1], [0, 0, 1, -9.007], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(-2.5,-1,-9.007), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((0,0,-1,0),(1,0,0,0),(0,-1,0,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[0, 0, -1, 0], [1, 0, 0, 0], [0, -1, 0, 0], [0, 0, 0, 1]]'
+19:29:03    children: 5
+19:29:03  [Transform] trans_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(90,0,-90)]
+19:29:03  [Boolean] intersection
+19:29:03  [Boolean] union
+19:29:03  [Boolean] difference
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (-0.5, 4.0, 0.8), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-0.5, 4.0, 0.9)}, {'type': 'cylinder', 'base': Vector (0.5, 4.0, 0.8), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.5, 4.0, 0.9)}, {'type': 'cylinder', 'base': Vector (-0.5, -4.0, 0.8), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-0.5, -4.0, 0.9)}, {'type': 'cylinder', 'base': Vector (0.5, -4.0, 0.8), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.5, -4.0, 0.9)}, {'type': 'cylinder', 'base': Vector (-0.5, 4.0, -1.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-0.5, 4.0, -0.9)}, {'type': 'cylinder', 'base': Vector (0.5, 4.0, -1.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.5, 4.0, -0.9)}, {'type': 'cylinder', 'base': Vector (-0.5, -4.0, -1.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-0.5, -4.0, -0.9)}, {'type': 'cylinder', 'base': Vector (0.5, -4.0, -1.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.5, -4.0, -0.9)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 4 vertices, r1=1.0, r2=1.0, z=[-1.000,1.000]
+19:29:03  [Hull] _build_rounded_prism: 4 vertical edges to fillet with r=1.0
+19:29:03  [Hull] _build_rounded_prism: success.
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (0.0, 3.5, 1.2000000000000002), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, 3.5, 1.35)}, {'type': 'cylinder', 'base': Vector (0.0, 3.5, 1.2000000000000002), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, 3.5, 1.35)}, {'type': 'cylinder', 'base': Vector (0.0, -3.5, 1.2000000000000002), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, -3.5, 1.35)}, {'type': 'cylinder', 'base': Vector (0.0, -3.5, 1.2000000000000002), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, -3.5, 1.35)}, {'type': 'cylinder', 'base': Vector (0.0, 3.5, -1.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, 3.5, -1.35)}, {'type': 'cylinder', 'base': Vector (0.0, 3.5, -1.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, 3.5, -1.35)}, {'type': 'cylinder', 'base': Vector (0.0, -3.5, -1.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, -3.5, -1.35)}, {'type': 'cylinder', 'base': Vector (0.0, -3.5, -1.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, -3.5, -1.35)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 2 vertices, r1=1.0, r2=1.0, z=[-1.500,1.500]
+19:29:03  [Hull] hull_parallel_cylinders_grid: degenerate hull, fallback.
+19:29:03  [Hull] try_hull_dispatch returned None — hull type not handled natively (types={cylinder, cylinder, cylinder, cylinder, cylinder, cylinder, cylinder, cylinder})
+19:29:03  [Hull] try_hull_dispatch returned None — hull type not handled natively (types={cylinder, cylinder, cylinder, cylinder, cylinder, cylinder, cylinder, cylinder})
+19:29:03  [AST] try_hull failed, falling back to OpenSCAD
+19:29:03  [Hull] Hull fallback to OpenSCAD
+19:29:03  [FLATTEN]     Flatten node: hull, children=8, csg_params=
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [CSG]     hull() {
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+    }
+19:29:03  [AST] Generate STL from SCAD string
+19:29:03  [OpenSCAD] Call OpenSCAD String via Temo File
+19:29:03  [OpenSCAD] temp file /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/tmp5u070a81.scad
+19:29:03  [OpenSCAD] Add $fn, $fa, $fs
+19:29:03  [OpenSCAD] Running: /Applications/OpenSCAD-2025.3.10.app/Contents/MacOS/OpenSCAD --export-format stl -D $fn=12 -D $fa=15.0 -D $fs=2.0 -o /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/tmp5u070a81.stl /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/tmp5u070a81.scad
+19:29:03  [OpenSCAD] Generated: /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/tmp5u070a81.stl
+19:29:03  stdout: 
+19:29:03  stderr: Geometries in cache: 6
+Geometry cache size in bytes: 52992
+CGAL Polyhedrons in cache: 0
+CGAL cache size in bytes: 0
+Total rendering time: 0:00:00.003
+Top level object is a 3D object (PolySet):
+   Convex:       yes
+   Triangles:    204
+19:29:03  
+19:29:03  returncode: 0
+19:29:03  [AST_Hull:Minkowski] Importing STL and converting to Part.Shape: /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/tmp5u070a81.stl
+19:29:03  [AST_Hull:Minkowski] Mesh facets=204, solid=True
+19:29:03  [AST_Hull:Minkowski] Solid created, valid=True
+19:29:03  [Hull] Hull fallback completed, shape cached
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,2.5),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 2.5], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(2.5,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Boolean] difference
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (-0.5, 4.0, 0.8), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-0.5, 4.0, 0.9)}, {'type': 'cylinder', 'base': Vector (0.5, 4.0, 0.8), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.5, 4.0, 0.9)}, {'type': 'cylinder', 'base': Vector (-0.5, -4.0, 0.8), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-0.5, -4.0, 0.9)}, {'type': 'cylinder', 'base': Vector (0.5, -4.0, 0.8), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.5, -4.0, 0.9)}, {'type': 'cylinder', 'base': Vector (-0.5, 4.0, -1.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-0.5, 4.0, -0.9)}, {'type': 'cylinder', 'base': Vector (0.5, 4.0, -1.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.5, 4.0, -0.9)}, {'type': 'cylinder', 'base': Vector (-0.5, -4.0, -1.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-0.5, -4.0, -0.9)}, {'type': 'cylinder', 'base': Vector (0.5, -4.0, -1.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.5, -4.0, -0.9)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 4 vertices, r1=1.0, r2=1.0, z=[-1.000,1.000]
+19:29:03  [Hull] _build_rounded_prism: 4 vertical edges to fillet with r=1.0
+19:29:03  [Hull] _build_rounded_prism: success.
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (0.0, 3.5, 1.2000000000000002), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, 3.5, 1.35)}, {'type': 'cylinder', 'base': Vector (0.0, 3.5, 1.2000000000000002), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, 3.5, 1.35)}, {'type': 'cylinder', 'base': Vector (0.0, -3.5, 1.2000000000000002), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, -3.5, 1.35)}, {'type': 'cylinder', 'base': Vector (0.0, -3.5, 1.2000000000000002), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, -3.5, 1.35)}, {'type': 'cylinder', 'base': Vector (0.0, 3.5, -1.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, 3.5, -1.35)}, {'type': 'cylinder', 'base': Vector (0.0, 3.5, -1.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, 3.5, -1.35)}, {'type': 'cylinder', 'base': Vector (0.0, -3.5, -1.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, -3.5, -1.35)}, {'type': 'cylinder', 'base': Vector (0.0, -3.5, -1.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (0.0, -3.5, -1.35)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 2 vertices, r1=1.0, r2=1.0, z=[-1.500,1.500]
+19:29:03  [Hull] hull_parallel_cylinders_grid: degenerate hull, fallback.
+19:29:03  [Hull] try_hull_dispatch returned None — hull type not handled natively (types={cylinder, cylinder, cylinder, cylinder, cylinder, cylinder, cylinder, cylinder})
+19:29:03  [Hull] try_hull_dispatch returned None — hull type not handled natively (types={cylinder, cylinder, cylinder, cylinder, cylinder, cylinder, cylinder, cylinder})
+19:29:03  [AST] try_hull failed, falling back to OpenSCAD
+19:29:03  [Hull] Hull fallback to OpenSCAD
+19:29:03  [FLATTEN]     Flatten node: hull, children=8, csg_params=
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [FLATTEN]         Flatten node: multmatrix, children=1, csg_params=[[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]
+19:29:03  [FLATTEN]             Flatten node: cylinder, children=0, csg_params=$fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [CSG]     hull() {
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, 1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, 3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, -1.35], [0, 0, 0, 1]]) {
+            cylinder($fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true);
+        }
+    }
+19:29:03  [AST] Generate STL from SCAD string
+19:29:03  [OpenSCAD] Call OpenSCAD String via Temo File
+19:29:03  [OpenSCAD] temp file /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/tmpirpp_kds.scad
+19:29:03  [OpenSCAD] Add $fn, $fa, $fs
+19:29:03  [OpenSCAD] Running: /Applications/OpenSCAD-2025.3.10.app/Contents/MacOS/OpenSCAD --export-format stl -D $fn=12 -D $fa=15.0 -D $fs=2.0 -o /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/tmpirpp_kds.stl /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/tmpirpp_kds.scad
+19:29:03  [OpenSCAD] Generated: /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/tmpirpp_kds.stl
+19:29:03  stdout: 
+19:29:03  stderr: Geometries in cache: 6
+Geometry cache size in bytes: 52992
+CGAL Polyhedrons in cache: 0
+CGAL cache size in bytes: 0
+Total rendering time: 0:00:00.003
+Top level object is a 3D object (PolySet):
+   Convex:       yes
+   Triangles:    204
+19:29:03  
+19:29:03  returncode: 0
+19:29:03  [AST_Hull:Minkowski] Importing STL and converting to Part.Shape: /var/folders/31/h9n3pl253yz7s27kcrh362340000gn/T/tmpirpp_kds.stl
+19:29:03  [AST_Hull:Minkowski] Mesh facets=204, solid=True
+19:29:03  [AST_Hull:Minkowski] Solid created, valid=True
+19:29:03  [Hull] Hull fallback completed, shape cached
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(2.5,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,-3.5),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, -3.5], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,-3.5,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Solid'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(-10,-5.5,-5), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(90,0,-90)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,1.25),(0,1,0,-2.5),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 1.25], [0, 1, 0, -2.5], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(1.25,-2.5,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Boolean] difference
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.2, r1 = 1, r2 = 1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.2, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (-3.0, 2.5, 0.8), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-3.0, 2.5, 0.9)}, {'type': 'cylinder', 'base': Vector (3.0, 2.5, 0.8), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (3.0, 2.5, 0.9)}, {'type': 'cylinder', 'base': Vector (-3.0, -2.5, 0.8), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-3.0, -2.5, 0.9)}, {'type': 'cylinder', 'base': Vector (3.0, -2.5, 0.8), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (3.0, -2.5, 0.9)}, {'type': 'cylinder', 'base': Vector (-3.0, 2.5, -1.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-3.0, 2.5, -0.9)}, {'type': 'cylinder', 'base': Vector (3.0, 2.5, -1.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (3.0, 2.5, -0.9)}, {'type': 'cylinder', 'base': Vector (-3.0, -2.5, -1.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-3.0, -2.5, -0.9)}, {'type': 'cylinder', 'base': Vector (3.0, -2.5, -1.0), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.2, 'r1': 1.0, 'r2': 1.0, 'center': Vector (3.0, -2.5, -0.9)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 4 vertices, r1=1.0, r2=1.0, z=[-1.000,1.000]
+19:29:03  [Hull] _build_rounded_prism: 4 vertical edges to fillet with r=1.0
+19:29:03  [Hull] _build_rounded_prism: success.
+19:29:03  [AST] Group node_type=group, children=1
+19:29:03  [AST] Hull node detected, children=8
+19:29:03  [AST] Try Hull node_type=hull
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  type cylinder params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True} csg_params $fn = 50, $fa = 12, $fs = 2, h = 0.3, r1 = 1, r2 = 1, center = true
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [cylinder] params {'$fn': 50, '$fa': 12, '$fs': 2, 'h': 0.3, 'r1': 1, 'r2': 1, 'center': True}
+19:29:03  [Hull] Dispatching hull with 8 primitive(s)
+19:29:03  [Hull] Dispatch types={'cylinder'}
+19:29:03  [Normalized ] [{'type': 'cylinder', 'base': Vector (-2.5, 2.0, 1.2000000000000002), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-2.5, 2.0, 1.35)}, {'type': 'cylinder', 'base': Vector (2.5, 2.0, 1.2000000000000002), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (2.5, 2.0, 1.35)}, {'type': 'cylinder', 'base': Vector (-2.5, -2.0, 1.2000000000000002), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-2.5, -2.0, 1.35)}, {'type': 'cylinder', 'base': Vector (2.5, -2.0, 1.2000000000000002), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (2.5, -2.0, 1.35)}, {'type': 'cylinder', 'base': Vector (-2.5, 2.0, -1.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-2.5, 2.0, -1.35)}, {'type': 'cylinder', 'base': Vector (2.5, 2.0, -1.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (2.5, 2.0, -1.35)}, {'type': 'cylinder', 'base': Vector (-2.5, -2.0, -1.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (-2.5, -2.0, -1.35)}, {'type': 'cylinder', 'base': Vector (2.5, -2.0, -1.5), 'dir': Vector (0.0, 0.0, 1.0), 'h': 0.3, 'r1': 1.0, 'r2': 1.0, 'center': Vector (2.5, -2.0, -1.35)}]
+19:29:03  [Hull] Attempting to hull cylinders/cones.
+19:29:03  [Hull] Cylinders not collinear — trying rounded-polygon extrusion.
+19:29:03  [Hull] hull_parallel_cylinders_grid: attempting rounded-polygon solid.
+19:29:03  [Hull] hull_parallel_cylinders_grid: 2-D hull has 4 vertices, r1=1.0, r2=1.0, z=[-1.500,1.500]
+19:29:03  [Hull] _build_rounded_prism: 4 vertical edges to fillet with r=1.0
+19:29:03  [Hull] _build_rounded_prism: success.
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,3),(0,1,0,0),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 3], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(3,0,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Solid'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(1,-1.25,-1.5), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(1.25,-2.5,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(0,1.25,2.5), Yaw-Pitch-Roll=(90,0,-90)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,2),(0,1,0,-1),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 2], [0, 1, 0, -1], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(2,-1,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Solid'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(-2,-1.25,-1), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(1,-2,1.25), Yaw-Pitch-Roll=(90,0,-90)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,0),(0,1,0,-2),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 0], [0, 1, 0, -2], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(0,-2,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Solid'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(0,-2,-1), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(1,0,2), Yaw-Pitch-Roll=(90,0,-90)]
+19:29:03  [Transform] multmatrix
+19:29:03  multmatrix  (MultMatrix)
+19:29:03    params:
+19:29:03      matrix: Matrix ((1,0,0,2.5),(0,1,0,-2),(0,0,1,0),(0,0,0,1))
+19:29:03    csg_params:
+19:29:03      '[[1, 0, 0, 2.5], [0, 1, 0, -2], [0, 0, 1, 0], [0, 0, 0, 1]]'
+19:29:03    children: 1
+19:29:03  [Transform] trans_pl Placement [Pos=(2.5,-2,0), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [List Item Types] <class 'Part.Solid'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(2.5,-2,-1), Yaw-Pitch-Roll=(0,0,0)]
+19:29:03  [Transform] Return_pl Placement [Pos=(1,2.5,2), Yaw-Pitch-Roll=(90,0,-90)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-2.5,-1,-9.007), Yaw-Pitch-Roll=(90,0,-90)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-2.5,0.25,-6.507), Yaw-Pitch-Roll=(90,0,-90)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-1.5,-3,-7.757), Yaw-Pitch-Roll=(90,0,-90)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-1.5,-1,-7.007), Yaw-Pitch-Roll=(90,0,-90)]
+19:29:03  [Transform] Return_pl Placement [Pos=(-1.5,1.5,-7.007), Yaw-Pitch-Roll=(90,0,-90)]
+19:29:03  [List Item Types] <class 'Part.Compound'> , <class 'Base.Placement'>
+19:29:03  [Transform] Return_pl Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,180)]
+19:29:03  [Dump] processed type <class 'list'>
+19:29:03  [Dump] [(<Compound object at 0xac9888aa0>, Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,180)])]
+19:29:03  [AST] Processed MultMatrix → 1 shape(s)
+19:29:03  [AST] shapePlaceList [('MultMatrix', <Compound object at 0xac9888aa0>, Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,180)])]
+19:29:03  [Import] ('MultMatrix', <Compound object at 0xac9888aa0>, Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,180)])
+19:29:03  [Add Object] Name MultMatrix Shape <Compound object at 0xac9888aa0> PlacementPlacement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,180)]
+19:29:03  ImportAstCSG Version 0.8.4
+19:29:03  End processing CSG file
+19:29:03  AST-Brep: one or more hull/minkowski shapes could not be built as native BRep and fell back to OpenSCAD CLI + STL. Result displayed as Mesh. Mode changed to Mesh. Check the Report View for details on which nodes were not handled.
+19:29:03  Shapes in WrkDoc 0
+19:29:03  CreateBrep Shape <Compound object at 0xac9888aa0>
+19:29:03  Loading MeshPart module… done
+19:29:03  AST-Brep fallback → Mesh (2019 facets)
+19:29:03  Active Document pegboard
+19:29:03  ==== Create Shape took 2.7991855409927666 secs ====
+19:29:03  [MeshUtils] Removed FeaturePython 'pegboard', companion Mesh::Feature 'pegboard001' promoted
+19:29:03  FileSCAD: import complete
+

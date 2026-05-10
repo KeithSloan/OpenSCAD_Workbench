@@ -7,68 +7,52 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.objects.SCADObject import SCADfileBase
 from freecad.OpenSCAD_Ext.commands.baseSCAD import BaseParams
 from freecad.OpenSCAD_Ext.core.create_scad_object_interactive import create_scad_object_interactive
+from freecad.OpenSCAD_Ext.commands.editSCAD import resolve_scad_object
+
 
 class EditStudioSCADFile_Class(BaseParams):
-    """Edit new SCAD file Object """
+    """Open SCAD file in OpenSCAD Studio"""
     def GetResources(self):
         return {
-            'MenuText': 'OpenSCAD Studio -  SCAD File Object',
-            'ToolTip': 'OpenSCAD Studio Edit  a new SCAD file Object',
+            'MenuText': 'OpenSCAD Studio - SCAD File Object',
+            'ToolTip': 'Open SCAD File Object in OpenSCAD Studio',
             'Pixmap': 'editStudioScadFileObj.svg'
         }
 
     def Activated(self):
         FreeCAD.Console.PrintMessage("OpenSCAD Studio - Edit SCAD File Object executed\n")
         write_log("Info", "Studio - Edit SCAD File Object executed")
-        
+
         doc = FreeCAD.ActiveDocument
         if not doc:
             write_log("Info", "No Active Document")
             doc = FreeCAD.newDocument("OpenSCAD_Studio")
-        write_log("Info",doc.Label)
+        write_log("Info", doc.Label)
 
         sel = FreeCADGui.Selection.getSelection()
-        write_log("Info",f"selection {sel}")
-        #if not sel:
-        #    FreeCAD.Console.PrintErrorMessage("No objects selected\n")
-        #return
-        if sel == []:
+        write_log("Info", f"selection {sel}")
+
+        if not sel:
+            # No selection — create a new SCAD object
             obj = create_scad_object_interactive(
-            title="Create New openscad Studio Object",
-            scadName = "OpenSCAD_Studio",
-            newFile = True,
+                title="Create New OpenSCAD Studio Object",
+                scadName="OpenSCAD_Studio",
+                newFile=True,
             )
-            #obj.recompute()
-            obj.Proxy.editOpenStudio()
-        
+            if obj is not None:
+                obj.Proxy.editOpenStudio()
         else:
             for obj in sel:
-                obj.Proxy.editOpenStudio()                            
-
-        '''
-        for obj in sel:
-            if obj.TypeId != "Part::FeaturePython":
-               write_log("INFO","Feature Python")
-               continue
-
-            proxy = getattr(obj, "Proxy", None)
-            if proxy is None:
-                continue
-
-            write_log("INFO","Has Proxy")
-            if not isinstance(proxy, SCADfileBase):
-                continue
-            write_log("INFO","isinstance SCADfileBase")
-
-            try:
-               write_log("Studio",f"obj.sourceFile {obj.sourceFile}")
-               self.open_scad_in_openscad_studio(obj.sourceFile)
-
-            except Exception as e:
-               FreeCAD.Console.PrintError(
-                f"Failed to edit SCAD file for {obj.Label}: {e}\n"
-               )
-        '''
+                scad_obj = resolve_scad_object(obj)
+                if scad_obj is None:
+                    write_log("INFO", f"Selected object '{obj.Label}' is not a SCAD object")
+                    continue
+                try:
+                    scad_obj.Proxy.editOpenStudio()
+                except Exception as e:
+                    FreeCAD.Console.PrintError(
+                        f"Failed to open OpenSCAD Studio for {scad_obj.Label}: {e}\n"
+                    )
 
     def IsActive(self):
         return True

@@ -121,22 +121,62 @@ def createBrep(srcObj, mode, tmpDir, wrkSrc, d_params=None):
         print(f"Process CSG File Mode {mode} name path {pathName} file {tmpFileName}")
 		
         #processCSG(wrkDoc, pathName, tmpFileName, srcObj.fnmax)
-        if mode == 'AST-Brep':
+        ast_had_fallback = False
+        if mode == 'Attempting AST-Brep':
             importASTCSG.processCSG(wrkDoc, tmpFileName, srcObj.fnmax)
+            # Check if any hull/minkowski node fell back to OpenSCAD CLI + STL.
+            # If so, the wrkDoc contains STL-derived Part.Shapes mixed with
+            # native BRep shapes.  We return Mesh.Mesh instead so the caller
+            # gets a uniform mesh result with no TNP spinner — same as Mesh mode.
+            from freecad.OpenSCAD_Ext.parsers.csg_parser import processAST as _pAST_mod
+            ast_had_fallback = getattr(_pAST_mod, '_fallback_used', False)
+            if ast_had_fallback:
+                # Mesh-derived shapes from per-node fallbacks silently produce
+                # wrong OCC boolean results (no exception thrown, just wrong
+                # geometry). Discard the partial wrkDoc shapes and re-run the
+                # complete CSG file through OpenSCAD for correct whole-file geometry.
+                FreeCAD.Console.PrintWarning(
+                    "Attempting AST-Brep: per-node OpenSCAD fallback was used — "
+                    "re-running whole CSG file through OpenSCAD for correct geometry. "
+                    "Result displayed as Mesh. Mode changed to Mesh.\n")
+                srcObj.message = ("Attempting AST-Brep fell back to Mesh — "
+                                  "not all shapes could be built as native BRep")
+                srcObj.mode = "Mesh"
+                if srcObj.keep_work_doc is not True:
+                    try:
+                        FreeCAD.closeDocument("work")
+                    except Exception:
+                        pass
+                FreeCAD.setActiveDocument(actDoc)
+                stl_file = callopenscad(tmpFileName, outputext='stl',
+                                        timeout=int(srcObj.timeout))
+                if stl_file and os.path.isfile(stl_file):
+                    import Mesh as _MeshMod
+                    retMesh = _MeshMod.Mesh(stl_file)
+                    try:
+                        os.unlink(stl_file)
+                    except OSError:
+                        pass
+                    print(f"Attempting AST-Brep whole-file fallback → Mesh "
+                          f"({retMesh.CountFacets} facets)")
+                    return retMesh
+                FreeCAD.Console.PrintError(
+                    "Attempting AST-Brep: whole-file fallback — "
+                    "OpenSCAD produced no STL\n")
+                return Part.Shape()
 
-        elif mode == 'Brep':
-            importAltCSG.processCSG(wrkDoc, tmpFileName, srcObj.fnmax)
-            # *** Does not work for earrings.scad
         shapes = []
-        retShape = Part.Shape()     # Empty Shape
         for cnt, obj in enumerate(wrkDoc.RootObjects, start=0):
-            if hasattr(obj, "Shape"):
+            if hasattr(obj, "Shape") and not obj.Shape.isNull():
                 shapes.append(obj.Shape)
-                print(f"Shapes in WrkDoc {cnt}")        
-            if cnt > 1:
-                retShape = Part.makeCompound(shapes)
-            else:
-                retShape = shapes[0]
+                print(f"Shapes in WrkDoc {cnt}")
+
+        if not shapes:
+            retShape = Part.Shape()
+        elif len(shapes) == 1:
+            retShape = shapes[0]
+        else:
+            retShape = Part.makeCompound(shapes)
         print(f"CreateBrep Shape {retShape}")
 		#links = []
 		#for cnt, obj in enumerate(wrkDoc.RootObjects):
@@ -242,7 +282,7 @@ def shapeFromSourceFile(srcObj, module=False, modules=False):
         if d_params:
             write_log("SCADfileBase", f"Applying {len(d_params)} VarSet override(s)")
 
-    if srcObj.mode in ["Brep", "AST-Brep"]:
+    if srcObj.mode == "Attempting AST-Brep":
         brepShape = createBrep(srcObj, srcObj.mode, tmpDir, wrkSrc, d_params=d_params)
         print(f"Active Document {FreeCAD.ActiveDocument.Name}")
         return brepShape
@@ -291,8 +331,7 @@ class GeometryType(QtGui.QWidget):
         self.layout.addWidget(self.label)
         self.importType = QtGui.QComboBox()
         self.importType.addItem('Mesh')
-        self.importType.addItem('AST-Brep')
-        self.importType.addItem('Brep')
+        self.importType.addItem('Attempting AST-Brep')
         self.layout.addWidget(self.importType)
         self.setLayout(self.layout)
 
@@ -338,6 +377,7 @@ class OpenSCADeditOptions(QtWidgets.QDialog):
         self.sourceFile = sourceFile  # Only known if editing an existing file
 
         self.setWindowTitle("SCAD File Options")
+        self.setMinimumWidth(460)
         self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
 
@@ -364,9 +404,6 @@ class OpenSCADeditOptions(QtWidgets.QDialog):
         self.timeOut = IntegerValue("TimeOut", 30)
         self.layout.addWidget(self.timeOut)
 
-        self.keepOption = BooleanValue("Keep File", False)
-        self.layout.addWidget(self.keepOption)
-
         # ---------- OK / Cancel ----------
         self.buttonBox = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
@@ -391,7 +428,6 @@ class OpenSCADeditOptions(QtWidgets.QDialog):
             "geometryType": self.geometryType.getVal(),
             "fnMax": self.fnMax.getVal(),
             "timeOut": self.timeOut.getVal(),
-            "keepOption": self.keepOption.getVal(),
             "newFile": self.newFile,
             "sourceFile": self.sourceFile,
         }
@@ -421,14 +457,19 @@ def create_from_dialog(self, sourceFile, newFile=True):
     def onOk(self):
         self.result = 'ok'
         #QtGui.QGuiApplication.restoreOverrideCursor()
-# --- DIAG startup marker ---
-import datetime as _diag_dt
-with open("/tmp/scad_diag.log", "a") as _diag_f:
-    _diag_f.write(f"\n=== SCADObject module loaded {_diag_dt.datetime.now()} ===\n")
-    _diag_f.flush()
+# --- Optional diagnostic logging (off by default) ---
+# Set _SCAD_DEBUG = True to enable; logs go to <tempdir>/scad_diag.log
+# Works on all platforms (Windows uses %TEMP%, Linux/macOS use /tmp).
+import tempfile as _tempfile, os as _os, datetime as _diag_dt
+_SCAD_DEBUG = False
+_DIAG_LOG   = _os.path.join(_tempfile.gettempdir(), "scad_diag.log")
+if _SCAD_DEBUG:
+    with open(_DIAG_LOG, "a") as _diag_f:
+        _diag_f.write(f"\n=== SCADObject module loaded {_diag_dt.datetime.now()} ===\n")
+        _diag_f.flush()
 
 class SCADfileBase:
-    IMPORT_MODE = ["Mesh", "AST-Brep", "Brep"]
+    IMPORT_MODE = ["Mesh", "Attempting AST-Brep"]
 
     def __init__(self, obj, scadName, sourceFile, mode="Mesh", fnmax=16, timeout=30, keep=False):
         self._initializing = True   # suppress onChanged rendering during setup
@@ -458,7 +499,7 @@ class SCADfileBase:
         obj.addProperty("App::PropertyBool","edit","OpenSCAD","Edit SCAD source")
         obj.addProperty("App::PropertyBool","execute","OpenSCAD","Process SCAD source")
         obj.addProperty("App::PropertyEnumeration","mode","OpenSCAD","mode - create Brep or Mesh")
-        obj.addProperty("App::PropertyInteger","fnmax","OpenSCAD","Max Poylgon - If circle or cylinder has more than this number of sides, treat as circle or cyliner")
+        obj.addProperty("App::PropertyInteger","fnmax","OpenSCAD","Facet threshold ($fn): shapes with $fn above this value are treated as true circles/cylinders (BRep); at or below, as N-sided prisms/polygons. Set 0 to always use BRep.")
         obj.fnmax = fnmax
         obj.addProperty("App::PropertyBool","mesh_recombine","OpenSCAD","Mesh Recombine")
         obj.addProperty("App::PropertyBool","keep_work_doc","OpenSCAD","Keep FC Work Document")
@@ -478,13 +519,13 @@ class SCADfileBase:
         if "Restore" in fp.State:
             return
 
-        # DIAG: log every property change so we can see what FC 1.1 is touching
-        import datetime as _dt
-        _oc_line = (f"{_dt.datetime.now().strftime('%H:%M:%S.%f')} "
-                    f"onChanged obj={fp.Label} state={list(fp.State)} prop={prop}\n")
-        with open("/tmp/scad_diag.log", "a") as _f:
-            _f.write(_oc_line)
-            _f.flush()
+        if _SCAD_DEBUG:
+            import datetime as _dt
+            _oc_line = (f"{_dt.datetime.now().strftime('%H:%M:%S.%f')} "
+                        f"onChanged obj={fp.Label} state={list(fp.State)} prop={prop}\n")
+            with open(_DIAG_LOG, "a") as _f:
+                _f.write(_oc_line)
+                _f.flush()
 
         if prop == "Shape":
             return
@@ -510,23 +551,41 @@ class SCADfileBase:
 
 
     def execute(self, fp):
-        '''Called by FreeCAD recompute. Never runs OpenSCAD.'''
-        import traceback as _tb, datetime as _dt
+        '''Called by FreeCAD recompute. Never runs OpenSCAD.
+
+        The shape was already set in executeFunction().  Avoid re-assigning
+        fp.Shape when purgeTouched() has already cleared the Touched flag, but
+        FreeCAD can still call execute() on Restore or other internal triggers.
+        Re-assigning an identical complex Part.Shape triggers a second TNP
+        element-map build → unnecessary lockout.  Guard with _shape_is_current.
+        '''
         _n = getattr(self, '_execute_count', 0) + 1
         self._execute_count = _n
-        with open("/tmp/scad_diag.log", "a") as _f:
-            _f.write(f"{_dt.datetime.now().strftime('%H:%M:%S.%f')} "
-                     f"execute #{_n} {getattr(fp,'Name','?')} "
-                     f"state={list(fp.State)} "
-                     f"cached={getattr(self,'_cached_shape',None) is not None}\n")
-            _f.flush()
+        if _SCAD_DEBUG:
+            import datetime as _dt
+            with open(_DIAG_LOG, "a") as _f:
+                _f.write(f"{_dt.datetime.now().strftime('%H:%M:%S.%f')} "
+                         f"execute #{_n} {getattr(fp,'Name','?')} "
+                         f"state={list(fp.State)} "
+                         f"cached={getattr(self,'_cached_shape',None) is not None} "
+                         f"current={getattr(self,'_shape_is_current',False)}\n")
+                _f.flush()
+
         if "Restore" in fp.State:
-            return
-        # Always set fp.Shape so FC clears the Touched flag.
-        # For Mesh mode _cached_shape is None → empty shape is fine;
-        # the companion Mesh::Feature holds the actual geometry.
+            # Document reload: must re-apply the cached shape.
+            self._shape_is_current = False
+
         cached = getattr(self, '_cached_shape', None)
+
+        if getattr(self, '_shape_is_current', False):
+            # purgeTouched() was called after the last executeFunction(); the
+            # shape is already correct in fp.Shape.  Nothing to do.
+            return
+
+        # First call after a restore, or after a property change that touched
+        # the object without going through executeFunction().  Apply cache.
         fp.Shape = cached if cached is not None else Part.Shape()
+        self._shape_is_current = True
 
     # use name render for new workbench
     # redirect for compatibility with old Alternate
@@ -537,15 +596,16 @@ class SCADfileBase:
 
 
     def executeFunction(self, obj):
-        import traceback as _tb, datetime as _dt
         _fn = getattr(self, '_execfn_count', 0) + 1
         self._execfn_count = _fn
-        _line = (f"{_dt.datetime.now().strftime('%H:%M:%S.%f')} "
-                 f"executeFunction #{_fn} obj={getattr(obj,'Name','?')}\n"
-                 + ''.join(_tb.format_stack(limit=8)))
-        with open("/tmp/scad_diag.log", "a") as _f:
-            _f.write(_line + "---\n")
-            _f.flush()
+        if _SCAD_DEBUG:
+            import traceback as _tb, datetime as _dt
+            _line = (f"{_dt.datetime.now().strftime('%H:%M:%S.%f')} "
+                     f"executeFunction #{_fn} obj={getattr(obj,'Name','?')}\n"
+                     + ''.join(_tb.format_stack(limit=8)))
+            with open(_DIAG_LOG, "a") as _f:
+                _f.write(_line + "---\n")
+                _f.flush()
         from timeit import default_timer as timer
         write_log("SCADfileBase",f"Execute {obj.Name} Mode {obj.mode} keepWork {obj.keep_work_doc}")
         start = timer()
@@ -576,11 +636,10 @@ class SCADfileBase:
             if companion is None:
                 companion       = obj.Document.addObject("Mesh::Feature", obj.Label)
                 obj.companion_mesh = companion.Name
-                # Hide the FeaturePython from the 3D view; companion shows geometry
-                try:
-                    obj.ViewObject.Visibility = False
-                except AttributeError:
-                    pass
+                # Do NOT hide the FeaturePython.  It has an empty Part.Shape so
+                # nothing appears in the 3D view, but it remains visible and
+                # selectable in the Model tree — which is required for Edit and
+                # OpenSCAD Studio commands to find the right object via selection.
             companion.Mesh = result
             try:
                 companion.ViewObject.DisplayMode = "Shaded"
@@ -588,7 +647,7 @@ class SCADfileBase:
                 pass
 
         elif result is not None:
-            # Brep / AST-Brep: standard Part.Shape path.
+            # Attempting AST-Brep: standard Part.Shape path.
             # If the object previously ran in Mesh mode it may have a companion
             # Mesh::Feature.  Remove it so only the FeaturePython is visible.
             companion_name = getattr(obj, 'companion_mesh', '')
@@ -604,6 +663,7 @@ class SCADfileBase:
             self._cached_shape = result
             self._cached_mesh  = None
             obj.Shape = result
+            self._shape_is_current = True   # tell execute() not to re-assign
             try:
                 obj.ViewObject.Visibility = True
                 obj.ViewObject.DisplayMode = u"Shaded"
@@ -614,12 +674,28 @@ class SCADfileBase:
             # OpenSCAD failed — clear everything
             self._cached_shape = None
             self._cached_mesh  = None
+            self._shape_is_current = False
             obj.Shape = Part.Shape()
 
         obj.execute = False
         end = timer()
         print(f"==== Create Shape took {end-start} secs ====")
-        FreeCADGui.Selection.addSelection(obj)
+
+        # purgeTouched() clears the Touched flag set by obj.Shape = result above.
+        # Without this, FreeCAD's automatic post-import recompute calls execute()
+        # → fp.Shape = cached, triggering a second TNP element-map build on an
+        # already-visible shape → second lockout.
+        try:
+            obj.purgeTouched()
+        except Exception:
+            pass  # older FreeCAD without purgeTouched() — safe to skip
+
+        # Do NOT call FreeCADGui.Selection.addSelection(obj) here.
+        # In FreeCAD 1.1+ the TNP system builds a selection element-map for every
+        # Part.Shape when it is selected.  For complex shapes (many filleted faces)
+        # this runs synchronously on the main thread and locks the UI — which is
+        # exactly the "shape appears then spinning cursor" symptom.  The shape is
+        # already visible in the 3-D view; auto-selecting it is cosmetic only.
 
 
     def editFunction(self, new_file=False):
@@ -771,18 +847,23 @@ class SCADfileBase:
         #   _initializing  — only meaningful during __init__
         #   Object         — FreeCAD re-injects this; storing it causes cycles
         _TRANSIENT = {"Object", "_cached_shape", "_cached_mesh", "_last_d_params",
-                      "_executing", "_initializing", "_execute_count", "_execfn_count"}
+                      "_executing", "_initializing", "_execute_count", "_execfn_count",
+                      "_shape_is_current"}
         return {k: v for k, v in self.__dict__.items() if k not in _TRANSIENT}
 
     def __setstate__(self, state):
         self.__dict__.update(state)
         # Ensure transient attributes exist with safe defaults so execute()
         # and onChanged never raise AttributeError on a freshly restored proxy.
-        self._cached_shape  = None
-        self._cached_mesh   = None
-        self._last_d_params = None
-        self._executing     = False
-        self._initializing  = False
+        self._cached_shape     = None
+        self._cached_mesh      = None
+        self._last_d_params    = None
+        self._executing        = False
+        self._initializing     = False
+        # False here so that the first execute() after restore re-applies the
+        # cached shape (which will be re-populated by executeFunction if re-run,
+        # or remain None meaning the shape will be empty until re-rendered).
+        self._shape_is_current = False
 
 class ViewSCADProvider:
     def __init__(self, obj):

@@ -27,7 +27,7 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 
 # Properties to migrate from FeaturePython → Mesh::Feature
 # Choices for the mode enumeration — must match SCADfileBase.IMPORT_MODE
-_MODE_ENUM = ["Mesh", "AST-Brep", "Brep"]
+_MODE_ENUM = ["Mesh", "Attempting AST-Brep"]
 
 _SCAD_PROPS = [
     ("App::PropertyFile",        "sourceFile",    "OpenSCAD", "SCAD source file"),

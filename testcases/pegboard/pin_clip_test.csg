@@ -1,0 +1,45 @@
+// Minimal test: one clip pin (j=0 from pinboard_clips)
+// Expected result: two FreeCAD objects
+//   1. A 15°-rotated cylinder (the peg body)
+//   2. A J-hook intersection (the clip that grabs the back of the pegboard)
+// Import this file with the AST importer and compare with OpenSCAD rendering.
+//
+// The outer multmatrix is the Pitch=90° rotation from the pinboard_clips assembly
+// (so orientation matches the real model — pegs pointing in world-X direction).
+
+multmatrix([[0, 0, 1, 0], [0, 1, 0, 0], [-1, 0, 0, 0], [0, 0, 0, 1]]) {
+    group() {
+        multmatrix([[1, 0, 0, 0], [0, 1, 0, -12.7], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+            group() {
+                multmatrix([[0.965926, -0.258819, 0, 0], [0.258819, 0.965926, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+                    cylinder($fn = 12, $fa = 12, $fs = 2, h = 7.6, r1 = 3.00175, r2 = 3.00175, center = true);
+                }
+                group() {
+                    multmatrix([[0, -1, 0, 0], [1, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+                        intersection() {
+                            multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 5.9035], [0, 0, 0, 1]]) {
+                                cube(size = [6.2035, 14.007, 12.007], center = true);
+                            }
+                            multmatrix([[1, 0, 0, 0], [0, 1, 0, 5.00175], [0, 0, 1, 2.5], [0, 0, 0, 1]]) {
+                                multmatrix([[0, 0, 1, 0], [0, 1, 0, 0], [-1, 0, 0, 0], [0, 0, 0, 1]]) {
+                                    rotate_extrude(angle = 360, start = 180, convexity = 5, $fn = 20, $fa = 12, $fs = 2) {
+                                        multmatrix([[1, 0, 0, 5], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+                                            circle($fn = 20, $fa = 12, $fs = 2, r = 2.85166);
+                                        }
+                                    }
+                                }
+                            }
+                            multmatrix([[1, 0, 0, 0], [0, 1, 0, 3.40175], [0, 0, 1, 2.5], [0, 0, 0, 1]]) {
+                                multmatrix([[1, 0, 0, 0], [0, 0.707107, -0.707107, 0], [0, 0.707107, 0.707107, 0], [0, 0, 0, 1]]) {
+                                    multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 3.6021], [0, 0, 0, 1]]) {
+                                        cube(size = [6.2035, 18.0105, 6.0035], center = true);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

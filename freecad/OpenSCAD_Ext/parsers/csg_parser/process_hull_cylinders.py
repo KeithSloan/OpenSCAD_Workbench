@@ -4,6 +4,7 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_utils import (
     is_collinear,
     convex_hull_2d,
+    make_rounded_polygon_wire,
     #make_tangent_frustum,
     #detect_grid,
 )
@@ -12,13 +13,24 @@ import Part
 
 def hull_cylinders_cones(cylinders):
     """
-    OpenSCAD is really a cone, cylinder if r1 = r2
-    Handle a set of cylinders in a hull.
-    - If all axes aligned and collinear, make a capsule if equal radii.
-    - If different radii, create tangent frustums.
-    - If all equal-radius true cylinders with a 2-D grid of positions, make a
-      rounded-polygon extrusion.
-    - Otherwise fallback.
+    Handle a set of OpenSCAD cylinders/cones in a hull.
+
+    OpenSCAD's cylinder() is a frustum: r1 at base, r2 at top (r1==r2 → true cylinder).
+
+    Dispatch:
+    - Collinear centres → revolved profile (handles mixed r1/r2 via upper-convex-hull
+      in (z, r) space).
+    - Non-collinear, parallel axes:
+        (a) All r1==r2, same radius → rounded-polygon prism (extrude + fillet).
+        (b) All same r1, same r2, r1!=r2, same direction, same base z-level →
+            tapered rounded-polygon solid (loft between two rounded-polygon wires).
+    - Otherwise → fallback to OpenSCAD CLI / STL.
+
+    Note on the 8-cylinder pattern (e.g. pegboard rounded-box hull):
+      OpenSCAD emits N_corners × 2 cylinders (one group per z-extreme) so that both
+      the top AND bottom extents are fully defined.  The duplicate 2-D positions are
+      harmless — convex_hull_2d deduplicates them and z_min/z_max still capture the
+      full span.  This is correct and handled without any special-casing.
     """
     write_log("Hull", "Attempting to hull cylinders/cones.")
 
@@ -160,44 +172,55 @@ def make_colinear_cylinders_cones(primitives, TOL=1e-9):
 
 
 # -----------------------------------------------------------------------------
-# Rounded-polygon extrusion: hull of parallel equal-radius cylinders whose
-# bases/tops form a 2-D polygon (non-collinear) perpendicular to the shared axis.
+# Rounded-polygon grid: hull of parallel cylinders/cones whose centres form a
+# 2-D polygon (non-collinear) perpendicular to the shared axis.
 #
-# Strategy:
-#   1. Project cylinder positions to 2-D (perpendicular to axis_dir).
-#   2. Compute 2-D convex hull of those positions.
-#   3. Offset each hull edge outward by r, find adjacent intersections
-#      → "outer polygon" (straight-sided, no arcs).
-#   4. Extrude the outer polygon along axis_dir.
-#   5. Fillet the prism's vertical edges (parallel to axis_dir) with radius r.
+# Two sub-cases:
 #
-# The fillet arcs are centered on the original hull vertices (= cylinder
-# positions), giving the exact Minkowski-sum geometry without needing Part.Arc.
+# (a) True cylinders (r1 == r2 for all, same radius):
+#   Strategy:
+#     1. Project cylinder positions to 2-D (⊥ axis_dir).
+#     2. Convex hull of those positions (convex_hull_2d deduplicates repeats).
+#     3. Offset each hull edge outward by r → "outer polygon" (straight-sided).
+#     4. Extrude the outer polygon along axis_dir.
+#     5. Fillet vertical edges with radius r.
+#   Fillet arcs are centred on the original hull vertices (= cylinder positions),
+#   giving the exact Minkowski-sum geometry.  This is the analytic equivalent of:
+#     hull() { for ([x,y]=corners) translate([x,y,z]) cylinder(h=…, r=r); }
 #
-# This is the analytic equivalent of the classic OpenSCAD rounded-box pattern:
-#
-#   hull() {
-#       for ([x,y] = corners) translate([x, y, z]) cylinder(h=..., r=r);
-#   }
+# (b) Uniform-taper cones (all same r1, all same r2, r1 != r2):
+#   Requires: all cones same direction (not anti-parallel), all bases at the same
+#   z-level, all tops at the same z-level.
+#   Strategy:
+#     1. Build 2-D convex hull of centre positions (same as above).
+#     2. Construct a rounded-polygon wire at z_base with radius r1 (make_rounded_polygon_wire).
+#     3. Construct a rounded-polygon wire at z_top  with radius r2.
+#     4. Loft between the two wires → tapered rounded-polygon solid.
+#   The resulting shape is the Minkowski sum of the 2-D convex hull with a linearly
+#   interpolated disk (radius goes from r1 at the base to r2 at the top).
 # -----------------------------------------------------------------------------
 
 def hull_parallel_cylinders_grid(cylinders, axis_dir, TOL=1e-6):
     """
-    Build a rounded-polygon extrusion from a set of parallel, equal-radius
-    true cylinders (r1 == r2) whose axes are all aligned with *axis_dir*.
+    Build a rounded-polygon solid from a set of parallel cylinders or cones
+    whose axes are all aligned with *axis_dir*.
 
-    Returns a Part.Shape or None if the conditions are not met.
+    Returns a Part.Shape or None if conditions are not met (caller falls back
+    to OpenSCAD CLI / STL).
     """
-    write_log("Hull", "hull_parallel_cylinders_grid: attempting rounded-polygon extrusion.")
+    write_log("Hull", "hull_parallel_cylinders_grid: attempting rounded-polygon solid.")
 
-    # All must be true cylinders (r1 == r2) with the same radius
-    r = cylinders[0]["r1"]
+    # All primitives must share the same r1 and the same r2 (uniform taper).
+    # Mixed-taper hulls (different cone angles) are not analytically reducible
+    # to a simple loft and fall through to the OpenSCAD fallback.
+    r1 = cylinders[0]["r1"]
+    r2 = cylinders[0]["r2"]
     for c in cylinders:
-        if abs(c["r1"] - c["r2"]) > TOL:
-            write_log("Hull", "hull_parallel_cylinders_grid: cone detected, fallback.")
+        if abs(c["r1"] - r1) > TOL:
+            write_log("Hull", "hull_parallel_cylinders_grid: mixed r1 radii, fallback.")
             return None
-        if abs(c["r1"] - r) > TOL:
-            write_log("Hull", "hull_parallel_cylinders_grid: mixed radii, fallback.")
+        if abs(c["r2"] - r2) > TOL:
+            write_log("Hull", "hull_parallel_cylinders_grid: mixed r2 radii, fallback.")
             return None
 
     # Build a 2-D coordinate frame perpendicular to axis_dir
@@ -212,7 +235,9 @@ def hull_parallel_cylinders_grid(cylinders, axis_dir, TOL=1e-6):
     ux = ux.normalize()
     uy = axis_dir.cross(ux).normalize()
 
-    # Project every cylinder base and top onto (ux, uy) and collect axial extents
+    # Project every cylinder/cone base and top onto (ux, uy) and collect axial extents.
+    # For Z-axis-aligned primitives the base and top project to the same 2-D point —
+    # convex_hull_2d will deduplicate those automatically.
     pts_2d = []
     z_vals = []
     for c in cylinders:
@@ -230,14 +255,108 @@ def hull_parallel_cylinders_grid(cylinders, axis_dir, TOL=1e-6):
         write_log("Hull", "hull_parallel_cylinders_grid: zero axial extent, fallback.")
         return None
 
-    # 2-D convex hull of projected positions
+    # 2-D convex hull (deduplicates repeated projections, e.g. from the common
+    # N_corners × 2_z_levels pattern OpenSCAD emits for rounded-box hulls)
     hull = convex_hull_2d(pts_2d)
     n = len(hull)
-    write_log("Hull", f"hull_parallel_cylinders_grid: 2-D hull has {n} vertices, r={r}, z=[{z_min:.3f},{z_max:.3f}]")
+    write_log("Hull", f"hull_parallel_cylinders_grid: 2-D hull has {n} vertices, "
+              f"r1={r1}, r2={r2}, z=[{z_min:.3f},{z_max:.3f}]")
 
-    if n < 3:
-        write_log("Hull", "hull_parallel_cylinders_grid: degenerate hull, fallback.")
+    if n < 2:
+        write_log("Hull", "hull_parallel_cylinders_grid: degenerate hull (<2 pts), fallback.")
         return None
+
+    if n == 2:
+        # Two unique centres — capsule (stadium) shape.
+        # Only valid for equal-radius cylinders; tapered cones with 2 centres
+        # produce an oblique frustum that is not yet implemented.
+        if abs(r1 - r2) <= TOL:
+            write_log("Hull", "hull_parallel_cylinders_grid: 2 centres — building capsule.")
+            return _build_capsule(hull, r1, z_min, z_max, axis_dir, ux, uy, TOL)
+        else:
+            write_log("Hull", "hull_parallel_cylinders_grid: 2 centres, tapered — fallback.")
+            return None
+
+    # Dispatch: true cylinder (r1==r2) vs uniform-taper cone (r1!=r2)
+    if abs(r1 - r2) <= TOL:
+        return _build_rounded_prism(hull, r1, z_min, z_max, axis_dir, ux, uy, TOL)
+    else:
+        return _build_tapered_rounded_prism(cylinders, hull, r1, r2, axis_dir, ux, uy, TOL)
+
+
+def _build_capsule(hull, r, z_min, z_max, axis_dir, ux, uy, TOL=1e-6):
+    """
+    Capsule (stadium) solid for the 2-unique-centre equal-radius case.
+
+    The 2D outline is two straight edges (parallel, separated by 2r) plus
+    two semicircular arcs at each cylinder centre.  Extruded along axis_dir.
+
+    hull  -- 2-element list of (u, v) in the projection plane
+    r     -- cylinder radius (equal for both)
+    """
+    u1, v1 = hull[0]
+    u2, v2 = hull[1]
+
+    du, dv = u2 - u1, v2 - v1
+    L = math.sqrt(du * du + dv * dv)
+    if L < TOL:
+        write_log("Hull", "_build_capsule: zero segment length, fallback.")
+        return None
+    du /= L; dv /= L                  # unit direction along segment
+
+    nu, nv = dv, -du                  # CCW outward perpendicular
+
+    # 3-D vectors (hull plane + axial)
+    D3 = du * ux + dv * uy            # along segment (unit)
+    N3 = nu * ux + nv * uy            # perpendicular (unit)
+    z_off = axis_dir * z_min          # axial base offset
+
+    C1 = u1 * ux + v1 * uy            # centre 1 in hull plane (no z)
+    C2 = u2 * ux + v2 * uy            # centre 2 in hull plane (no z)
+
+    # Six key points of the capsule at z = z_min:
+    #   top edge endpoints (offset +r in N3)
+    p1_top = C1 + r * N3 + z_off
+    p2_top = C2 + r * N3 + z_off
+    #   bottom edge endpoints (offset −r in N3)
+    p2_bot = C2 - r * N3 + z_off
+    p1_bot = C1 - r * N3 + z_off
+    #   midpoints of the semicircular arcs
+    p2_mid = C2 + r * D3 + z_off     # 90° point of cap at C2
+    p1_mid = C1 - r * D3 + z_off     # 90° point of cap at C1
+
+    try:
+        # Winding: p1_top → p2_top → (arc) → p2_bot → p1_bot → (arc) → p1_top
+        edge_top = Part.makeLine(p1_top, p2_top)
+        arc_C2   = Part.Arc(p2_top, p2_mid, p2_bot).toShape()
+        edge_bot = Part.makeLine(p2_bot, p1_bot)
+        arc_C1   = Part.Arc(p1_bot, p1_mid, p1_top).toShape()
+        wire = Part.Wire([edge_top, arc_C2, edge_bot, arc_C1])
+        face = Part.Face(wire)
+    except Exception as e:
+        write_log("Hull", f"_build_capsule: 2-D profile failed: {e}")
+        return None
+
+    h = z_max - z_min
+    try:
+        solid = face.extrude(axis_dir * h)
+    except Exception as e:
+        write_log("Hull", f"_build_capsule: extrude failed: {e}")
+        return None
+
+    write_log("Hull", "_build_capsule: success.")
+    return solid
+
+
+def _build_rounded_prism(hull, r, z_min, z_max, axis_dir, ux, uy, TOL=1e-6):
+    """
+    Rounded-polygon prism for parallel equal-radius cylinders.
+
+    Builds a straight-sided outer polygon (each edge offset outward by r,
+    corners at adjacent-edge intersections), extrudes it, then fillets the
+    vertical edges with radius r to produce the exact Minkowski-sum shape.
+    """
+    n = len(hull)
 
     # ------------------------------------------------------------------
     # Compute edge unit directions and outward normals (CCW polygon)
@@ -250,7 +369,7 @@ def hull_parallel_cylinders_grid(cylinders, axis_dir, TOL=1e-6):
         du, dv = u1 - u0, v1 - v0
         L = math.sqrt(du * du + dv * dv)
         if L < TOL:
-            write_log("Hull", "hull_parallel_cylinders_grid: degenerate edge, fallback.")
+            write_log("Hull", "_build_rounded_prism: degenerate edge, fallback.")
             return None
         du /= L; dv /= L
         edge_dirs.append((du, dv))
@@ -297,14 +416,14 @@ def hull_parallel_cylinders_grid(cylinders, axis_dir, TOL=1e-6):
         wire  = Part.makePolygon(outer_3d)
         face  = Part.Face(wire)
     except Exception as e:
-        write_log("Hull", f"hull_parallel_cylinders_grid: polygon/face failed: {e}")
+        write_log("Hull", f"_build_rounded_prism: polygon/face failed: {e}")
         return None
 
     extrude_vec = axis_dir * (z_max - z_min)
     try:
         prism = face.extrude(extrude_vec)
     except Exception as e:
-        write_log("Hull", f"hull_parallel_cylinders_grid: extrude failed: {e}")
+        write_log("Hull", f"_build_rounded_prism: extrude failed: {e}")
         return None
 
     # ------------------------------------------------------------------
@@ -320,19 +439,86 @@ def hull_parallel_cylinders_grid(cylinders, axis_dir, TOL=1e-6):
                 if cross.Length < 0.01:
                     vert_edges.append(edge)
 
-    write_log("Hull", f"hull_parallel_cylinders_grid: {len(vert_edges)} vertical edges to fillet with r={r}")
+    write_log("Hull", f"_build_rounded_prism: {len(vert_edges)} vertical edges to fillet with r={r}")
 
     if not vert_edges:
-        write_log("Hull", "hull_parallel_cylinders_grid: no vertical edges found, returning prism.")
+        write_log("Hull", "_build_rounded_prism: no vertical edges found, returning prism.")
         return prism
 
     try:
         shape = prism.makeFillet(r, vert_edges)
     except Exception as e:
-        write_log("Hull", f"hull_parallel_cylinders_grid: makeFillet failed: {e}, returning prism.")
+        write_log("Hull", f"_build_rounded_prism: makeFillet failed: {e}, returning prism.")
         return prism   # still better than tessellation
 
     shape = shape.removeSplitter()
     shape.fix(1e-7, 1e-7, 1e-7)
-    write_log("Hull", "hull_parallel_cylinders_grid: success.")
+    write_log("Hull", "_build_rounded_prism: success.")
     return shape
+
+
+def _build_tapered_rounded_prism(cylinders, hull, r1, r2, axis_dir, ux, uy, TOL=1e-6):
+    """
+    Tapered rounded-polygon solid for parallel uniform-taper cones.
+
+    Lofts between a rounded-polygon wire at the base z-level (radius r1) and
+    one at the top z-level (radius r2).  The result is the Minkowski sum of the
+    2-D convex hull with a linearly interpolated disk, which is exactly the 3-D
+    convex hull of a set of identically tapered cones placed at the hull vertices.
+
+    Constraints (fall through to OpenSCAD fallback if violated):
+    - All cones must be same-direction (anti-parallel mixes r1/r2 ends).
+    - All cone bases must be at the same z-level; all tops at the same z-level.
+      (Mixed z-level cones produce a complex multi-section shape that cannot be
+      reduced to a two-wire loft — use the CLI fallback for those.)
+    """
+    write_log("Hull", "_build_tapered_rounded_prism: attempting tapered loft.")
+
+    # Reject anti-parallel cones: they would have r1/r2 swapped at the z-extremes,
+    # making the effective radius at z_min ambiguous without per-cone bookkeeping.
+    first_dir = cylinders[0]["dir"]
+    for c in cylinders:
+        if c["dir"].isEqual(first_dir.negative(), 1e-9):
+            write_log("Hull", "_build_tapered_rounded_prism: anti-parallel cones, fallback.")
+            return None
+
+    # All bases must be at the same z-level, all tops at the same z-level.
+    base_zs = [c["base"].dot(axis_dir) for c in cylinders]
+    top_zs  = [(c["base"] + axis_dir * c["h"]).dot(axis_dir) for c in cylinders]
+
+    z_base = base_zs[0]
+    z_top  = top_zs[0]
+    for bz, tz in zip(base_zs[1:], top_zs[1:]):
+        if abs(bz - z_base) > TOL or abs(tz - z_top) > TOL:
+            write_log("Hull", "_build_tapered_rounded_prism: cones at mixed z-levels, fallback.")
+            return None
+
+    if z_top - z_base < TOL:
+        write_log("Hull", "_build_tapered_rounded_prism: zero axial extent, fallback.")
+        return None
+
+    write_log("Hull", f"_build_tapered_rounded_prism: r1={r1}@z={z_base:.3f}, r2={r2}@z={z_top:.3f}")
+
+    # Build arc-based rounded-polygon wires at each z-level
+    bottom_wire = make_rounded_polygon_wire(hull, r1, z_base, axis_dir, ux, uy)
+    top_wire    = make_rounded_polygon_wire(hull, r2, z_top,  axis_dir, ux, uy)
+
+    if bottom_wire is None or top_wire is None:
+        write_log("Hull", "_build_tapered_rounded_prism: wire construction failed, fallback.")
+        return None
+
+    try:
+        # solid=True closes the loft; ruled=False gives smooth curved faces
+        loft = Part.makeLoft([bottom_wire, top_wire], True, False)
+    except Exception as e:
+        write_log("Hull", f"_build_tapered_rounded_prism: makeLoft failed: {e}, fallback.")
+        return None
+
+    if loft is None or loft.isNull():
+        write_log("Hull", "_build_tapered_rounded_prism: loft returned null, fallback.")
+        return None
+
+    loft = loft.removeSplitter()
+    loft.fix(1e-7, 1e-7, 1e-7)
+    write_log("Hull", "_build_tapered_rounded_prism: success.")
+    return loft

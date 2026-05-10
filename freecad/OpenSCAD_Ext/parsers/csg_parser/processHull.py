@@ -1,5 +1,12 @@
+import FreeCAD
 from FreeCAD import Vector, Matrix
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+
+
+def _warn(msg):
+    """Write a hull-failure reason to both the log file and the Report View (orange)."""
+    write_log("Hull", msg)
+    FreeCAD.Console.PrintWarning(f"[Hull] {msg}\n")
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_spheres import hull_spheres
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_cylinders import hull_cylinders_cones
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_cubes import hull_cubes
@@ -18,18 +25,47 @@ def try_hull(node):
     matrices = []
 
     if not collect_primitives(node.children, primitives, matrices):
-        write_log("Hull", "not_handled: hull")
+        _warn("collect_primitives failed — hull contains unsupported child node types")
         return None
-
 
     geo = normalize_primitives(primitives, matrices)
-    write_log("Normalized",f"primatives")
-    write_log("Normlised",f"Geo {geo}")
     if geo is None:
-        write_log("Hull", "not_handled: normalize failed")
+        _warn("normalize_primitives failed — check cylinder/sphere parameter names")
         return None
 
-    return try_hull_dispatch(geo)
+    write_log("Hull", f"Dispatching hull with {len(geo)} primitive(s)")
+    result = try_hull_dispatch(geo)
+    if result is None:
+        _warn(f"try_hull_dispatch returned None — hull type not handled natively "
+              f"(types={{{', '.join(p['type'] for p in geo)}}})")
+    return result
+
+
+def _subtree_has_complex_op(node):
+    """
+    Return True if the node's subtree contains any operation that could
+    dramatically reshape a primitive — i.e. anything beyond transparent
+    wrappers (group, color, multmatrix) and leaf primitives.
+
+    Used by the intersection handler to decide whether the clipping
+    geometry is 'simple enough' to safely ignore (e.g. a linear_extrude
+    sector polygon) versus 'complex' (e.g. difference/hull chains that
+    reduce the primitive to a tiny fraction of its original extent).
+
+    Complex ops that trigger fallback:
+      difference, union, hull, minkowski, linear_extrude, rotate_extrude,
+      offset, projection — anything constructive or extrusive.
+    """
+    _COMPLEX = {
+        "difference", "union", "hull", "minkowski",
+        "linear_extrude", "rotate_extrude", "offset", "projection",
+    }
+    if node.node_type in _COMPLEX:
+        return True
+    for child in (node.children or []):
+        if _subtree_has_complex_op(child):
+            return True
+    return False
 
 
 def collect_primitives(children, primitives_out, matrices_out, parent_matrix=None):
@@ -51,17 +87,42 @@ def collect_primitives(children, primitives_out, matrices_out, parent_matrix=Non
             if not collect_primitives(child.children, primitives_out, matrices_out, matrix):
                 return False
 
+        elif child.node_type == "hull":
+            # Nested hull: flatten by recursing into its children.
+            # The convex hull of a set of convex shapes equals the convex hull
+            # of all their constituent primitives, so we can collect them directly
+            # without losing correctness.  Any transform already accumulated in
+            # `matrix` is passed through unchanged (hull itself applies no transform).
+            write_log("Hull", "Nested hull detected — flattening into parent hull")
+            if not collect_primitives(child.children, primitives_out, matrices_out, matrix):
+                return False
+
         elif child.node_type in ("sphere", "cube", "cylinder"):
             primitives_out.append(child)
             print(f"type {child.node_type} params {child.params} csg_params {child.csg_params}")
             matrices_out.append(matrix if matrix else Matrix())
 
         elif child.node_type == "intersection":
-            # An intersection clips a primitive to a sub-region.  For convex-hull
-            # purposes the clipped shape contributes the same boundary points as
-            # the full primitive (removing interior material never expands the hull).
-            # Find the first child branch that yields a known primitive; ignore the
-            # rest (the clipping geometry, e.g. linear_extrude of a sector polygon).
+            # An intersection clips a primitive to a sub-region.
+            #
+            # Safe approximation: hull(A ∩ B, ...) ⊆ hull(A, ...) because
+            # clipping can only shrink the hull boundary, never expand it.
+            # We use the first child primitive as a stand-in for the
+            # intersection — BUT only when the clipping children are simple
+            # (transparent wrappers + primitives).  When a clipping child
+            # contains constructive ops (difference, hull, linear_extrude …)
+            # the intersection result may be far smaller than the primitive
+            # (e.g. a 30 mm cube clipped down to a tiny peg shape), making
+            # the approximation produce grossly wrong hull geometry.
+            # In that case, fail here so the caller falls back to OpenSCAD CLI.
+            clipping_children = (child.children or [])[1:]  # everything after the first
+            if any(_subtree_has_complex_op(s) for s in clipping_children):
+                write_log("Hull",
+                          "intersection: clipping child has complex ops "
+                          "(difference/hull/extrude/…) — cannot safely approximate "
+                          "as primitive; falling back to OpenSCAD CLI.")
+                return False
+
             found = False
             for sub in child.children:
                 sub_prims, sub_mats = [], []
@@ -76,7 +137,7 @@ def collect_primitives(children, primitives_out, matrices_out, parent_matrix=Non
                 return False
 
         else:
-            write_log("Hull", f"unsupported node inside hull: {child.node_type}")
+            _warn(f"unsupported node inside hull: '{child.node_type}' — cannot build native BRep hull")
             return False
 
     return True
@@ -104,10 +165,31 @@ def normalize_primitives(primitives, matrices):
         elif node.node_type == "cube":
             if "size" not in node.params:
                 return None
+            size_val = node.params["size"]
+            if isinstance(size_val, (list, tuple)):
+                sx, sy, sz = float(size_val[0]), float(size_val[1]), float(size_val[2])
+            else:
+                sx = sy = sz = float(size_val)
+            center_flag = bool(node.params.get("center", False))
+            # Compute the Part.makeBox corner in world space.
+            # pos = mat.multVec(0,0,0) = world position of the cube's local origin.
+            # center=false: local origin IS the corner.
+            # center=true:  local origin IS the geometric centre; corner is at
+            #               (-sx/2, -sy/2, -sz/2) in local space.
+            if center_flag:
+                if mat:
+                    corner = mat.multVec(Vector(-sx / 2, -sy / 2, -sz / 2))
+                else:
+                    corner = Vector(-sx / 2, -sy / 2, -sz / 2)
+            else:
+                corner = pos  # pos already equals mat.multVec(0,0,0) = corner
+            # Geometric centre (used by hull_cubes bbox logic)
+            geom_center = corner + Vector(sx / 2, sy / 2, sz / 2)
             out.append({
                 "type": "cube",
-                "center": pos,
-                "size": node.params["size"],
+                "center": geom_center,  # geometric centre, always correct
+                "corner": corner,       # Part.makeBox origin, always correct
+                "size": [sx, sy, sz],
             })
 
         elif node.node_type == "cylinder":
@@ -187,14 +269,19 @@ def try_hull_dispatch(normalized_hull):
     write_log("Hull", f"Dispatch types={types}")
     write_log("Normalized ",normalized_hull)
 
-    write_log("Number of types ", len(types))
-
     if len(types) == 1:
         if types == {'sphere'}:
             return hull_spheres(normalized_hull)
-
         elif types == {'cylinder'}:
             return hull_cylinders_cones(normalized_hull)
-
-    write_log("Number of Types", len(types))
-    return None
+        elif types == {'cube'}:
+            return hull_cubes(normalized_hull)
+        else:
+            _warn(f"hull of all-{types} not handled natively")
+            return None
+    elif types == {'cube', 'cylinder'}:
+        from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_mixed import hull_cylinders_and_cube
+        return hull_cylinders_and_cube(normalized_hull)
+    else:
+        _warn(f"mixed-type hull not handled natively: {types}")
+        return None

@@ -1,0 +1,36 @@
+// fn_threshold_test.csg
+//
+// Tests the $fn threshold logic in processAST.py.
+// With default fnmax=16:
+//   $fn=8  → 8-sided prism  (8 <= 16)
+//   $fn=32 → true BRep cylinder (32 > 16)
+//   $fn=0  → true BRep cylinder (unspecified)
+//
+// Each shape is placed side-by-side along X.
+
+group() {
+  // 1. Cylinder $fn=8 → should be 8-sided prism
+  multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+    cylinder($fn = 8, $fa = 12, $fs = 2, h = 10, r1 = 5, r2 = 5, center = false);
+  }
+  // 2. Cylinder $fn=16 → should be 16-sided prism (at threshold boundary)
+  multmatrix([[1, 0, 0, 15], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+    cylinder($fn = 16, $fa = 12, $fs = 2, h = 10, r1 = 5, r2 = 5, center = false);
+  }
+  // 3. Cylinder $fn=17 → should be true BRep (just above threshold)
+  multmatrix([[1, 0, 0, 30], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+    cylinder($fn = 17, $fa = 12, $fs = 2, h = 10, r1 = 5, r2 = 5, center = false);
+  }
+  // 4. Cylinder $fn=32 → should be true BRep
+  multmatrix([[1, 0, 0, 45], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+    cylinder($fn = 32, $fa = 12, $fs = 2, h = 10, r1 = 5, r2 = 5, center = false);
+  }
+  // 5. Cone $fn=8 → should be 8-sided frustum
+  multmatrix([[1, 0, 0, 60], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+    cylinder($fn = 8, $fa = 12, $fs = 2, h = 10, r1 = 5, r2 = 2, center = false);
+  }
+  // 6. Cone $fn=32 → should be true BRep cone
+  multmatrix([[1, 0, 0, 75], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+    cylinder($fn = 32, $fa = 12, $fs = 2, h = 10, r1 = 5, r2 = 2, center = false);
+  }
+}

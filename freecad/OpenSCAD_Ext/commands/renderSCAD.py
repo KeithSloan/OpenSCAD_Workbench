@@ -7,7 +7,7 @@ from freecad.OpenSCAD_Ext.objects.SCADObject import SCADfileBase
 
 def _replace_mesh_feature_with_brep(mesh_obj):
     """
-    Replace a finalized Mesh::Feature with a BRep/AST-Brep FeaturePython.
+    Replace a finalized Mesh::Feature with an Attempting AST-Brep FeaturePython.
 
     Called when the user has changed mode away from "Mesh" on a finalized
     Mesh::Feature.  We can't render a BRep shape onto a Mesh::Feature (it has
@@ -18,14 +18,14 @@ def _replace_mesh_feature_with_brep(mesh_obj):
       4. Restore the linked_varset link on the new object.
 
     create_scad_object() calls doc.recompute() internally, which triggers
-    executeFunction() → the BRep/AST-Brep render happens automatically.
+    executeFunction() → the Attempting AST-Brep render happens automatically.
     """
     from freecad.OpenSCAD_Ext.core.create_scad_object import create_scad_object
 
     label       = mesh_obj.Label
     doc         = mesh_obj.Document
     source      = getattr(mesh_obj, 'sourceFile', '')
-    mode        = getattr(mesh_obj, 'mode', 'AST-Brep')
+    mode        = getattr(mesh_obj, 'mode', 'Attempting AST-Brep')
     fnmax       = int(getattr(mesh_obj, 'fnmax', 16))
     timeout     = int(getattr(mesh_obj, 'timeout', 30))
     keep        = bool(getattr(mesh_obj, 'keep_work_doc', False))
@@ -169,7 +169,7 @@ class RenderSCADFileObject_Class:
 
             # Finalized Mesh::Feature — no Proxy, dispatch by current mode.
             # If mode is still "Mesh": update the mesh in-place.
-            # If mode was switched to BRep/AST-Brep: replace the Mesh::Feature
+            # If mode was switched to Attempting AST-Brep: replace the Mesh::Feature
             # with a new Part::FeaturePython so it can hold a Part.Shape.
             if _is_scad_mesh_feature(obj):
                 mode = getattr(obj, 'mode', 'Mesh')

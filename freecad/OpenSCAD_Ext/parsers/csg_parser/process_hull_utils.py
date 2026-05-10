@@ -149,10 +149,24 @@ def make_tangent_frustum(c1, r1, c2, r2):
 # -----------------------------
 
 def is_collinear(points, tol=1e-9):
+    """
+    Return True iff all points are collinear (or fewer than 2 unique points).
+
+    Uses the first pair of distinct points to define the direction vector so
+    that duplicate-point inputs (v = 0) do not cause false positives.
+    """
     if len(points) < 2:
         return True
-    v = points[1] - points[0]
-    for p in points[2:]:
+    # Find first point distinct from points[0] to form a non-zero direction.
+    v = None
+    for p in points[1:]:
+        candidate = p - points[0]
+        if candidate.Length > tol:
+            v = candidate
+            break
+    if v is None:
+        return True  # all points are the same — trivially collinear
+    for p in points:
         if (p - points[0]).cross(v).Length > tol:
             return False
     return True

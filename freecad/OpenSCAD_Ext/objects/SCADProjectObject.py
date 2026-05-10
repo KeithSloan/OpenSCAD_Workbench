@@ -21,8 +21,8 @@ class SCADProjectObject(SCADfileBase):
 
 class SCADProjectObject(SCADfileBase):
     def __init__(self, obj, name, sourceFile, meta=None, module=None, args=None):
-        # Project always defaults mode to AST-Brep
-        super().__init__(obj, scadName=name, sourceFile=sourceFile, mode="AST-Brep")
+        # Project always defaults mode to Attempting AST-Brep
+        super().__init__(obj, scadName=name, sourceFile=sourceFile, mode="Attempting AST-Brep")
 
         self.Object = obj
         self.meta = meta

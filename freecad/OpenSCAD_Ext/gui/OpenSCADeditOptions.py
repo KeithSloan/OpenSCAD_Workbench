@@ -73,7 +73,7 @@ class GeometryType(QtWidgets.QWidget):
         layout = QtWidgets.QHBoxLayout()
         self.label = QtWidgets.QLabel("Geometry Type")
         self.importType = QtWidgets.QComboBox()
-        self.importType.addItems(["Mesh", "AST-Brep", "Brep"])
+        self.importType.addItems(["Mesh", "Attempting AST-Brep"])
         layout.addWidget(self.label)
         layout.addWidget(self.importType)
         self.setLayout(layout)
@@ -161,9 +161,6 @@ class OpenSCADeditOptions(QtWidgets.QDialog):
         self.timeOut = IntegerValue("TimeOut", 30)
         self.layout.addWidget(self.timeOut)
 
-        self.keepOption = BooleanValue("Keep File", False)
-        self.layout.addWidget(self.keepOption)
-
         self.closeAfter = BooleanValue("Close Library Browser after creation", True)
         self.closeAfter.setVisible(self._showCloseOption)
         self.layout.addWidget(self.closeAfter)
@@ -189,7 +186,7 @@ class OpenSCADeditOptions(QtWidgets.QDialog):
             "geometryType": self.geometryType.getVal(),
             "fnMax": self.fnMax.getVal(),
             "timeOut": self.timeOut.getVal(),
-            "keepOption": self.keepOption.getVal(),
+            "keepOption": False,
             "closeAfter": self.closeAfter.getVal(),
             "newFile": self.newFile,
             "sourceFile": self.sourceFile,

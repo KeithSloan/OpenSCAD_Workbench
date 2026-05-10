@@ -29,7 +29,7 @@
 __title__="FreeCAD OpenSCAD Workbench - AST / CSG importer"
 __author__ = "Keith Sloan <keith@sloan-home.co.uk>"
 __url__ = ["http://www.sloan-home.co.uk/ImportCSG"]
-__version__ = "0.8.3"
+__version__ = "0.8.4"
 
 import FreeCADGui
 from pathlib import Path
@@ -152,14 +152,14 @@ def open(filename):
             #pathName = os.getcwd() #https://github.com/openscad/openscad/issues/128
         else:
             pathName = os.path.dirname(os.path.normpath(filename))
-        processCSG(doc, tmpfile)
+        processCSG(doc, tmpfile, allow_wholefile_fallback=True)
         try:
             os.unlink(tmpfile)
         except OSError:
             pass
     else:
         pathName = os.path.dirname(os.path.normpath(filename))
-        processCSG(doc, filename)
+        processCSG(doc, filename, allow_wholefile_fallback=True)
     return doc
 
 def insert(filename,docname):
@@ -185,14 +185,14 @@ def insert(filename,docname):
         else:
             pathName = os.path.dirname(os.path.normpath(filename))
         write_log("Info",f"Processing : {filename}")
-        processCSG(doc, tmpfile)
+        processCSG(doc, tmpfile, allow_wholefile_fallback=True)
         try:
             os.unlink(tmpfile)
         except OSError:
             pass
     else:
         pathName = os.path.dirname(os.path.normpath(filename))
-        processCSG(doc, filename)
+        processCSG(doc, filename, allow_wholefile_fallback=True)
 
 '''
 def add_shapes_to_document(doc, name, shapes):
@@ -248,7 +248,7 @@ def add_shape_to_doc(doc, shape, placement, name="Part"):
     obj.Placement = placement
     return obj
 
-def processCSG(docSrc, filename, fnmax_param = None):
+def processCSG(docSrc, filename, fnmax_param=None, allow_wholefile_fallback=False):
     global doc
     global fnmax
     if fnmax_param is None:
@@ -263,17 +263,52 @@ def processCSG(docSrc, filename, fnmax_param = None):
     FreeCAD.Console.PrintMessage(f'ImportAstCSG Version {__version__}\n')
     write_log("Info","Using OpenSCAD AST / CSG Importer")
     write_log("Info",f"Doc {doc.Name} useMaxFn {fnmax}")
+
+    # Reset per-run flags and propagate the fnmax threshold so that
+    # processAST shape builders respect the $fn polygon/cylinder setting.
+    from freecad.OpenSCAD_Ext.parsers.csg_parser import processAST as _pAST_mod
+    _pAST_mod._fallback_used = False
+    _pAST_mod._nodes_failed  = False
+    _pAST_mod._fnmax = fnmax   # pass facet threshold to shape builders
+
     raw_ast_nodes = parse_csg_file_to_AST_nodes(filename)
     ast_nodes = raw_ast_nodes
     #ast_nodes = normalize_ast(raw_ast_nodes)
     shapePlaceList = process_AST(ast_nodes, mode="multiple")
     write_log("AST",f"shapePlaceList {shapePlaceList}")
-    for sp in shapePlaceList:
-        write_log("Import",f"{sp}")
-        obj=add_shape_to_doc(doc,sp[1],sp[2],sp[0])
-        # obj.recompute() per-object is redundant — setting obj.Shape already
-        # marks it for display; calling it here just adds an extra tessellation
-        # pass per shape before doc.recompute() runs at the end.
+
+    # Whole-file fallback: if any per-node OpenSCAD fallback was used, discard
+    # ALL BRep shapes and import the complete file as a single OpenSCAD mesh.
+    # Reason: mesh-derived shapes from per-node fallbacks do NOT throw exceptions
+    # when used in OCC boolean operations — they silently produce wrong geometry.
+    # So we can't trust any BRep result once a fallback mesh has been mixed in.
+    if allow_wholefile_fallback and _pAST_mod._fallback_used:
+        FreeCAD.Console.PrintWarning(
+            f"ImportAstCSG: per-node OpenSCAD fallback was used — importing "
+            f"whole file as OpenSCAD mesh (partial BRep objects discarded)\n")
+        try:
+            from freecad.OpenSCAD_Ext.core.OpenSCADUtils import callopenscad
+            import Mesh as MeshModule
+            stl_path = callopenscad(filename, outputext='stl', timeout=120)
+            if stl_path and os.path.isfile(stl_path):
+                mesh_feat = doc.addObject("Mesh::Feature", f"{name}_openscad")
+                mesh_feat.Label = f"{name}"
+                mesh_feat.Mesh = MeshModule.Mesh(stl_path)
+                write_log("Import", f"Whole-file fallback mesh added: {mesh_feat.Label}")
+                try:
+                    os.unlink(stl_path)
+                except OSError:
+                    pass
+            else:
+                FreeCAD.Console.PrintError(
+                    "ImportAstCSG: whole-file fallback failed — OpenSCAD produced no STL\n")
+        except Exception as e:
+            FreeCAD.Console.PrintError(f"ImportAstCSG: whole-file fallback error: {e}\n")
+    else:
+        # All geometry recovered — add BRep shapes to the document
+        for sp in shapePlaceList:
+            write_log("Import",f"{sp}")
+            obj = add_shape_to_doc(doc, sp[1], sp[2], sp[0])
 
     #add_shapes_to_document(doc, name, shapes)
     FreeCAD.Console.PrintMessage(f'ImportAstCSG Version {__version__}\n')
