@@ -32,6 +32,7 @@ import os
 import tempfile
 from PySide import QtCore
 from freecad.OpenSCAD_Ext.core.checkObjectShapes import *
+from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 
 try:
     from PySide import QtGui
@@ -192,9 +193,9 @@ def callopenscad(
                 raise OpenSCADError('%s %s\n' % (stdoutd.strip(),stderrd.strip()))
                 #raise Exception,'stdout %s\n stderr%s' %(stdoutd,stderrd)
             if stderrd.strip():
-                FreeCAD.Console.PrintWarning(stderrd+u'\n')
+                write_log("OpenSCAD", stderrd.strip())
             if stdoutd.strip():
-                FreeCAD.Console.PrintMessage(stdoutd+u'\n')
+                write_log("OpenSCAD", stdoutd.strip())
                 return stdoutd
 
         except TimeoutExpired:
@@ -253,9 +254,9 @@ def callopenscad_with_overrides(
                     '%s %s\n' % (stdoutd.strip(), stderrd.strip())
                 )
             if stderrd.strip():
-                FreeCAD.Console.PrintWarning(stderrd + u'\n')
+                write_log("OpenSCAD", stderrd.strip())
             if stdoutd.strip():
-                FreeCAD.Console.PrintMessage(stdoutd + u'\n')
+                write_log("OpenSCAD", stdoutd.strip())
                 return stdoutd
         except TimeoutExpired:
             msg = "Call to OpenSCAD timed out after " + str(timeout) + " secs"
@@ -336,9 +337,9 @@ def callopenscad_check_syntax(inputfilename, timeout=None):
             )
 
         if stderrd.strip():
-            FreeCAD.Console.PrintWarning(stderrd + u'\n')
+            write_log("OpenSCAD", stderrd.strip())
         if stdoutd.strip():
-            FreeCAD.Console.PrintMessage(stdoutd + u'\n')
+            write_log("OpenSCAD", stdoutd.strip())
 
         return True
 

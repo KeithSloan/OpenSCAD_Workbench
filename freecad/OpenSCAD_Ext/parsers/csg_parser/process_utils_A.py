@@ -111,9 +111,11 @@ def call_openscad_scad_string(
         )
         write_log("OpenSCAD", f"Generated: {out_path}")
 
-        print("stdout:", result.stdout)
-        print("stderr:", result.stderr)
-        print("returncode:", result.returncode)
+        if result.stdout:
+            write_log("OpenSCAD", f"stdout: {result.stdout.strip()}")
+        if result.stderr:
+            write_log("OpenSCAD", f"stderr: {result.stderr.strip()}")
+        write_log("OpenSCAD", f"returncode: {result.returncode}")
         return out_path
 
     except subprocess.TimeoutExpired:

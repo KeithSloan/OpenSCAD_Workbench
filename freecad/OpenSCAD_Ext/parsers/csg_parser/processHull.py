@@ -4,9 +4,17 @@ from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 
 
 def _warn(msg):
-    """Write a hull-failure reason to both the log file and the Report View (orange)."""
+    """Write a hull-fallback reason to the log file only.
+
+    Hull fallbacks are normal — the parent boolean node detects _fallback_used
+    and escalates to a whole-node OpenSCAD call, which importASTCSG then
+    surfaces to the user as a single summary PrintWarning.  Per-hull orange
+    panel noise is redundant and confusing.
+
+    Use FreeCAD.Console.PrintError directly (not _warn) if geometry is
+    genuinely lost with no recovery path.
+    """
     write_log("Hull", msg)
-    FreeCAD.Console.PrintWarning(f"[Hull] {msg}\n")
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_spheres import hull_spheres
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_cylinders import hull_cylinders_cones
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_cubes import hull_cubes
@@ -21,11 +29,19 @@ def try_hull(node):
     if node.node_type != "hull":
         return None
 
+    # Log the immediate children so failures are traceable.
+    child_summary = ", ".join(
+        f"{c.node_type}({len(c.children or [])})" for c in (node.children or [])
+    )
+    write_log("Hull", f"Hull children ({len(node.children or [])}): [{child_summary}]")
+
     primitives = []
     matrices = []
+    fail_reason = []          # collect_primitives populates this on failure
 
-    if not collect_primitives(node.children, primitives, matrices):
-        _warn("collect_primitives failed — hull contains unsupported child node types")
+    if not collect_primitives(node.children, primitives, matrices, _fail=fail_reason):
+        reason = fail_reason[0] if fail_reason else "unknown reason"
+        _warn(f"Hull → native BRep not possible: {reason}")
         return None
 
     geo = normalize_primitives(primitives, matrices)
@@ -39,6 +55,12 @@ def try_hull(node):
         _warn(f"try_hull_dispatch returned None — hull type not handled natively "
               f"(types={{{', '.join(p['type'] for p in geo)}}})")
     return result
+
+
+_COMPLEX_OPS = {
+    "difference", "union", "hull", "minkowski",
+    "linear_extrude", "rotate_extrude", "offset", "projection",
+}
 
 
 def _subtree_has_complex_op(node):
@@ -56,11 +78,7 @@ def _subtree_has_complex_op(node):
       difference, union, hull, minkowski, linear_extrude, rotate_extrude,
       offset, projection — anything constructive or extrusive.
     """
-    _COMPLEX = {
-        "difference", "union", "hull", "minkowski",
-        "linear_extrude", "rotate_extrude", "offset", "projection",
-    }
-    if node.node_type in _COMPLEX:
+    if node.node_type in _COMPLEX_OPS:
         return True
     for child in (node.children or []):
         if _subtree_has_complex_op(child):
@@ -68,7 +86,30 @@ def _subtree_has_complex_op(node):
     return False
 
 
-def collect_primitives(children, primitives_out, matrices_out, parent_matrix=None):
+def _first_complex_op(node):
+    """Like _subtree_has_complex_op but returns the first complex op node_type
+    found in the subtree, or None if the subtree is clean."""
+    if node.node_type in _COMPLEX_OPS:
+        return node.node_type
+    for child in (node.children or []):
+        found = _first_complex_op(child)
+        if found:
+            return found
+    return None
+
+
+def collect_primitives(children, primitives_out, matrices_out, parent_matrix=None, _fail=None):
+    """Walk hull children accumulating (primitive_node, matrix) pairs.
+
+    Returns True on success.  On failure, appends a human-readable reason
+    string to *_fail* (if provided) before returning False — so callers can
+    report exactly why the native hull path was abandoned.
+    """
+    def _fail_with(reason):
+        if _fail is not None and not _fail:   # only record the first (root) reason
+            _fail.append(reason)
+        return False
+
     for child in children:
         matrix = (
             parent_matrix.multiply(child.matrix)
@@ -78,13 +119,13 @@ def collect_primitives(children, primitives_out, matrices_out, parent_matrix=Non
 
         if child.node_type in ("group", "color"):
             # color is a transparent wrapper — recurse into children, ignoring colour
-            if not collect_primitives(child.children, primitives_out, matrices_out, matrix):
+            if not collect_primitives(child.children, primitives_out, matrices_out, matrix, _fail):
                 return False
 
         elif child.node_type == "multmatrix":
             if not hasattr(child, "matrix"):
-                return False
-            if not collect_primitives(child.children, primitives_out, matrices_out, matrix):
+                return _fail_with(f"multmatrix child has no matrix attribute")
+            if not collect_primitives(child.children, primitives_out, matrices_out, matrix, _fail):
                 return False
 
         elif child.node_type == "hull":
@@ -93,13 +134,17 @@ def collect_primitives(children, primitives_out, matrices_out, parent_matrix=Non
             # of all their constituent primitives, so we can collect them directly
             # without losing correctness.  Any transform already accumulated in
             # `matrix` is passed through unchanged (hull itself applies no transform).
-            write_log("Hull", "Nested hull detected — flattening into parent hull")
-            if not collect_primitives(child.children, primitives_out, matrices_out, matrix):
+            nested_summary = ", ".join(
+                f"{c.node_type}({len(c.children or [])})" for c in (child.children or [])
+            )
+            write_log("Hull",
+                f"Nested hull detected — flattening {len(child.children or [])} "
+                f"children into parent: [{nested_summary}]")
+            if not collect_primitives(child.children, primitives_out, matrices_out, matrix, _fail):
                 return False
 
         elif child.node_type in ("sphere", "cube", "cylinder"):
             primitives_out.append(child)
-            print(f"type {child.node_type} params {child.params} csg_params {child.csg_params}")
             matrices_out.append(matrix if matrix else Matrix())
 
         elif child.node_type == "intersection":
@@ -116,29 +161,35 @@ def collect_primitives(children, primitives_out, matrices_out, parent_matrix=Non
             # the approximation produce grossly wrong hull geometry.
             # In that case, fail here so the caller falls back to OpenSCAD CLI.
             clipping_children = (child.children or [])[1:]  # everything after the first
-            if any(_subtree_has_complex_op(s) for s in clipping_children):
-                write_log("Hull",
-                          "intersection: clipping child has complex ops "
-                          "(difference/hull/extrude/…) — cannot safely approximate "
-                          "as primitive; falling back to OpenSCAD CLI.")
-                return False
+            for clip in clipping_children:
+                op = _first_complex_op(clip)
+                if op:
+                    reason = (
+                        f"intersection clipping child ('{clip.node_type}') contains "
+                        f"complex op '{op}' — hull(A∩B) approximation unsafe; "
+                        f"the clipped shape may be far smaller than the raw primitive"
+                    )
+                    write_log("Hull", reason)
+                    return _fail_with(reason)
 
             found = False
             for sub in child.children:
                 sub_prims, sub_mats = [], []
-                if collect_primitives([sub], sub_prims, sub_mats, matrix):
+                if collect_primitives([sub], sub_prims, sub_mats, matrix, _fail):
                     if sub_prims:
                         primitives_out.extend(sub_prims)
                         matrices_out.extend(sub_mats)
                         found = True
                         break
             if not found:
-                write_log("Hull", "intersection: no primitive child found, fallback.")
-                return False
+                reason = "intersection: no usable primitive child found"
+                write_log("Hull", reason)
+                return _fail_with(reason)
 
         else:
-            _warn(f"unsupported node inside hull: '{child.node_type}' — cannot build native BRep hull")
-            return False
+            reason = f"unsupported node inside hull: '{child.node_type}'"
+            _warn(f"{reason} — cannot build native BRep hull")
+            return _fail_with(reason)
 
     return True
 

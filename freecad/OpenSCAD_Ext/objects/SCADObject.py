@@ -61,20 +61,20 @@ def createMesh(srcObj, wrkSrc, d_params=None):
     TNP element-map pipeline, which would otherwise spin indefinitely when
     indexing the thousands of triangles in a complex mesh on every selection.
     """
-    print(f"Create Mesh {srcObj.Name} {wrkSrc}")
+    write_log("Mesh", f"Create Mesh {srcObj.Name} {wrkSrc}")
     if d_params:
-        print(f"  -D overrides: {d_params}")
+        write_log("Mesh", f"  -D overrides: {d_params}")
     try:
         tmpDir = tempfile.gettempdir()
         tmpOutFile = os.path.join(tmpDir, srcObj.Name+'.stl')
-        print(f"Call OpenSCAD - Input file {wrkSrc} Output file {tmpOutFile}")
+        write_log("Mesh", f"Call OpenSCAD input={wrkSrc} output={tmpOutFile}")
         tmpFileName = callopenscad(wrkSrc,
             outputfilename=tmpOutFile, outputext='stl',
             timeout=int(srcObj.timeout), d_params=d_params)
         if os.path.exists(tmpFileName):
             mesh = Mesh.Mesh()
             mesh.read(tmpFileName)
-            print(f"Mesh facets={mesh.CountFacets} solid={mesh.isSolid()}")
+            write_log("Mesh", f"facets={mesh.CountFacets} solid={mesh.isSolid()}")
             try:
                 os.unlink(tmpFileName)
             except OSError:
@@ -82,15 +82,11 @@ def createMesh(srcObj, wrkSrc, d_params=None):
             return mesh          # ← Mesh.Mesh, not Part.Shape
 
     except OpenSCADError as e:
-        #print(f"OpenSCADError {e} {e.value}")
         before = e.value.split('in file',1)[0]
-        print(f"Before : {before}")
         after = e.value.rsplit(',',1)[1]
-        print(f"After  : {after}")
         after = after.splitlines()[0]
-        print(f"After  : {after}")
         srcObj.message = before + after
-        print(f"End After - Error Message {srcObj.message}")
+        write_log("Mesh", f"OpenSCADError: {srcObj.message}")
         #FreeCAD.closeDocument("work")
         # work document is for Brep Only
         srcObj.execute = False
@@ -98,18 +94,17 @@ def createMesh(srcObj, wrkSrc, d_params=None):
 # Source may be processed
 def createBrep(srcObj, mode, tmpDir, wrkSrc, d_params=None):
 
-    print(f"Create Brep {srcObj.scadName} {srcObj.fnmax}")
+    write_log("Brep", f"Create Brep {srcObj.scadName} fnmax={srcObj.fnmax}")
     if d_params:
-        print(f"  -D overrides: {d_params}")
+        write_log("Brep", f"-D overrides: {d_params}")
     actDoc = FreeCAD.activeDocument().Name
-    print(f"Active Document {actDoc}")
+    write_log("Brep", f"active doc={actDoc}")
     wrkDoc = FreeCAD.newDocument("work")
     try:
-        print(f"Source : {srcObj.scadName}")
-        print(f"SourceFile : {srcObj.sourceFile}")
+        write_log("Brep", f"source={srcObj.scadName} file={srcObj.sourceFile}")
         csgOutFile = os.path.join(tmpDir, srcObj.Name+'.csg')
         # brepOutFile = os.path.join(tmpDir, srcObj.Name+'.brep')
-        print("Call OpenSCAD to create csg file from scad")
+        write_log("Brep", "Call OpenSCAD to create csg file from scad")
         tmpFileName=callopenscad(wrkSrc, \
 			outputfilename=csgOutFile, outputext='csg', \
 			timeout=int(srcObj.timeout), d_params=d_params)
@@ -118,7 +113,7 @@ def createBrep(srcObj, mode, tmpDir, wrkSrc, d_params=None):
         if hasattr(srcObj, "sourceFile"):
         	source = srcObj.sourceFile    
         pathName = os.path.dirname(os.path.normpath(srcObj.scadName))
-        print(f"Process CSG File Mode {mode} name path {pathName} file {tmpFileName}")
+        write_log("Brep", f"Process CSG file mode={mode} pathName={pathName} file={tmpFileName}")
 		
         #processCSG(wrkDoc, pathName, tmpFileName, srcObj.fnmax)
         ast_had_fallback = False
@@ -135,10 +130,10 @@ def createBrep(srcObj, mode, tmpDir, wrkSrc, d_params=None):
                 # wrong OCC boolean results (no exception thrown, just wrong
                 # geometry). Discard the partial wrkDoc shapes and re-run the
                 # complete CSG file through OpenSCAD for correct whole-file geometry.
-                FreeCAD.Console.PrintWarning(
-                    "Attempting AST-Brep: per-node OpenSCAD fallback was used — "
-                    "re-running whole CSG file through OpenSCAD for correct geometry. "
-                    "Result displayed as Mesh. Mode changed to Mesh.\n")
+                write_log("AST-Brep",
+                    "per-node OpenSCAD fallback was used — "
+                    "re-running whole CSG file through OpenSCAD for correct geometry; "
+                    "result displayed as Mesh, mode changed to Mesh")
                 srcObj.message = ("Attempting AST-Brep fell back to Mesh — "
                                   "not all shapes could be built as native BRep")
                 srcObj.mode = "Mesh"
@@ -157,8 +152,8 @@ def createBrep(srcObj, mode, tmpDir, wrkSrc, d_params=None):
                         os.unlink(stl_file)
                     except OSError:
                         pass
-                    print(f"Attempting AST-Brep whole-file fallback → Mesh "
-                          f"({retMesh.CountFacets} facets)")
+                    write_log("AST-Brep",
+                              f"whole-file fallback → Mesh ({retMesh.CountFacets} facets)")
                     return retMesh
                 FreeCAD.Console.PrintError(
                     "Attempting AST-Brep: whole-file fallback — "
@@ -195,7 +190,7 @@ def createBrep(srcObj, mode, tmpDir, wrkSrc, d_params=None):
         if srcObj.keep_work_doc is not True:
             FreeCAD.closeDocument("work")
 		# restore active document 
-        print(f"Set Active Document {actDoc}")
+        write_log("Brep", f"restoring active doc={actDoc}")
         FreeCAD.setActiveDocument(actDoc)
 		#FreeCADGui.SendMsgToActiveView("ViewFit")
 		#print(f"Ret Obj {retObj.Name} Shape {retObj.Shape}")
@@ -267,11 +262,11 @@ def _get_linked_varset(fp):
 
 
 def shapeFromSourceFile(srcObj, module=False, modules=False):
-    print(f"shapeFrom Source File : keepWork {srcObj.keep_work_doc}")
+    write_log("Shape", f"shapeFromSourceFile keepWork={srcObj.keep_work_doc}")
     tmpDir = tempfile.gettempdir()
     wrkSrc = srcObj.sourceFile
 
-    print(f"source name {srcObj.Label} mode {srcObj.mode}")
+    write_log("Shape", f"source={srcObj.Label} mode={srcObj.mode}")
 
     # Build -D overrides from linked VarSet (if any)
     d_params = None
@@ -284,7 +279,7 @@ def shapeFromSourceFile(srcObj, module=False, modules=False):
 
     if srcObj.mode == "Attempting AST-Brep":
         brepShape = createBrep(srcObj, srcObj.mode, tmpDir, wrkSrc, d_params=d_params)
-        print(f"Active Document {FreeCAD.ActiveDocument.Name}")
+        write_log("Brep", f"active doc after brep={FreeCAD.ActiveDocument.Name}")
         return brepShape
 
     elif srcObj.mode == "Mesh":
@@ -679,7 +674,7 @@ class SCADfileBase:
 
         obj.execute = False
         end = timer()
-        print(f"==== Create Shape took {end-start} secs ====")
+        write_log("Brep", f"Create Shape took {end-start:.3f}s")
 
         # purgeTouched() clears the Touched flag set by obj.Shape = result above.
         # Without this, FreeCAD's automatic post-import recompute calls execute()
@@ -897,7 +892,7 @@ class ViewSCADProvider:
 
     def onChanged(self, vp, prop):
         """Here we can do something when a single property got changed"""
-        print(f"View Provider OnChanged : prop {prop}")
+        write_log("ViewProvider", f"onChanged prop={prop}")
 
 
     def getIcon(self):

@@ -175,7 +175,7 @@ height.  No special-casing needed.
 
 ## Importer versioning
 - **ImportAstCSG** (`importers/importASTCSG.py`) is the active AST-based importer.
-  - Current version: `0.8.4`  (set via `__version__` at top of file)
+  - Current version: `0.8.5`  (set via `__version__` at top of file)
   - **Only bump `__version__` when the user confirms testing is complete and the
     change is ready to push to the main repo.** Do not bump during development
     iterations. Bug fix → patch (0.8.x → 0.8.x+1), significant new feature → minor
@@ -187,6 +187,19 @@ height.  No special-casing needed.
   - Reports itself as `ImportAltCSG Version 0.6a` in the Report View.
 - **newImportCSG** (`importers/newImportCSG.py`) is a transitional importer — to be removed
   once ImportAstCSG is complete.
+
+## Report View / panel output policy
+All normal and fallback operations are silent in the FreeCAD Report View.
+Only genuine geometry loss (a node that failed even after OpenSCAD fallback)
+produces a `PrintError` panel message.
+
+- `write_log(level, msg)` — log file only, never touches the panel.
+- `FreeCAD.Console.PrintError(msg)` — used explicitly at `_nodes_failed` sites.
+- Module-level `print()` calls in importer files have been removed (they fire on
+  import and FreeCAD redirects stdout to the Report View).
+- OpenSCAD subprocess stdout/stderr on success is routed to `write_log` in
+  `OpenSCADUtils.py`; errors (non-zero returncode) still raise `OpenSCADError`.
+- Debug calls like `dump_ast_node()` must not be left in live code paths.
 
 ## CSG parameter parsing (`parse_csg_to_AST.py`)
 Named parameters (e.g. `center = false`, `center = true`) are parsed via

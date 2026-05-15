@@ -52,7 +52,6 @@ from freecad.OpenSCAD_Ext.core.create_scad_object_interactive import create_scad
 
 params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
 printverbose = params.GetBool('printverbose',False)
-print(f'Verbose = {printverbose}')
 
 
 def open(filename):
@@ -61,7 +60,7 @@ def open(filename):
 	pathText = os.path.splitext(os.path.basename(filename))
 	objectName  = pathText[0]
 	filePath = pathText[1]
-	FreeCAD.Console.PrintMessage('Creating SCAD File Object from : '+filename+'\n')
+	write_log("FileSCAD", f"open: {filename}")
 	doc=FreeCAD.newDocument(objectName)
 	insert(filename,objectName)
 

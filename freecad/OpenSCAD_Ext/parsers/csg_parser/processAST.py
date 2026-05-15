@@ -662,8 +662,6 @@ def process_AST_node(node):
 
 
         elif node_type == "multmatrix":
-            dump_ast_node(node)
-
             m = params.get("matrix")
             if not isinstance(m, App.Matrix):
                 raise TypeError(f"multmatrix param is not Matrix: {type(m)}")
@@ -853,32 +851,41 @@ def process_AST_node(node):
         shapes = []
 
         for child in node.children:
+            _fallback_before = _fallback_used   # snapshot before processing child
             lst = _as_list(process_AST_node(child))
+            child_type = getattr(child, 'node_type', '?')
 
-            # If the child produced nothing, escalate to running OpenSCAD on
-            # the ENTIRE boolean node rather than trying to combine a mesh
-            # fallback with BRep shapes — OCC booleans on mixed mesh+BRep
-            # shapes are unreliable.  Returning a single coherent mesh for the
-            # whole operation is safer than a hybrid result.
-            #
-            # TODO: when a proper mesh→BRep conversion or mesh boolean path is
-            # available, we could fall back per-child and combine here instead.
-            if not lst:
-                child_type = getattr(child, 'node_type', '?')
+            # Check for mesh fallback FIRST, regardless of whether lst is empty.
+            # When a child node (e.g. hull) cannot be built as native BRep and
+            # falls back to OpenSCAD CLI, it sets _fallback_used=True AND returns
+            # a mesh-derived shape in lst.  OCC booleans on mesh-derived shapes
+            # do NOT raise exceptions — they silently return wrong geometry.
+            # We must intercept here before the mesh shape reaches the OCC boolean.
+            if _fallback_used and not _fallback_before:
                 write_log("Boolean",
-                    f"{node_type}: child '{child_type}' returned nothing "
+                    f"{node_type}: child '{child_type}' used mesh fallback "
                     f"— escalating to whole-node OpenSCAD fallback to avoid "
                     f"mixing mesh and BRep in boolean")
                 result = fallback_to_OpenSCAD(
                     node, operation_type="Boolean", tolerance=1.0, timeout=60)
                 if result is None:
-                    write_log("Boolean",
-                        f"{node_type}: whole-node fallback also failed "
-                        f"— geometry will be missing, flagging for whole-file fallback")
+                    msg = (f"[AST-BRep] {node_type}: whole-node OpenSCAD fallback "
+                           f"failed — geometry for this node will be missing")
+                    write_log("Boolean", msg)
+                    FreeCAD.Console.PrintError(msg + "\n")
                     _nodes_failed = True
                     return []
                 # Wrap in tuple — process_AST_node must return (shape, placement)
                 return (result, App.Placement())
+
+            if not lst:
+                # Child produced no geometry and no mesh fallback was triggered —
+                # this is a valid no-op in OpenSCAD semantics (subtracting or
+                # unioning nothing leaves the result unchanged).  Skip it.
+                write_log("Boolean",
+                    f"{node_type}: child '{child_type}' is empty geometry "
+                    f"— skipping (no-op)")
+                continue
 
             for shape, pl in lst:
                 if shape is None:
@@ -968,10 +975,11 @@ def process_AST_node(node):
                     node, operation_type="Boolean", tolerance=1.0, timeout=60)
                 if fallback is not None:
                     return (fallback, App.Placement())
+                msg = (f"[AST-BRep] {node_type}: whole-node OpenSCAD fallback "
+                       f"failed — geometry for this node will be missing")
+                write_log("Boolean", msg)
+                FreeCAD.Console.PrintError(msg + "\n")
                 _nodes_failed = True
-                write_log("Boolean",
-                    f"{node_type}: whole-node fallback also failed "
-                    f"— flagging for whole-file fallback")
                 return []
 
         return (result, App.Placement())
@@ -1194,9 +1202,10 @@ def process_AST(nodes, mode="multiple"):
                     if fallback is not None:
                         child_processed = [(fallback, App.Placement())]
                     else:
-                        write_log("AST",
-                            f"OpenSCAD fallback also failed for '{child_name}' "
-                            f"— flagging for whole-file fallback")
+                        msg = (f"[AST-BRep] OpenSCAD fallback also failed for "
+                               f"'{child_name}' — geometry for this node will be missing")
+                        write_log("AST", msg)
+                        FreeCAD.Console.PrintError(msg + "\n")
                         _nodes_failed = True
                         continue
                 if not isinstance(child_processed, list):

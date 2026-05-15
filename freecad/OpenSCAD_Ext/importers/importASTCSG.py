@@ -29,7 +29,7 @@
 __title__="FreeCAD OpenSCAD Workbench - AST / CSG importer"
 __author__ = "Keith Sloan <keith@sloan-home.co.uk>"
 __url__ = ["http://www.sloan-home.co.uk/ImportCSG"]
-__version__ = "0.8.4"
+__version__ = "0.8.5"
 
 import FreeCADGui
 from pathlib import Path
@@ -59,7 +59,6 @@ DisplayName = "OpenSCAD Ext – CSG / AST Importer"
 
 params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
 printverbose = params.GetBool('printverbose',False)
-print(f'Verbose = {printverbose}')
 #print(params.GetContents())
 printverbose = True
 
@@ -260,7 +259,7 @@ def processCSG(docSrc, filename, fnmax_param=None, allow_wholefile_fallback=Fals
     doc = docSrc
 
     name = Path(filename).stem
-    FreeCAD.Console.PrintMessage(f'ImportAstCSG Version {__version__}\n')
+    write_log("Info", f"ImportAstCSG Version {__version__}")
     write_log("Info","Using OpenSCAD AST / CSG Importer")
     write_log("Info",f"Doc {doc.Name} useMaxFn {fnmax}")
 
@@ -283,9 +282,9 @@ def processCSG(docSrc, filename, fnmax_param=None, allow_wholefile_fallback=Fals
     # when used in OCC boolean operations — they silently produce wrong geometry.
     # So we can't trust any BRep result once a fallback mesh has been mixed in.
     if allow_wholefile_fallback and _pAST_mod._fallback_used:
-        FreeCAD.Console.PrintWarning(
-            f"ImportAstCSG: per-node OpenSCAD fallback was used — importing "
-            f"whole file as OpenSCAD mesh (partial BRep objects discarded)\n")
+        write_log("ImportAstCSG",
+            "per-node OpenSCAD fallback was used — importing "
+            "whole file as OpenSCAD mesh (partial BRep objects discarded)")
         try:
             from freecad.OpenSCAD_Ext.core.OpenSCADUtils import callopenscad
             import Mesh as MeshModule
@@ -311,8 +310,7 @@ def processCSG(docSrc, filename, fnmax_param=None, allow_wholefile_fallback=Fals
             obj = add_shape_to_doc(doc, sp[1], sp[2], sp[0])
 
     #add_shapes_to_document(doc, name, shapes)
-    FreeCAD.Console.PrintMessage(f'ImportAstCSG Version {__version__}\n')
-    FreeCAD.Console.PrintMessage('End processing CSG file\n')
+    write_log("Info", f"ImportAstCSG Version {__version__} — processing complete")
     doc.recompute()
     # ViewFit deferred — calling it synchronously here hangs in FreeCAD 1.1.x
     # because the shape tessellation hasn't completed yet.

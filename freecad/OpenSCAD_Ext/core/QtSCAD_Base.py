@@ -42,7 +42,6 @@ from PySide import QtGui, QtCore
 
 params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
 printverbose = params.GetBool('printverbose',False)
-print(f'Verbose = {printverbose}')
 
 class ShapeType(QtGui.QWidget):
 	def __init__(self):

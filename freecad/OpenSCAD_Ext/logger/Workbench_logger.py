@@ -13,17 +13,17 @@ def _timestamp():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def write_log(level, msg):
-    """Write message to log file."""
+    """Write message to the log file only.
+
+    Nothing goes to the FreeCAD Report View panel here.  Callers that want a
+    visible panel message for genuine failures should call
+    FreeCAD.Console.PrintError() / PrintWarning() explicitly alongside
+    write_log(), so the distinction between normal fallback activity (silent)
+    and real geometry loss (visible) is clear at the call site.
+    """
     with _lock:
         with open(LOG_FILE, "a", encoding="utf-8") as f:
             f.write(f"{_timestamp()} [{level}] {msg}\n")
-
-    # Also send to FreeCAD Report View
-    #if FreeCAD.GuiUp:
-        if level in ("ERROR", "FC-ERR"):
-            FreeCAD.Console.PrintError(f"[{level}] {msg}\n")
-        else:
-            FreeCAD.Console.PrintMessage(f"[{level}] {msg}\n")
 
 # --- Redirect Python print ---
 #class PrintLogger:

@@ -46,16 +46,13 @@ from freecad.OpenSCAD_Ext.importers.importAltCSG import processCSG
 
 params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
 printverbose = params.GetBool('printverbose',False)
-print(f'Verbose = {printverbose}')
 
 
 def open(filename, currentdoc=None):
     "called when freecad opens a file."
-    FreeCAD.Console.PrintMessage('Creating Object from : '+filename+'\n')
     pathText = os.path.splitext(os.path.basename(filename))
     objectName  = pathText[0]
     filePath = pathText[1]
-    print(f"Create Object {objectName} path {filename}")
     #doc = FreeCAD.ActiveDocument
     if currentdoc is None:
         doc=FreeCAD.newDocument(objectName)    

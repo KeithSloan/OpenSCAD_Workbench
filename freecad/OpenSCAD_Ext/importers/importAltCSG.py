@@ -61,7 +61,6 @@ DisplayName = "OpenSCAD Ext – CSG Importer"
 
 params = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/OpenSCAD")
 printverbose = params.GetBool('printverbose',False)
-print(f'Verbose = {printverbose}')
 #print(params.GetContents())
 printverbose = True
 
