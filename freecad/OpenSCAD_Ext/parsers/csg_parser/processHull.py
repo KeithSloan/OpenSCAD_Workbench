@@ -51,10 +51,95 @@ def try_hull(node):
 
     write_log("Hull", f"Dispatching hull with {len(geo)} primitive(s)")
     result = try_hull_dispatch(geo)
-    if result is None:
-        _warn(f"try_hull_dispatch returned None — hull type not handled natively "
-              f"(types={{{', '.join(p['type'] for p in geo)}}})")
-    return result
+    if result is not None:
+        return result
+
+    _warn(f"AST dispatch failed — trying shape-based handlers"
+          f" (types={{{', '.join(p['type'] for p in geo)}}})")
+
+    # ── Shape-based fallback ──────────────────────────────────────────
+    try:
+        from freecad.OpenSCAD_Ext.parsers.csg_parser.processAST import (
+            process_AST_node
+        )
+        from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_mixed_curve import (
+            hull_sphere_polyhedron
+        )
+        from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_brep import (
+            hull_brep_shapes
+        )
+
+        shapes = []
+        for c in (node.children or []):
+            r = process_AST_node(c)
+            if r is None:
+                continue
+            if isinstance(r, list):
+                for item in r:
+                    if isinstance(item, tuple) and len(item) >= 2:
+                        s, pl = item[0], item[1]
+                    else:
+                        s, pl = item, None
+                    if s is not None:
+                        s = s.Shape if hasattr(s, 'Shape') else s
+                        if pl is not None and hasattr(pl, 'Matrix'):
+                            s = s.copy()
+                            s.transformShape(pl.Matrix)
+                        if hasattr(s, 'BoundBox'):
+                            shapes.append(s)
+            elif isinstance(r, tuple):
+                s, pl = r[0], (r[1] if len(r) >= 2 else None)
+                if s is not None:
+                    s = s.Shape if hasattr(s, 'Shape') else s
+                    if pl is not None and hasattr(pl, 'Matrix'):
+                        s = s.copy()
+                        s.transformShape(pl.Matrix)
+                    if hasattr(s, 'BoundBox'):
+                        shapes.append(s)
+            elif hasattr(r, 'Shape'):
+                shapes.append(r.Shape)
+            elif hasattr(r, 'BoundBox'):
+                shapes.append(r)
+
+        write_log("Hull", f"  shapes created: {len(shapes)}")
+
+        if len(shapes) >= 2:
+            # ── Analytical mixed: sphere + polyhedron ─────────────────
+            import Part as _Part
+            spheres, polys = [], []
+            for s in shapes:
+                try:
+                    if any(isinstance(f.Surface, _Part.Sphere) for f in s.Faces):
+                        spheres.append(s)
+                    else:
+                        polys.append(s)
+                except Exception:
+                    polys.append(s)
+
+            for sp in spheres:
+                for po in polys:
+                    try:
+                        result = hull_sphere_polyhedron(sp, po)
+                        if result is not None:
+                            write_log("Hull", "  sphere+poly analytical OK")
+                            return result
+                    except Exception as ex:
+                        write_log("Hull", f"  sphere+poly err: {ex}")
+
+            # ── General BRep ──────────────────────────────────────────
+            try:
+                result = hull_brep_shapes(shapes)
+                write_log("Hull", "  general BRep OK")
+                return result
+            except Exception as ex:
+                write_log("Hull", f"  general BRep err: {ex}")
+
+    except Exception as ex:
+        write_log("Hull", f"Shape-based fallback error: {ex}")
+        import traceback
+        write_log("Hull", traceback.format_exc())
+
+    return None
 
 
 _COMPLEX_OPS = {

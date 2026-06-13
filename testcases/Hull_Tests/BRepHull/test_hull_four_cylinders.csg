@@ -1,0 +1,21 @@
+hull() {
+	group() {
+		group() {
+			multmatrix([[1, 0, 0, -15], [0, 1, 0, -10], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+				cylinder($fn = 32, $fa = 12, $fs = 2, h = 10, r1 = 4, r2 = 4, center = true);
+			}
+			multmatrix([[1, 0, 0, -15], [0, 1, 0, 10], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+				cylinder($fn = 32, $fa = 12, $fs = 2, h = 10, r1 = 4, r2 = 4, center = true);
+			}
+		}
+		group() {
+			multmatrix([[1, 0, 0, 15], [0, 1, 0, -10], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+				cylinder($fn = 32, $fa = 12, $fs = 2, h = 10, r1 = 4, r2 = 4, center = true);
+			}
+			multmatrix([[1, 0, 0, 15], [0, 1, 0, 10], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+				cylinder($fn = 32, $fa = 12, $fs = 2, h = 10, r1 = 4, r2 = 4, center = true);
+			}
+		}
+	}
+}
+

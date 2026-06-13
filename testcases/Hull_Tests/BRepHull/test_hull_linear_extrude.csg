@@ -1,0 +1,11 @@
+hull() {
+	linear_extrude(height = 3, center = false, convexity = 1, scale = [1, 1], $fn = 32, $fa = 12, $fs = 2) {
+		offset(r = 1.5, $fn = 32, $fa = 12, $fs = 2) {
+			square(size = [20, 12], center = true);
+		}
+	}
+	multmatrix([[1, 0, 0, 10], [0, 1, 0, 8], [0, 0, 1, 6], [0, 0, 0, 1]]) {
+		cylinder($fn = 32, $fa = 12, $fs = 2, h = 4, r1 = 5, r2 = 5, center = false);
+	}
+}
+

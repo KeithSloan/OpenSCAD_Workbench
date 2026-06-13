@@ -1,0 +1,29 @@
+group() {
+	group() {
+		hull() {
+			multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+				cylinder($fn = 32, $fa = 12, $fs = 2, h = 1, r1 = 6, r2 = 6, center = true);
+			}
+			multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 8], [0, 0, 0, 1]]) {
+				cube(size = [8, 8, 1], center = true);
+			}
+		}
+		hull() {
+			multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 8], [0, 0, 0, 1]]) {
+				cube(size = [8, 8, 1], center = true);
+			}
+			multmatrix([[1, 0, 0, 5], [0, 1, 0, 0], [0, 0, 1, 16], [0, 0, 0, 1]]) {
+				cylinder($fn = 32, $fa = 12, $fs = 2, h = 1, r1 = 7, r2 = 7, center = true);
+			}
+		}
+		hull() {
+			multmatrix([[1, 0, 0, 5], [0, 1, 0, 0], [0, 0, 1, 16], [0, 0, 0, 1]]) {
+				cylinder($fn = 32, $fa = 12, $fs = 2, h = 1, r1 = 7, r2 = 7, center = true);
+			}
+			multmatrix([[1, 0, 0, 5], [0, 1, 0, 0], [0, 0, 1, 24], [0, 0, 0, 1]]) {
+				cylinder($fn = 32, $fa = 12, $fs = 2, h = 1, r1 = 3, r2 = 3, center = true);
+			}
+		}
+	}
+}
+

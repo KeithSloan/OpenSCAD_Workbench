@@ -1,0 +1,208 @@
+# =============================================================================
+# RunBRepHullCSGTests.FCMacro
+#
+# Imports all CSG hull test cases and validates that native BRep hull
+# succeeds without OpenSCAD fallback.
+#
+# Usage:
+#   1. Open FreeCAD.
+#   2. Run this macro (Macro → Macros → RunBRepHullCSGTests).
+#   3. Results printed to Report View and written to ~/brep_hull_test_results.log
+#
+# Requires: OpenSCAD workbench installed, scipy available in FreeCAD's Python.
+# =============================================================================
+
+import FreeCAD
+import os
+import sys
+import time
+import traceback
+from pathlib import Path
+
+# ── Test configuration ────────────────────────────────────────────────────────
+# Directory containing the .csg test files
+TESTS_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "testcases", "Hull_Tests", "BRepHull"
+)
+
+# Fallback: if running from a different location, try relative to this file
+if not os.path.isdir(TESTS_DIR):
+    # Try relative to the workbench root
+    import freecad.OpenSCAD_Ext
+    WB_DIR = os.path.dirname(os.path.dirname(os.path.dirname(
+        freecad.OpenSCAD_Ext.__file__
+    )))
+    TESTS_DIR = os.path.join(WB_DIR, "testcases", "Hull_Tests", "BRepHull")
+
+LOG_FILE = os.path.expanduser("~/brep_hull_test_results.log")
+CLOSE_DOCS = False  # Set True to auto-close test documents
+
+# ── Discover CSG files ────────────────────────────────────────────────────────
+csg_files = sorted(Path(TESTS_DIR).glob("*.csg"))
+if not csg_files:
+    raise RuntimeError(f"No .csg files found in {TESTS_DIR}")
+
+# =============================================================================
+def run_tests():
+    results = []  # list of (name, "PASS"|"FAIL"|"ERROR", detail)
+
+    # Import the CSG processor
+    from freecad.OpenSCAD_Ext.importers.importASTCSG import processCSG
+    from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
+
+    write_log("Info", f"BRep Hull Test Suite — {len(csg_files)} CSG file(s)")
+
+    for csg_path in csg_files:
+        name = csg_path.stem
+        test_start = time.time()
+
+        # Check for fallback BEFORE the import
+        import freecad.OpenSCAD_Ext.parsers.csg_parser.processAST as _past
+        _past._fallback_used = False
+        _past._nodes_failed = False
+
+        try:
+            # Create a fresh document
+            doc_name = f"HullTest_{name}"
+            doc = FreeCAD.newDocument(doc_name)
+
+            # Import the CSG file
+            processCSG(doc, str(csg_path), allow_wholefile_fallback=False)
+
+            doc.recompute()
+
+            # ── Validation ─────────────────────────────────────────────────────
+            errors = []
+
+            # 1. Check no OpenSCAD fallback was used
+            fallback_used = getattr(_past, '_fallback_used', False)
+            nodes_failed = getattr(_past, '_nodes_failed', False)
+
+            if fallback_used or nodes_failed:
+                errors.append(
+                    f"OpenSCAD fallback triggered "
+                    f"(fallback={fallback_used}, nodes_failed={nodes_failed})"
+                )
+
+            # 2. Find hull objects and validate them
+            hull_objects = [
+                o for o in doc.Objects
+                if o.Name.startswith("Hull_") or 'hull' in o.Name.lower()
+            ]
+            if not hull_objects:
+                # Some CSGs produce union/group results rather than Hull_ named objects
+                # Find all solid objects instead
+                hull_objects = [
+                    o for o in doc.Objects
+                    if hasattr(o, 'Shape') and o.Shape is not None
+                    and hasattr(o.Shape, 'Solids') and len(o.Shape.Solids) > 0
+                ]
+
+            if not hull_objects:
+                errors.append("No solid objects found in result")
+            else:
+                for obj in hull_objects:
+                    shape = obj.Shape
+
+                    # Valid?
+                    try:
+                        if not shape.isValid():
+                            errors.append(f"{obj.Name}: isValid=False")
+                    except Exception as e:
+                        errors.append(f"{obj.Name}: isValid error: {e}")
+
+                    # Closed?
+                    try:
+                        if not shape.isClosed():
+                            errors.append(f"{obj.Name}: isClosed=False (not watertight)")
+                    except Exception as e:
+                        errors.append(f"{obj.Name}: isClosed error: {e}")
+
+                    # Positive volume
+                    if shape.Volume <= 0:
+                        errors.append(
+                            f"{obj.Name}: volume={shape.Volume:.3f} (non-positive)"
+                        )
+
+            elapsed = time.time() - test_start
+
+            if errors:
+                detail = "; ".join(errors)
+                results.append((name, "FAIL", f"{detail} [{elapsed:.1f}s]"))
+                FreeCAD.Console.PrintError(
+                    f"  ✘ {name}: FAIL — {detail}\n"
+                )
+            else:
+                results.append((name, "PASS", f"{elapsed:.1f}s"))
+                FreeCAD.Console.PrintMessage(
+                    f"  ✓ {name}: PASS ({elapsed:.1f}s)\n"
+                )
+
+        except Exception as ex:
+            elapsed = time.time() - test_start
+            tb = traceback.format_exc()
+            results.append((name, "ERROR", f"{ex} [{elapsed:.1f}s]"))
+            FreeCAD.Console.PrintError(
+                f"  ✘ {name}: ERROR — {ex}\n"
+            )
+            # Write traceback to log for diagnosis
+            FreeCAD.Console.PrintWarning(tb + "\n")
+
+        # Close doc if configured
+        if CLOSE_DOCS:
+            try:
+                FreeCAD.closeDocument(doc_name)
+            except Exception:
+                pass
+
+    # ── Summary ────────────────────────────────────────────────────────────────
+    passed  = sum(1 for _, s, _ in results if s == "PASS")
+    failed  = sum(1 for _, s, _ in results if s == "FAIL")
+    errored = sum(1 for _, s, _ in results if s == "ERROR")
+    total   = len(results)
+
+    summary_lines = [
+        f"\n{'='*60}",
+        f"  BRep Hull Test Results",
+        f"{'='*60}",
+        f"  PASSED  {passed}",
+        f"  FAILED  {failed}",
+        f"  ERROR   {errored}",
+        f"  ─────────────",
+        f"  TOTAL   {total}",
+        f"{'='*60}",
+    ]
+
+    for line in summary_lines:
+        FreeCAD.Console.PrintMessage(line + "\n")
+
+    # Write log file
+    with open(LOG_FILE, "w") as f:
+        f.write(f"BRep Hull Test Run — {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"Tests directory: {TESTS_DIR}\n\n")
+        for name, status, detail in results:
+            tag = "✓" if status == "PASS" else "✘"
+            f.write(f"{tag} {name}: {status}")
+            if detail:
+                f.write(f" — {detail}")
+            f.write("\n")
+        f.write("\n")
+        for line in summary_lines:
+            f.write(line + "\n")
+
+    FreeCAD.Console.PrintMessage(f"\n  Log written → {LOG_FILE}\n")
+
+    return passed, failed, errored, total
+
+# =============================================================================
+# Main
+# =============================================================================
+FreeCAD.Console.PrintMessage(
+    f"\n{'='*60}\n"
+    f"  BRep Hull CSG Import Test Suite\n"
+    f"  {len(csg_files)} test(s) in {TESTS_DIR}\n"
+    f"{'='*60}\n"
+)
+
+run_tests()

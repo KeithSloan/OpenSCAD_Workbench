@@ -1,0 +1,7 @@
+hull() {
+	cube(size = [12, 12, 8], center = true);
+	multmatrix([[1, 0, 0, 18], [0, 1, 0, 4], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+		sphere($fn = 32, $fa = 12, $fs = 2, r = 6);
+	}
+}
+
