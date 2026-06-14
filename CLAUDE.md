@@ -102,22 +102,67 @@ When mode is switched from Mesh → Attempting AST-Brep on a finalized Mesh::Fea
 fresh Part::FeaturePython.
 
 ## Hull handling
-`processHull.py` → `try_hull()` dispatches to type-specific handlers.
+`processHull.py` → `try_hull()` collects children via `_descend()` and dispatches
+to the analytical primitive path first, then a shape-based BRep path.
 
-### collect_primitives
-Walks hull children accumulating transform matrices. Transparent wrappers
-handled: `group`, `color`, `multmatrix`.
-- **`intersection`** is treated as transparent *only when the clipping children
-  are simple* (transparent wrappers + leaf primitives — no `difference`, `hull`,
-  `linear_extrude`, etc.).  The first child that yields a known primitive is used;
-  simple clipping geometry (e.g. `linear_extrude` of a sector polygon) is ignored.
-  Rationale: hull(A ∩ B, …) ⊆ hull(A, …) so the unclipped primitive is an
-  over-approximation that is always geometrically safe.
-  **Exception**: if any clipping child contains constructive ops (`difference`,
-  `hull`, `linear_extrude`, …), the intersection result may be far smaller than
-  the first primitive (e.g. a 30 mm cube clipped to a tiny peg).  In that case
-  `collect_primitives` returns `False` → the whole hull falls back to OpenSCAD CLI.
-  Implemented via `_subtree_has_complex_op()` in `processHull.py`.
+### `_descend()` — child collection
+Walks hull children accumulating transform matrices into two buckets:
+`primitives` (simple AST nodes) and `shapes` (evaluated BRep for complex ops).
+- **Transparent wrappers** `group`, `color`, `multmatrix` → recurse.
+- **`hull` and `union`** → **flattened**: `hull(A ∪ B, …) ≡ hull(A, B, …)`, so a
+  union contributes its members directly, exactly like a nested hull. This keeps
+  the analytical primitive path available and avoids a lone `union` collapsing to
+  a single fused shape (which would lose the primitive path and fall back).
+- **`sphere`/`cube`/`cylinder`** → collected as primitives.
+- **`intersection`** → approximated by its first primitive child, since
+  `hull(A ∩ B, …) ⊆ hull(A, …)`. If no primitive child exists, the intersection
+  is evaluated to a shape.
+- **Any other op** (`difference`, `minkowski`, `linear_extrude`, `offset`, …) →
+  fully evaluated via `process_AST_node()` and added to `shapes`.
+
+> Historical note: the strict `collect_primitives()` collector (which returned
+> `False` → OpenSCAD CLI fallback on any non-primitive, and carried the
+> `_subtree_has_complex_op()` intersection guard) has been **removed**. The live
+> path is `_descend()`, whose intersection handling takes the first primitive
+> without that guard.
+
+### Dispatch paths (`try_hull`)
+1. **Path 1 — analytical** (all children primitives, no complex shapes):
+   `normalize_primitives()` → `try_hull_dispatch()` → type-specific handlers
+   (`hull_spheres`, `hull_cylinders_cones`, `hull_cubes`, `hull_cylinders_and_cube`).
+2. **Path 2 — shape-based** (mixed/complex children): each primitive/shape is
+   converted to a `Part.Shape`, then:
+   - **sphere + polyhedron** → `hull_sphere_polyhedron` (`process_hull_mixed_curve.py`).
+   - **exactly 2 shapes** → `hull_brep_loft` (`process_hull_brep_loft.py`) — smooth
+     BRep via silhouette extraction + loft (see below).
+   - **fallback** → `hull_brep_shapes` (`process_hull_brep.py`) — scipy `ConvexHull`,
+     faceted but always succeeds (no OpenSCAD CLI needed).
+
+### General BRep loft (`process_hull_brep_loft.py`)
+`hull_brep_loft(shapes)` builds a smooth hull of two BRep shapes:
+1. Axis = COG(A) → COG(B). Classify each shape's faces vs the away-direction:
+   outer (+1), inner (−1), transverse (0), curved-mixed (2).
+2. `_extract_silhouette()` harvests silhouette edges = edges of **inner *or*
+   curved** faces shared with a cap (outer+transverse) face, sorted into closed
+   wires. Including curved faces is essential: a cylinder's lateral surface is
+   curved-mixed, and harvesting its shared edge yields the **cap-rim circle** as
+   the silhouette loop; rounded corners likewise stitch into the outline.
+3. `Part.makeLoft` bridges A's silhouette wire(s) to B's (native loft, BSpline
+   resample fallback).
+4. Assemble cap faces A + bridge + cap faces B → `sewShape` → `Part.makeSolid`.
+
+Returns `None` on any failure → caller uses the faceted fallback.
+
+> Known limitation: the silhouette attaches at the cap rim, which is the exact
+> convex hull when one shape sits along the other's axis but only an
+> approximation when the true support plane is tangent to a curved *side*. Full
+> tangent-silhouette (`n·e_away = 0` mid-face) and curved cap-splitting are
+> future refinements.
+
+### Instrumentation
+`processHull.HULL_DEBUG` (module flag) gates the `[HULL]`/`[LOFT]` dispatch trace
+to the Report View; `write_log` always records it to `workbench.log`. Set
+`HULL_DEBUG = False` before merging to main (Report View policy below).
 
 ### Cylinder hull dispatch (`process_hull_cylinders.py`)
 - **Collinear axes, collinear centres** → revolved profile (`make_colinear_cylinders_cones`).
@@ -175,7 +220,7 @@ height.  No special-casing needed.
 
 ## Importer versioning
 - **ImportAstCSG** (`importers/importASTCSG.py`) is the active AST-based importer.
-  - Current version: `0.8.5`  (set via `__version__` at top of file)
+  - Current version: `0.9.0`  (set via `__version__` at top of file)
   - **Only bump `__version__` when the user confirms testing is complete and the
     change is ready to push to the main repo.** Do not bump during development
     iterations. Bug fix → patch (0.8.x → 0.8.x+1), significant new feature → minor
@@ -208,6 +253,26 @@ Do **not** use `ast.literal_eval()` directly for named parameter values —
 Python rejects lowercase booleans and falls back to a raw string, which is
 truthy in Python and silently misapplies centering to every primitive.
 
+## 2D operations — `offset` (`processAST.py`)
+OpenSCAD's `offset()` is a **2-D** operation. The handler dispatches on the
+child's dimensionality:
+- **2-D** child (Face/Wire, zero volume) → `Part.Shape.makeOffset2D(r, join, …)`,
+  which grows the profile in its own plane and returns a planar Face.
+  `join`: `0` = arc (round, OpenSCAD `r=`), `2` = intersection (sharp, `delta=`).
+- **3-D** child (Solid/Shell, has volume) → **error**: logs, `PrintError`s, and
+  raises `ValueError`. A 3-D child is invalid OpenSCAD `offset()` input.
+
+> Do **not** use `makeOffsetShape(r, tol, fill=True)` for 2-D offsets — it is a
+> 3-D shell/solid operation that, on a flat face, builds a thin solid whose extra
+> side/top faces break a downstream `linear_extrude` (degenerate solids →
+> "Null shape" at the fuse). `linear_extrude` also now skips null/invalid solids
+> before fusing as a defensive guard.
+
 ## Test file
 /Users/ksloan/github/CAD_Files_Git/OpenSCAD/Ab_Tools/test-2.csg
+
+### Hull / BRep loft test cases
+`testcases/Hull_Tests/BRepHull/` — e.g. `test_hull_linear_extrude.csg`
+(`hull()` of a `linear_extrude(offset(square))` slab + a translated cylinder;
+exercises the 2-D offset fix and the curved-silhouette loft path).
 

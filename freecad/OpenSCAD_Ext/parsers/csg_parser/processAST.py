@@ -763,9 +763,18 @@ def process_AST_node(node):
                 write_log("Extrusion", "No solids produced")
                 return []
 
-            result = solids[0]
-            for s in solids[1:]:
-                result = result.fuse(s)
+            # Skip any null/invalid solids — fusing a null shape raises
+            # "Null shape" and kills the whole extrude (and any hull above it).
+            result = None
+            for s in solids:
+                if s is None or s.isNull():
+                    write_log("Extrusion", "Skipping null solid before fuse")
+                    continue
+                result = s if result is None else result.fuse(s)
+
+            if result is None:
+                write_log("Extrusion", "All solids null after filtering")
+                return []
 
             # Encode centering in local_pl rather than calling translate().
             # shape.translate() may modify the shape's internal TopLoc_Location;
@@ -1136,25 +1145,46 @@ def process_AST_node(node):
         for shape, pl in child_results:
             if shape is None:
                 continue
+
+            # OpenSCAD offset() is defined for 2-D profiles only.  A 3-D child
+            # (Solid/Shell with volume) is invalid input — fail loudly rather
+            # than silently producing geometry OpenSCAD itself would not.
+            if (bool(getattr(shape, "Solids", None))
+                    or getattr(shape, "Volume", 0.0) > 1e-9):
+                msg = (f"offset() requires a 2-D child but got a 3-D "
+                       f"{getattr(shape, 'ShapeType', type(shape).__name__)}")
+                write_log("Offset", msg)
+                App.Console.PrintError(f"OpenSCAD_Ext: {msg}\n")
+                raise ValueError(msg)
+
             try:
                 if abs(r) < 1e-9:
                     offset_results.append((shape, pl))
                     continue
 
-                if chamfer:
-                    # delta offset: sharp corners
-                    offset_shape = shape.makeOffsetShape(r, 1e-3, join=1)  # join=1 = Arc
-                else:
-                    # r offset: rounded corners
-                    offset_shape = shape.makeOffsetShape(r, 1e-3, fill=True)
+                # 2-D profile: grow in its own plane and return a planar Face.
+                # (makeOffsetShape with fill=True on a flat face builds a thin
+                #  3-D solid whose extra faces break a downstream linear_extrude
+                #  → degenerate solids → "Null shape".)
+                #   join: 0 = arc (round, OpenSCAD r=)
+                #         2 = intersection (sharp/miter, OpenSCAD delta=)
+                join = 2 if chamfer else 0
+                offset_shape = shape.makeOffset2D(r, join, False, False, False)
+                # makeOffset2D on a Wire yields a Wire; ensure a Face for extrude.
+                if (offset_shape is not None and not offset_shape.isNull()
+                        and not isinstance(offset_shape, Part.Face)):
+                    try:
+                        offset_shape = Part.Face(offset_shape)
+                    except Exception:
+                        pass
 
                 if offset_shape is not None and not offset_shape.isNull():
                     offset_results.append((offset_shape, pl))
                 else:
-                    write_log("Offset", "makeOffsetShape returned null")
+                    write_log("Offset", "makeOffset2D returned null")
                     offset_results.append((shape, pl))
             except Exception as ex:
-                write_log("Offset", f"makeOffsetShape failed: {ex}")
+                write_log("Offset", f"makeOffset2D failed: {ex}")
                 offset_results.append((shape, pl))
 
         return offset_results

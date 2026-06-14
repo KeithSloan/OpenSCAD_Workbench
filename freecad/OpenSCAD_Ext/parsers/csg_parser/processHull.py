@@ -2,6 +2,23 @@ import FreeCAD
 from FreeCAD import Vector, Matrix
 from freecad.OpenSCAD_Ext.logger.Workbench_logger import write_log
 
+from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_spheres import hull_spheres
+from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_cylinders import hull_cylinders_cones
+from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_cubes import hull_cubes
+
+
+# Dev instrumentation.  While True, the hull dispatch trace is mirrored to the
+# FreeCAD Report View; everything is always written to workbench.log regardless.
+# Set False before merging to main (Report View policy: silent normal ops).
+HULL_DEBUG = True
+
+
+def _dbg(msg):
+    """Log to file always; mirror to the Report View while HULL_DEBUG is on."""
+    write_log("Hull", msg)
+    if HULL_DEBUG:
+        FreeCAD.Console.PrintMessage(f"[HULL] {msg}\n")
+
 
 def _warn(msg):
     """Write a hull-fallback reason to the log file only.
@@ -15,9 +32,6 @@ def _warn(msg):
     genuinely lost with no recovery path.
     """
     write_log("Hull", msg)
-from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_spheres import hull_spheres
-from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_cylinders import hull_cylinders_cones
-from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_cubes import hull_cubes
 
 
 # -----------------------------
@@ -42,7 +56,7 @@ def try_hull(node):
     shapes = []
 
     def _extract_shape(result):
-        """Extract a Part.Shape from process_AST_node return value."""
+        """Extract a Part.Shape from a process_AST_node return value."""
         if result is None:
             return
         items = result if isinstance(result, list) else [result]
@@ -60,7 +74,19 @@ def try_hull(node):
                     shapes.append(s)
 
     def _descend(children, parent_matrix=None):
-        """Walk children: collect simple primitives, descend into complex ones."""
+        """Walk hull children: collect simple primitives, descend into the rest.
+
+        Transparent wrappers (group, color, multmatrix) and unions are
+        flattened: hull(A ∪ B, …) ≡ hull(A, B, …), so a union contributes its
+        members directly, exactly like a nested hull.  This keeps the analytical
+        primitive path (Path 1) available and avoids the lone-union case that
+        would otherwise produce a single fused shape and fall back to OpenSCAD.
+
+        Intersection is approximated by its first primitive child, since
+        hull(A ∩ B, …) ⊆ hull(A, …).  Any other op (difference, minkowski,
+        extrude, offset, …) is fully evaluated to a BRep shape and hulled via
+        the shape-based path.
+        """
         for child in (children or []):
             matrix = (
                 parent_matrix.multiply(child.matrix)
@@ -78,9 +104,9 @@ def try_hull(node):
                 else:
                     _descend(child.children, parent_matrix)
 
-            elif nt == "hull":
+            elif nt in ("hull", "union"):
                 write_log("Hull",
-                    f"Nested hull — flattening {len(child.children or [])} children")
+                    f"Flattening {nt} — {len(child.children or [])} children")
                 _descend(child.children, matrix)
 
             elif nt in ("sphere", "cube", "cylinder"):
@@ -96,43 +122,45 @@ def try_hull(node):
                         found = True
                         break
                 if not found:
-                    write_log("Hull", "intersection: no usable primitive, creating shape")
+                    _dbg("intersection: no usable primitive, creating shape")
                     try:
                         _extract_shape(process_AST_node(child))
                     except Exception as ex:
-                        write_log("Hull", f"  intersection shape failed: {ex}")
+                        _dbg(f"  intersection shape failed: {ex}")
 
             else:
-                # Complex op: boolean, minkowski, extrude, offset, etc.
-                write_log("Hull",
-                    f"Descending into '{nt}' — creating child shape")
+                # Complex op: difference, minkowski, extrude, offset, …
+                _dbg(f"Descending into '{nt}' — creating child shape")
                 try:
+                    n_before = len(shapes)
                     _extract_shape(process_AST_node(child))
+                    if len(shapes) == n_before:
+                        _dbg(f"  '{nt}' produced no shape")
                 except Exception as ex:
-                    write_log("Hull", f"  {nt} shape failed: {ex}")
+                    _dbg(f"  '{nt}' shape failed: {ex}")
 
     _descend(node.children)
 
-    write_log("Hull",
-        f"Collected: {len(primitives)} primitives, {len(shapes)} complex shapes")
+    _dbg(f"Collected: {len(primitives)} primitives, {len(shapes)} complex shapes")
 
     # ── Path 1: AST-based dispatch (only when ALL children are simple) ─
     if len(primitives) >= 2 and len(shapes) == 0:
         geo = normalize_primitives(primitives, matrices)
         if geo is not None:
-            write_log("Hull", f"Dispatching AST hull with {len(geo)} primitive(s)")
+            _dbg(f"Path 1: AST dispatch with {len(geo)} primitive(s)")
             result = try_hull_dispatch(geo)
             if result is not None:
+                _dbg("Path 1: AST dispatch OK")
                 return result
+            _dbg("Path 1: AST dispatch returned None")
 
     # ── Convert primitives to shapes if needed ────────────────────────
     all_shapes = list(shapes)
-    if not all_shapes or len(all_shapes) < 2:
-        import FreeCAD as _FC
+    if len(all_shapes) < 2:
         for child, mat in zip(primitives, matrices):
             try:
                 r = process_AST_node(child)
-                # Apply the accumulated transform matrix to the shape
+                # Apply the accumulated transform matrix to each shape.
                 items = r if isinstance(r, list) else [r]
                 for item in items:
                     if isinstance(item, tuple) and len(item) >= 2:
@@ -141,7 +169,7 @@ def try_hull(node):
                         s, pl = item, None
                     if s is not None:
                         s = s.Shape if hasattr(s, 'Shape') else s
-                        # Combine child's own placement with accumulated matrix
+                        # Combine child's own placement with accumulated matrix.
                         if pl is not None and hasattr(pl, 'Matrix'):
                             s = s.copy()
                             s.transformShape(pl.Matrix)
@@ -153,7 +181,7 @@ def try_hull(node):
             except Exception as ex:
                 write_log("Hull", f"  primitive->shape failed: {ex}")
 
-    write_log("Hull", f"  shape-based: {len(all_shapes)} total shapes")
+    _dbg(f"Path 2: shape-based with {len(all_shapes)} total shape(s)")
 
     if len(all_shapes) >= 2:
         from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_mixed_curve import (
@@ -162,8 +190,8 @@ def try_hull(node):
         from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_brep import (
             hull_brep_shapes
         )
-
         import Part as _Part
+
         spheres, polys = [], []
         for s in all_shapes:
             try:
@@ -174,161 +202,46 @@ def try_hull(node):
             except Exception:
                 polys.append(s)
 
+        # ── Analytical: sphere + polyhedron ──────────────────────────
+        _dbg(f"  classified: spheres={len(spheres)} polys={len(polys)}")
+
         for sp in spheres:
             for po in polys:
                 try:
                     result = hull_sphere_polyhedron(sp, po)
                     if result is not None:
-                        write_log("Hull", "  sphere+poly analytical OK")
+                        _dbg("  sphere+poly analytical OK")
                         return result
                 except Exception as ex:
-                    write_log("Hull", f"  sphere+poly err: {ex}")
+                    _dbg(f"  sphere+poly err: {ex}")
 
+        # ── General silhouette + loft (smooth BRep, no faceting) ─────
+        if len(all_shapes) == 2:
+            from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_brep_loft import (
+                hull_brep_loft
+            )
+            _dbg("  trying brep loft (2 shapes)")
+            try:
+                result = hull_brep_loft(all_shapes)
+                if result is not None:
+                    _dbg("  brep loft OK")
+                    return result
+                _dbg("  brep loft returned None")
+            except Exception as ex:
+                _dbg(f"  brep loft err: {ex}")
+
+        # ── General BRep faceted (last resort) ────────────────────────
+        _dbg("  loft unavailable → faceted BRep fallback")
         try:
             result = hull_brep_shapes(all_shapes)
-            write_log("Hull", "  general BRep OK")
+            _dbg("  general BRep (faceted) OK")
             return result
         except Exception as ex:
-            write_log("Hull", f"  general BRep err: {ex}")
+            _dbg(f"  general BRep err: {ex}")
 
+    _dbg("hull: no native path succeeded → returning None")
     return None
 
-
-_COMPLEX_OPS = {
-    "difference", "union", "hull", "minkowski",
-    "linear_extrude", "rotate_extrude", "offset", "projection",
-}
-
-
-def _subtree_has_complex_op(node):
-    """
-    Return True if the node's subtree contains any operation that could
-    dramatically reshape a primitive — i.e. anything beyond transparent
-    wrappers (group, color, multmatrix) and leaf primitives.
-
-    Used by the intersection handler to decide whether the clipping
-    geometry is 'simple enough' to safely ignore (e.g. a linear_extrude
-    sector polygon) versus 'complex' (e.g. difference/hull chains that
-    reduce the primitive to a tiny fraction of its original extent).
-
-    Complex ops that trigger fallback:
-      difference, union, hull, minkowski, linear_extrude, rotate_extrude,
-      offset, projection — anything constructive or extrusive.
-    """
-    if node.node_type in _COMPLEX_OPS:
-        return True
-    for child in (node.children or []):
-        if _subtree_has_complex_op(child):
-            return True
-    return False
-
-
-def _first_complex_op(node):
-    """Like _subtree_has_complex_op but returns the first complex op node_type
-    found in the subtree, or None if the subtree is clean."""
-    if node.node_type in _COMPLEX_OPS:
-        return node.node_type
-    for child in (node.children or []):
-        found = _first_complex_op(child)
-        if found:
-            return found
-    return None
-
-
-def collect_primitives(children, primitives_out, matrices_out, parent_matrix=None, _fail=None):
-    """Walk hull children accumulating (primitive_node, matrix) pairs.
-
-    Returns True on success.  On failure, appends a human-readable reason
-    string to *_fail* (if provided) before returning False — so callers can
-    report exactly why the native hull path was abandoned.
-    """
-    def _fail_with(reason):
-        if _fail is not None and not _fail:   # only record the first (root) reason
-            _fail.append(reason)
-        return False
-
-    for child in children:
-        matrix = (
-            parent_matrix.multiply(child.matrix)
-            if (parent_matrix and hasattr(child, "matrix"))
-            else (child.matrix if hasattr(child, "matrix") else parent_matrix)
-        )
-
-        if child.node_type in ("group", "color"):
-            # color is a transparent wrapper — recurse into children, ignoring colour
-            if not collect_primitives(child.children, primitives_out, matrices_out, matrix, _fail):
-                return False
-
-        elif child.node_type == "multmatrix":
-            if not hasattr(child, "matrix"):
-                return _fail_with(f"multmatrix child has no matrix attribute")
-            if not collect_primitives(child.children, primitives_out, matrices_out, matrix, _fail):
-                return False
-
-        elif child.node_type == "hull":
-            # Nested hull: flatten by recursing into its children.
-            # The convex hull of a set of convex shapes equals the convex hull
-            # of all their constituent primitives, so we can collect them directly
-            # without losing correctness.  Any transform already accumulated in
-            # `matrix` is passed through unchanged (hull itself applies no transform).
-            nested_summary = ", ".join(
-                f"{c.node_type}({len(c.children or [])})" for c in (child.children or [])
-            )
-            write_log("Hull",
-                f"Nested hull detected — flattening {len(child.children or [])} "
-                f"children into parent: [{nested_summary}]")
-            if not collect_primitives(child.children, primitives_out, matrices_out, matrix, _fail):
-                return False
-
-        elif child.node_type in ("sphere", "cube", "cylinder"):
-            primitives_out.append(child)
-            matrices_out.append(matrix if matrix else Matrix())
-
-        elif child.node_type == "intersection":
-            # An intersection clips a primitive to a sub-region.
-            #
-            # Safe approximation: hull(A ∩ B, ...) ⊆ hull(A, ...) because
-            # clipping can only shrink the hull boundary, never expand it.
-            # We use the first child primitive as a stand-in for the
-            # intersection — BUT only when the clipping children are simple
-            # (transparent wrappers + primitives).  When a clipping child
-            # contains constructive ops (difference, hull, linear_extrude …)
-            # the intersection result may be far smaller than the primitive
-            # (e.g. a 30 mm cube clipped down to a tiny peg shape), making
-            # the approximation produce grossly wrong hull geometry.
-            # In that case, fail here so the caller falls back to OpenSCAD CLI.
-            clipping_children = (child.children or [])[1:]  # everything after the first
-            for clip in clipping_children:
-                op = _first_complex_op(clip)
-                if op:
-                    reason = (
-                        f"intersection clipping child ('{clip.node_type}') contains "
-                        f"complex op '{op}' — hull(A∩B) approximation unsafe; "
-                        f"the clipped shape may be far smaller than the raw primitive"
-                    )
-                    write_log("Hull", reason)
-                    return _fail_with(reason)
-
-            found = False
-            for sub in child.children:
-                sub_prims, sub_mats = [], []
-                if collect_primitives([sub], sub_prims, sub_mats, matrix, _fail):
-                    if sub_prims:
-                        primitives_out.extend(sub_prims)
-                        matrices_out.extend(sub_mats)
-                        found = True
-                        break
-            if not found:
-                reason = "intersection: no usable primitive child found"
-                write_log("Hull", reason)
-                return _fail_with(reason)
-
-        else:
-            reason = f"unsupported node inside hull: '{child.node_type}'"
-            _warn(f"{reason} — cannot build native BRep hull")
-            return _fail_with(reason)
-
-    return True
 
 def normalize_primitives(primitives, matrices):
     out = []
@@ -381,9 +294,6 @@ def normalize_primitives(primitives, matrices):
             })
 
         elif node.node_type == "cylinder":
-
-            write_log("cylinder",f"params {node.params}")
-
             params = node.params
 
             if "h" not in params:
@@ -452,10 +362,10 @@ def normalize_primitives(primitives, matrices):
             })
     return out
 
+
 def try_hull_dispatch(normalized_hull):
     types = {p["type"] for p in normalized_hull}
     write_log("Hull", f"Dispatch types={types}")
-    write_log("Normalized ",normalized_hull)
 
     if len(types) == 1:
         if types == {'sphere'}:

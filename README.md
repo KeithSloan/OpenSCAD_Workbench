@@ -10,6 +10,10 @@ scanner.
 
 - **Import** `.scad` and `.csg` files into FreeCAD as native BRep shapes
   (with mesh fallback via OpenSCAD CLI)
+- **Native `hull()`** – analytical handlers for spheres/cylinders/cubes plus a
+  general smooth-BRep path that lofts between extracted silhouettes (including
+  curved primitives), with a scipy convex-hull faceted fallback — no OpenSCAD
+  CLI round-trip required
 - **Export** FreeCAD objects to `.scad` format
 - **Toolbar icons** for every command — visually distinct, colour-coded 64×64 SVGs
 - **OpenSCAD Library Browser** – browse your `OPENSCADPATH` library,
