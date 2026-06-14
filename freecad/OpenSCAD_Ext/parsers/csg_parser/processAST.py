@@ -1118,6 +1118,48 @@ def process_AST_node(node):
 
 
     # -----------------------------
+    # OFFSET
+    # -----------------------------
+    if node_type == "offset":
+        r = float(params.get("r", params.get("delta", 0)))
+        chamfer = "delta" in params
+        write_log("Offset", f"r={r} chamfer={chamfer}")
+
+        child_results = []
+        for child in getattr(node, "children", []):
+            child_results.extend(_as_list(process_AST_node(child)))
+
+        if not child_results:
+            return []
+
+        offset_results = []
+        for shape, pl in child_results:
+            if shape is None:
+                continue
+            try:
+                if abs(r) < 1e-9:
+                    offset_results.append((shape, pl))
+                    continue
+
+                if chamfer:
+                    # delta offset: sharp corners
+                    offset_shape = shape.makeOffsetShape(r, 1e-3, join=1)  # join=1 = Arc
+                else:
+                    # r offset: rounded corners
+                    offset_shape = shape.makeOffsetShape(r, 1e-3, fill=True)
+
+                if offset_shape is not None and not offset_shape.isNull():
+                    offset_results.append((offset_shape, pl))
+                else:
+                    write_log("Offset", "makeOffsetShape returned null")
+                    offset_results.append((shape, pl))
+            except Exception as ex:
+                write_log("Offset", f"makeOffsetShape failed: {ex}")
+                offset_results.append((shape, pl))
+
+        return offset_results
+
+    # -----------------------------
     # FALLBACK
     # -----------------------------
     results = []

@@ -29,39 +29,133 @@ def try_hull(node):
     if node.node_type != "hull":
         return None
 
-    # Log the immediate children so failures are traceable.
     child_summary = ", ".join(
         f"{c.node_type}({len(c.children or [])})" for c in (node.children or [])
     )
     write_log("Hull", f"Hull children ({len(node.children or [])}): [{child_summary}]")
 
+    # ── Tolerant collection: primitives from AST + shapes from complex children ─
+    from freecad.OpenSCAD_Ext.parsers.csg_parser.processAST import process_AST_node
+
     primitives = []
     matrices = []
-    fail_reason = []          # collect_primitives populates this on failure
+    shapes = []
 
-    if not collect_primitives(node.children, primitives, matrices, _fail=fail_reason):
-        reason = fail_reason[0] if fail_reason else "unknown reason"
-        _warn(f"Hull → native BRep not possible: {reason}")
-        return None
+    def _extract_shape(result):
+        """Extract a Part.Shape from process_AST_node return value."""
+        if result is None:
+            return
+        items = result if isinstance(result, list) else [result]
+        for item in items:
+            if isinstance(item, tuple) and len(item) >= 2:
+                s, pl = item[0], item[1]
+            else:
+                s, pl = item, None
+            if s is not None:
+                s = s.Shape if hasattr(s, 'Shape') else s
+                if pl is not None and hasattr(pl, 'Matrix'):
+                    s = s.copy()
+                    s.transformShape(pl.Matrix)
+                if hasattr(s, 'BoundBox'):
+                    shapes.append(s)
 
-    geo = normalize_primitives(primitives, matrices)
-    if geo is None:
-        _warn("normalize_primitives failed — check cylinder/sphere parameter names")
-        return None
+    def _descend(children, parent_matrix=None):
+        """Walk children: collect simple primitives, descend into complex ones."""
+        for child in (children or []):
+            matrix = (
+                parent_matrix.multiply(child.matrix)
+                if (parent_matrix and hasattr(child, "matrix"))
+                else (child.matrix if hasattr(child, "matrix") else parent_matrix)
+            )
+            nt = child.node_type
 
-    write_log("Hull", f"Dispatching hull with {len(geo)} primitive(s)")
-    result = try_hull_dispatch(geo)
-    if result is not None:
-        return result
+            if nt in ("group", "color"):
+                _descend(child.children, matrix)
 
-    _warn(f"AST dispatch failed — trying shape-based handlers"
-          f" (types={{{', '.join(p['type'] for p in geo)}}})")
+            elif nt == "multmatrix":
+                if hasattr(child, "matrix"):
+                    _descend(child.children, matrix)
+                else:
+                    _descend(child.children, parent_matrix)
 
-    # ── Shape-based fallback ──────────────────────────────────────────
-    try:
-        from freecad.OpenSCAD_Ext.parsers.csg_parser.processAST import (
-            process_AST_node
-        )
+            elif nt == "hull":
+                write_log("Hull",
+                    f"Nested hull — flattening {len(child.children or [])} children")
+                _descend(child.children, matrix)
+
+            elif nt in ("sphere", "cube", "cylinder"):
+                primitives.append(child)
+                matrices.append(matrix if matrix else Matrix())
+
+            elif nt == "intersection":
+                found = False
+                for sub in (child.children or []):
+                    if sub.node_type in ("sphere", "cube", "cylinder"):
+                        primitives.append(sub)
+                        matrices.append(matrix if matrix else Matrix())
+                        found = True
+                        break
+                if not found:
+                    write_log("Hull", "intersection: no usable primitive, creating shape")
+                    try:
+                        _extract_shape(process_AST_node(child))
+                    except Exception as ex:
+                        write_log("Hull", f"  intersection shape failed: {ex}")
+
+            else:
+                # Complex op: boolean, minkowski, extrude, offset, etc.
+                write_log("Hull",
+                    f"Descending into '{nt}' — creating child shape")
+                try:
+                    _extract_shape(process_AST_node(child))
+                except Exception as ex:
+                    write_log("Hull", f"  {nt} shape failed: {ex}")
+
+    _descend(node.children)
+
+    write_log("Hull",
+        f"Collected: {len(primitives)} primitives, {len(shapes)} complex shapes")
+
+    # ── Path 1: AST-based dispatch (only when ALL children are simple) ─
+    if len(primitives) >= 2 and len(shapes) == 0:
+        geo = normalize_primitives(primitives, matrices)
+        if geo is not None:
+            write_log("Hull", f"Dispatching AST hull with {len(geo)} primitive(s)")
+            result = try_hull_dispatch(geo)
+            if result is not None:
+                return result
+
+    # ── Convert primitives to shapes if needed ────────────────────────
+    all_shapes = list(shapes)
+    if not all_shapes or len(all_shapes) < 2:
+        import FreeCAD as _FC
+        for child, mat in zip(primitives, matrices):
+            try:
+                r = process_AST_node(child)
+                # Apply the accumulated transform matrix to the shape
+                items = r if isinstance(r, list) else [r]
+                for item in items:
+                    if isinstance(item, tuple) and len(item) >= 2:
+                        s, pl = item[0], item[1]
+                    else:
+                        s, pl = item, None
+                    if s is not None:
+                        s = s.Shape if hasattr(s, 'Shape') else s
+                        # Combine child's own placement with accumulated matrix
+                        if pl is not None and hasattr(pl, 'Matrix'):
+                            s = s.copy()
+                            s.transformShape(pl.Matrix)
+                        if mat is not None:
+                            s = s.copy()
+                            s.transformShape(mat)
+                        if hasattr(s, 'BoundBox'):
+                            all_shapes.append(s)
+            except Exception as ex:
+                write_log("Hull", f"  primitive->shape failed: {ex}")
+
+    write_log("Hull", f"  shape-based: {len(all_shapes)} total shapes")
+
+    if len(all_shapes) >= 2:
         from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_mixed_curve import (
             hull_sphere_polyhedron
         )
@@ -69,75 +163,33 @@ def try_hull(node):
             hull_brep_shapes
         )
 
-        shapes = []
-        for c in (node.children or []):
-            r = process_AST_node(c)
-            if r is None:
-                continue
-            if isinstance(r, list):
-                for item in r:
-                    if isinstance(item, tuple) and len(item) >= 2:
-                        s, pl = item[0], item[1]
-                    else:
-                        s, pl = item, None
-                    if s is not None:
-                        s = s.Shape if hasattr(s, 'Shape') else s
-                        if pl is not None and hasattr(pl, 'Matrix'):
-                            s = s.copy()
-                            s.transformShape(pl.Matrix)
-                        if hasattr(s, 'BoundBox'):
-                            shapes.append(s)
-            elif isinstance(r, tuple):
-                s, pl = r[0], (r[1] if len(r) >= 2 else None)
-                if s is not None:
-                    s = s.Shape if hasattr(s, 'Shape') else s
-                    if pl is not None and hasattr(pl, 'Matrix'):
-                        s = s.copy()
-                        s.transformShape(pl.Matrix)
-                    if hasattr(s, 'BoundBox'):
-                        shapes.append(s)
-            elif hasattr(r, 'Shape'):
-                shapes.append(r.Shape)
-            elif hasattr(r, 'BoundBox'):
-                shapes.append(r)
-
-        write_log("Hull", f"  shapes created: {len(shapes)}")
-
-        if len(shapes) >= 2:
-            # ── Analytical mixed: sphere + polyhedron ─────────────────
-            import Part as _Part
-            spheres, polys = [], []
-            for s in shapes:
-                try:
-                    if any(isinstance(f.Surface, _Part.Sphere) for f in s.Faces):
-                        spheres.append(s)
-                    else:
-                        polys.append(s)
-                except Exception:
-                    polys.append(s)
-
-            for sp in spheres:
-                for po in polys:
-                    try:
-                        result = hull_sphere_polyhedron(sp, po)
-                        if result is not None:
-                            write_log("Hull", "  sphere+poly analytical OK")
-                            return result
-                    except Exception as ex:
-                        write_log("Hull", f"  sphere+poly err: {ex}")
-
-            # ── General BRep ──────────────────────────────────────────
+        import Part as _Part
+        spheres, polys = [], []
+        for s in all_shapes:
             try:
-                result = hull_brep_shapes(shapes)
-                write_log("Hull", "  general BRep OK")
-                return result
-            except Exception as ex:
-                write_log("Hull", f"  general BRep err: {ex}")
+                if any(isinstance(f.Surface, _Part.Sphere) for f in s.Faces):
+                    spheres.append(s)
+                else:
+                    polys.append(s)
+            except Exception:
+                polys.append(s)
 
-    except Exception as ex:
-        write_log("Hull", f"Shape-based fallback error: {ex}")
-        import traceback
-        write_log("Hull", traceback.format_exc())
+        for sp in spheres:
+            for po in polys:
+                try:
+                    result = hull_sphere_polyhedron(sp, po)
+                    if result is not None:
+                        write_log("Hull", "  sphere+poly analytical OK")
+                        return result
+                except Exception as ex:
+                    write_log("Hull", f"  sphere+poly err: {ex}")
+
+        try:
+            result = hull_brep_shapes(all_shapes)
+            write_log("Hull", "  general BRep OK")
+            return result
+        except Exception as ex:
+            write_log("Hull", f"  general BRep err: {ex}")
 
     return None
 
