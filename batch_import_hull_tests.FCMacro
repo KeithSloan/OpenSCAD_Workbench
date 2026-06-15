@@ -1,0 +1,121 @@
+# -*- coding: utf-8 -*-
+# batch_import_hull_tests.FCMacro
+#
+# Batch-imports a folder of .scad files through the OpenSCAD_Ext AST importer
+# (importASTCSG.open) and prints a pass / empty / error summary to the Report
+# View.  Intended for exercising hull() handling against the OpenFlexure
+# hull test corpus.
+#
+# Run:  Macro -> Macros... -> (add this file's folder) -> Execute
+#       or Macro -> Execute macro... and pick this file.
+
+import os, traceback, importlib
+import FreeCAD, FreeCADGui
+
+# ----------------------------------------------------------------------------
+# CONFIG  — edit these
+# ----------------------------------------------------------------------------
+HULL_DIR  = "/Users/ksloan/Workbenches/OpenSCAD_Workbench/testcases/Hull_Tests/openflexure_csgs"
+ONLY      = ["compact_nut_seat.csg"]   # confirmation run; [] = every .csg/.scad
+SKIP      = []      # files that hang / are too slow — skip them
+KEEP_OPEN = False   # close each doc after import (faster, less memory); True to inspect
+SAVE_DIR  = None    # e.g. "/Users/ksloan/.../results"; saves <name>.FCStd if set
+RELOAD    = True    # reload workbench modules so live code edits take effect
+SUPPRESS_CUSTOMIZER = True  # skip the "SCAD Customizer Detected" dialog (static import)
+# ----------------------------------------------------------------------------
+
+
+def _reload_workbench():
+    """Reload importer + parser modules (leaf-first) so edits apply without
+    restarting FreeCAD.  A full FreeCAD restart is the only 100%-reliable way,
+    but this is usually enough for iterating on the hull code."""
+    names = [
+        "freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_2d",
+        "freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_brep_loft",
+        "freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_brep",
+        "freecad.OpenSCAD_Ext.parsers.csg_parser.processHull",
+        "freecad.OpenSCAD_Ext.parsers.csg_parser.processAST",
+        "freecad.OpenSCAD_Ext.importers.importASTCSG",
+    ]
+    import sys
+    for n in names:
+        m = sys.modules.get(n)
+        if m is not None:
+            try:
+                importlib.reload(m)
+            except Exception as e:
+                FreeCAD.Console.PrintWarning(f"reload failed for {n}: {e}\n")
+
+
+from freecad.OpenSCAD_Ext.importers import importASTCSG
+if RELOAD:
+    _reload_workbench()
+    from freecad.OpenSCAD_Ext.importers import importASTCSG  # rebind after reload
+
+# Skip the interactive "SCAD Customizer Detected" dialog so the batch runs
+# unattended — files import with their default parameter values (static).
+if SUPPRESS_CUSTOMIZER:
+    importASTCSG._customizer_intercept = lambda *a, **k: False
+
+
+def _shape_stats(doc):
+    nobj = len(doc.Objects) if doc else 0
+    solids = closed = 0
+    for o in (doc.Objects if doc else []):
+        sh = getattr(o, "Shape", None)
+        if sh is not None:
+            try:
+                solids += len(sh.Solids)
+                if sh.Solids and all(s.isClosed() for s in sh.Solids):
+                    closed += 1
+            except Exception:
+                pass
+    return nobj, solids, closed
+
+
+files = sorted(f for f in os.listdir(HULL_DIR) if f.lower().endswith((".csg", ".scad")))
+if ONLY:
+    files = [f for f in files if f in ONLY]
+files = [f for f in files if f not in SKIP]
+
+FreeCAD.Console.PrintMessage(
+    f"\n===== batch import: {len(files)} file(s) from {HULL_DIR} =====\n")
+
+results = []
+for f in files:
+    path = os.path.join(HULL_DIR, f)
+    FreeCAD.Console.PrintMessage(f"\n--- {f} ---\n")
+    try:
+        doc = importASTCSG.open(path)
+        if doc is not None:
+            doc.recompute()
+        nobj, solids, closed = _shape_stats(doc)
+        status = "OK" if nobj else "EMPTY"
+        results.append((f, status, nobj, solids, closed, ""))
+        if SAVE_DIR and doc is not None:
+            os.makedirs(SAVE_DIR, exist_ok=True)
+            doc.saveAs(os.path.join(SAVE_DIR, os.path.splitext(f)[0] + ".FCStd"))
+        if not KEEP_OPEN and doc is not None:
+            FreeCAD.closeDocument(doc.Name)
+    except Exception as e:
+        msg = (str(e).splitlines() or [type(e).__name__])[0]
+        results.append((f, "ERROR", 0, 0, 0, msg))
+        FreeCAD.Console.PrintError(f"[{f}] {traceback.format_exc()}\n")
+
+# ---- summary ----
+FreeCAD.Console.PrintMessage("\n========== SUMMARY ==========\n")
+FreeCAD.Console.PrintMessage(f"{'status':7}{'obj':>4}{'sol':>4}{'closed':>7}  file   (error)\n")
+for f, st, n, sol, cl, err in results:
+    FreeCAD.Console.PrintMessage(f"{st:7}{n:4}{sol:4}{cl:7}  {f}  {err}\n")
+
+ok = sum(1 for r in results if r[1] == "OK")
+em = sum(1 for r in results if r[1] == "EMPTY")
+er = sum(1 for r in results if r[1] == "ERROR")
+FreeCAD.Console.PrintMessage(
+    f"\n{ok} ok, {em} empty, {er} error  (of {len(results)})\n")
+
+if KEEP_OPEN and FreeCADGui.ActiveDocument:
+    try:
+        FreeCADGui.SendMsgToActiveView("ViewFit")
+    except Exception:
+        pass

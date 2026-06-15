@@ -197,8 +197,18 @@ def hull_brep_loft(shapes):
     _dbg(f"A faces={len(A.Faces)} B faces={len(B.Faces)}")
 
     # ── Axis ──────────────────────────────────────────────────────────────
-    cA = A.CenterOfMass if A.Volume > 0 else A.BoundBox.Center
-    cB = B.CenterOfMass if B.Volume > 0 else B.BoundBox.Center
+    # A Part.Compound has no CenterOfMass attribute even when it has volume, so
+    # guard it and fall back to the bounding-box centre.
+    def _cog(s):
+        try:
+            if s.Volume > TOL:
+                return s.CenterOfMass
+        except Exception:
+            pass
+        return s.BoundBox.Center
+
+    cA = _cog(A)
+    cB = _cog(B)
     d = cB - cA
     if d.Length < TOL:
         write_log("HullLoft", "COGs coincide — cannot determine axis")

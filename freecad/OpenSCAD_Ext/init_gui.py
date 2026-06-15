@@ -62,7 +62,8 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
         from freecad.OpenSCAD_Ext.commands import renderSCAD
         from freecad.OpenSCAD_Ext.commands import varsSCAD
         from freecad.OpenSCAD_Ext.commands import librarySCAD
- 
+        from freecad.OpenSCAD_Ext.commands import hullLoftTest
+
         commands = [
             "NewSCADFileObject_CMD",
             "EditSCADFileObject_CMD",
@@ -70,6 +71,7 @@ class OpenSCADWorkbench_Ext(Gui.Workbench):
             "RenderSCADFileObject_CMD",
             "VarsSCADFileObject_CMD",
             "LibrarySCAD_CMD",
+            "HullLoftTest_CMD",
 
         ]
         toolbarcommands = commands

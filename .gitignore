@@ -10,3 +10,10 @@ rsync_to_goole-drive
 .idea
 .Utils.save
 .claude/
+
+# Hull-loft debug artifacts (regenerated on failed lofts / trace runs)
+*_loftfail_*
+_import_trace.log
+A_Brep.brep
+B_Brep.brep
+AB_Brep_info.txt

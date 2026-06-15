@@ -20,6 +20,50 @@ def _dbg(msg):
         FreeCAD.Console.PrintMessage(f"[HULL] {msg}\n")
 
 
+_loft_fail_count = 0
+
+
+def _export_failed_loft(shapes):
+    """Save the input shapes of a failed BRep hull loft as .brep files in the
+    same directory as the CSG being imported, for offline inspection.
+
+    Files: <csg-stem>_loftfail_<n>_A.brep, _B.brep, and _info.txt (placement /
+    bbox / validity).  No-op if the CSG directory is unknown (e.g. .scad imports
+    processed from a temp file) or fewer than 2 shapes were involved.
+    """
+    global _loft_fail_count
+    if not shapes or len(shapes) < 2:
+        return
+    try:
+        import os
+        from freecad.OpenSCAD_Ext.parsers.csg_parser import processAST as _pa
+        outdir = getattr(_pa, "_current_csg_dir", None)
+        stem = getattr(_pa, "_current_csg_stem", None) or "model"
+        if not outdir or not os.path.isdir(outdir):
+            _dbg("  failed-loft export skipped (CSG directory unknown)")
+            return
+        _loft_fail_count += 1
+        n = _loft_fail_count
+        info = []
+        for tag, s in zip(("A", "B"), shapes[:2]):
+            fn = os.path.join(outdir, f"{stem}_loftfail_{n}_{tag}.brep")
+            try:
+                s.exportBrep(fn)
+                info.append(
+                    f"{tag}: {os.path.basename(fn)}  type={s.ShapeType} "
+                    f"solids={len(s.Solids)} faces={len(s.Faces)} "
+                    f"vol={getattr(s, 'Volume', 0):.3f} valid={s.isValid()} "
+                    f"closed={s.isClosed()}\n   Placement={s.Placement}\n"
+                    f"   BoundBox={s.BoundBox}")
+            except Exception as e:
+                info.append(f"{tag}: export failed: {e}")
+        with open(os.path.join(outdir, f"{stem}_loftfail_{n}_info.txt"), "w") as f:
+            f.write("\n".join(info) + "\n")
+        _dbg(f"  saved failed-loft shapes → {stem}_loftfail_{n}_A/B.brep (next to CSG)")
+    except Exception as ex:
+        _dbg(f"  failed-loft export error: {ex}")
+
+
 def _warn(msg):
     """Write a hull-fallback reason to the log file only.
 
@@ -109,7 +153,8 @@ def try_hull(node):
                     f"Flattening {nt} — {len(child.children or [])} children")
                 _descend(child.children, matrix)
 
-            elif nt in ("sphere", "cube", "cylinder"):
+            elif nt in ("sphere", "cube", "cylinder",
+                        "circle", "square", "polygon"):
                 primitives.append(child)
                 matrices.append(matrix if matrix else Matrix())
 
@@ -148,7 +193,13 @@ def try_hull(node):
         geo = normalize_primitives(primitives, matrices)
         if geo is not None:
             _dbg(f"Path 1: AST dispatch with {len(geo)} primitive(s)")
-            result = try_hull_dispatch(geo)
+            try:
+                result = try_hull_dispatch(geo)
+            except Exception as ex:
+                # An analytical handler must never abort the whole import —
+                # fall through to the shape-based path on any failure.
+                _dbg(f"Path 1: dispatch raised ({ex}) — falling through")
+                result = None
             if result is not None:
                 _dbg("Path 1: AST dispatch OK")
                 return result
@@ -182,6 +233,27 @@ def try_hull(node):
                 write_log("Hull", f"  primitive->shape failed: {ex}")
 
     _dbg(f"Path 2: shape-based with {len(all_shapes)} total shape(s)")
+
+    # ── Single child: hull(X) is just the convex hull of X ────────────
+    # OpenSCAD allows hull() with one child (often the result of mirror/
+    # translate wrappers around a single primitive).  A lone convex primitive
+    # (cylinder/cube/sphere) IS its own hull → return it unchanged (smooth, no
+    # faceting).  A lone complex shape may be concave, so take its convex hull.
+    if len(all_shapes) == 1:
+        if len(shapes) == 0 and len(primitives) == 1:
+            _dbg("hull of a single primitive → returning it unchanged")
+            return all_shapes[0]
+        _dbg("hull of a single complex shape → convex hull")
+        try:
+            from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_brep import (
+                hull_brep_shapes
+            )
+            result = hull_brep_shapes(all_shapes)
+            if result is not None:
+                return result
+        except Exception as ex:
+            _dbg(f"  single-shape convex hull err: {ex}")
+        return all_shapes[0]
 
     if len(all_shapes) >= 2:
         from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_mixed_curve import (
@@ -227,8 +299,10 @@ def try_hull(node):
                     _dbg("  brep loft OK")
                     return result
                 _dbg("  brep loft returned None")
+                _export_failed_loft(all_shapes)
             except Exception as ex:
                 _dbg(f"  brep loft err: {ex}")
+                _export_failed_loft(all_shapes)
 
         # ── General BRep faceted (last resort) ────────────────────────
         _dbg("  loft unavailable → faceted BRep fallback")
@@ -360,12 +434,70 @@ def normalize_primitives(primitives, matrices):
                 "r2": r2,
                 "center": center,
             })
+
+        # ---- 2-D primitives (hull() of 2-D children is a 2-D op) ----
+        elif node.node_type == "circle":
+            p = node.params
+            if "r" in p:
+                rr = float(p["r"])
+            elif "d" in p:
+                rr = float(p["d"]) / 2.0
+            else:
+                try:
+                    rr = float(node.csg_params.strip())
+                except Exception:
+                    rr = 1.0
+            c = mat.multVec(Vector(0, 0, 0)) if mat else Vector(0, 0, 0)
+            try:
+                fn = int(round(float(p.get("$fn", 0) or 0)))
+            except Exception:
+                fn = 0
+            out.append({"type": "circle", "center": c, "r": rr, "fn": fn})
+
+        elif node.node_type == "square":
+            p = node.params
+            size = p.get("size", 1.0)
+            if isinstance(size, (int, float)):
+                w = h2 = float(size)
+            elif isinstance(size, (list, tuple)) and len(size) >= 2:
+                w, h2 = float(size[0]), float(size[1])
+            else:
+                w = h2 = 1.0
+            ctr = p.get("center", False)
+            if isinstance(ctr, str):
+                ctr = ctr.lower() == "true"
+            if ctr:
+                local = [Vector(-w/2, -h2/2, 0), Vector(w/2, -h2/2, 0),
+                         Vector(w/2, h2/2, 0), Vector(-w/2, h2/2, 0)]
+            else:
+                local = [Vector(0, 0, 0), Vector(w, 0, 0),
+                         Vector(w, h2, 0), Vector(0, h2, 0)]
+            pts = [(mat.multVec(v) if mat else v) for v in local]
+            out.append({"type": "square", "pts": pts})
+
+        elif node.node_type == "polygon":
+            p = node.params
+            pts = []
+            for q in (p.get("points", []) or []):
+                try:
+                    v = Vector(float(q[0]), float(q[1]), 0)
+                except Exception:
+                    continue
+                pts.append(mat.multVec(v) if mat else v)
+            if pts:
+                out.append({"type": "polygon", "pts": pts})
     return out
 
 
 def try_hull_dispatch(normalized_hull):
     types = {p["type"] for p in normalized_hull}
-    write_log("Hull", f"Dispatch types={types}")
+    _dbg(f"Dispatch types={types} n={len(normalized_hull)}")
+
+    # 2-D hull: all children are 2-D primitives → planar Face (NOT a 3-D hull).
+    _TWO_D = {"circle", "square", "polygon"}
+    if types and types <= _TWO_D:
+        from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_2d import hull_2d
+        return hull_2d(normalized_hull)
 
     if len(types) == 1:
         if types == {'sphere'}:

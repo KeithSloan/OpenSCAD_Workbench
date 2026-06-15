@@ -130,6 +130,15 @@ Walks hull children accumulating transform matrices into two buckets:
 1. **Path 1 — analytical** (all children primitives, no complex shapes):
    `normalize_primitives()` → `try_hull_dispatch()` → type-specific handlers
    (`hull_spheres`, `hull_cylinders_cones`, `hull_cubes`, `hull_cylinders_and_cube`).
+   - **2-D primitives** (`circle`/`square`/`polygon`) are collected by `_descend`
+     just like their 3-D cousins.  When *all* children are 2-D, `try_hull_dispatch`
+     routes to `hull_2d` (`process_hull_2d.py`) which returns a **planar Face**:
+     equal-radius circles → exact rounded polygon (`make_rounded_polygon_wire`);
+     otherwise the convex hull of sampled boundary points → polygon Face.  This
+     avoids the 3-D `ConvexHull` "need ≥4 unique points" failure on coplanar 2-D
+     input.  (Limitation: 2-D hulls whose children are *complex* 2-D ops — e.g.
+     `offset`, `projection`, 2-D booleans — still take the shape-based path and
+     need a coplanar-aware fallback; future work.)
 2. **Path 2 — shape-based** (mixed/complex children): each primitive/shape is
    converted to a `Part.Shape`, then:
    - **sphere + polyhedron** → `hull_sphere_polyhedron` (`process_hull_mixed_curve.py`).
@@ -152,6 +161,27 @@ Walks hull children accumulating transform matrices into two buckets:
 4. Assemble cap faces A + bridge + cap faces B → `sewShape` → `Part.makeSolid`.
 
 Returns `None` on any failure → caller uses the faceted fallback.
+
+When a loft fails, `try_hull` calls `_export_failed_loft(all_shapes)`, which saves
+the two input shapes as `<csg-stem>_loftfail_<n>_A.brep` / `_B.brep` (plus an
+`_info.txt` with placement/bbox/validity) **in the same directory as the CSG**
+being imported, for offline inspection.  The CSG dir/stem are propagated from
+`importASTCSG.processCSG` via `processAST._current_csg_dir` / `_current_csg_stem`
+(no-op for `.scad` imports processed from a temp file, where the dir is unknown).
+The `HullLoftTest_CMD` GUI command (`commands/hullLoftTest.py`) lofts the two
+selected objects so a failed pair can be reloaded and iterated on in isolation.
+
+### Hull — known limitations & roadmap (see `Developer_Notes/BrepHullLofts_Architecture.md`)
+- **Single-loft limitation:** `hull_brep_loft` uses one silhouette loop per shape
+  + one `makeLoft`; mismatched outline topology only partially bridges. The true
+  hull side is a *patchwork* of ruled/planar patches. Roadmap: **option 2**
+  (multi-patch tangent construction) first, **option 1** (piecewise sub-wire
+  lofts) as fallback.
+- **Analytical hull ignores `$fn`:** low-`$fn` cylinders (e.g. `$fn=6` nut traps)
+  are hulled as *round* instead of *hex*. Fix: gate analytical collection on
+  `_use_brep($fn)`; route faceted cylinders to the shape-based path.
+- `try_hull_dispatch` is wrapped in try/except so a handler exception never
+  aborts the whole import (falls through to the shape-based/faceted path).
 
 > Known limitation: the silhouette attaches at the cap rim, which is the exact
 > convex hull when one shape sits along the other's axis but only an
@@ -259,8 +289,14 @@ child's dimensionality:
 - **2-D** child (Face/Wire, zero volume) → `Part.Shape.makeOffset2D(r, join, …)`,
   which grows the profile in its own plane and returns a planar Face.
   `join`: `0` = arc (round, OpenSCAD `r=`), `2` = intersection (sharp, `delta=`).
-- **3-D** child (Solid/Shell, has volume) → **error**: logs, `PrintError`s, and
-  raises `ValueError`. A 3-D child is invalid OpenSCAD `offset()` input.
+- **3-D** child (a real Solid — keyed on `len(shape.Solids)`, **not** Volume,
+  since open shells can report a spurious volume) → **skip the offset, pass the
+  child through, and `PrintWarning`**. A solid child is invalid OpenSCAD
+  `offset()` input and almost always means a 2-D op in the child subtree was
+  wrongly evaluated to a solid upstream — the handler logs the child node-types
+  and shape characteristics (`solids/faces/vol`) to help locate the cause.
+  (Earlier this `raise`d `ValueError`, which aborted the whole file; that was too
+  aggressive on real OpenFlexure files.)
 
 > Do **not** use `makeOffsetShape(r, tol, fill=True)` for 2-D offsets — it is a
 > 3-D shell/solid operation that, on a flat face, builds a thin solid whose extra

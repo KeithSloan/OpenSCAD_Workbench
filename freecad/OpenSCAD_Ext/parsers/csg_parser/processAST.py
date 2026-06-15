@@ -68,6 +68,12 @@ _nodes_failed = False
 # Default 0 (BRep-only) is safe; the importer overrides this at runtime.
 _fnmax = 0
 
+# Directory + stem of the CSG currently being imported (set by importASTCSG.
+# processCSG).  Used to save the input shapes of any failed BRep hull loft next
+# to the CSG file.  None → don't export.
+_current_csg_dir = None
+_current_csg_stem = "model"
+
 
 def _use_brep(fn_val):
     """
@@ -107,12 +113,12 @@ def _make_frustum(r1, r2, h, n):
         verts.append(verts[0])
         return Part.Wire(Part.makePolygon(verts))
 
-    if r1 == 0:
-        # Bottom is a point — degenerate pyramid; loft still works with a tiny circle
-        w_bot = _ngon_wire(1e-6, 0)
-    else:
-        w_bot = _ngon_wire(r1, 0)
-    w_top = _ngon_wire(r2, h)
+    # A zero radius at either end is a cone apex — Part.makePolygon needs ≥2
+    # distinct vertices, so substitute a tiny circle (degenerate pyramid) at the
+    # zero end.  Applies to both r1 (bottom) and r2 (top, e.g. cylinder r2=0).
+    EPS = 1e-6
+    w_bot = _ngon_wire(r1 if r1 > EPS else EPS, 0)
+    w_top = _ngon_wire(r2 if r2 > EPS else EPS, h)
     return Part.makeLoft([w_bot, w_top], True, True)
 
 
@@ -1132,7 +1138,8 @@ def process_AST_node(node):
     if node_type == "offset":
         r = float(params.get("r", params.get("delta", 0)))
         chamfer = "delta" in params
-        write_log("Offset", f"r={r} chamfer={chamfer}")
+        _ch_types = [getattr(c, "node_type", "?") for c in getattr(node, "children", [])]
+        write_log("Offset", f"r={r} chamfer={chamfer} children={_ch_types}")
 
         child_results = []
         for child in getattr(node, "children", []):
@@ -1146,16 +1153,32 @@ def process_AST_node(node):
             if shape is None:
                 continue
 
-            # OpenSCAD offset() is defined for 2-D profiles only.  A 3-D child
-            # (Solid/Shell with volume) is invalid input — fail loudly rather
-            # than silently producing geometry OpenSCAD itself would not.
-            if (bool(getattr(shape, "Solids", None))
-                    or getattr(shape, "Volume", 0.0) > 1e-9):
-                msg = (f"offset() requires a 2-D child but got a 3-D "
-                       f"{getattr(shape, 'ShapeType', type(shape).__name__)}")
+            # OpenSCAD offset() is defined for 2-D profiles only, so the child
+            # should be a planar Face/Wire with no solids.  Diagnose what we got
+            # (keyed on actual Solids, not Volume — open shells can report a
+            # spurious volume).
+            n_solids = len(getattr(shape, "Solids", []) or [])
+            n_faces  = len(getattr(shape, "Faces", []) or [])
+            try:
+                _vol = shape.Volume
+            except Exception:
+                _vol = 0.0
+            write_log("Offset",
+                f"child shape: {getattr(shape, 'ShapeType', '?')} "
+                f"solids={n_solids} faces={n_faces} vol={_vol:.4g}")
+
+            if n_solids > 0:
+                # A genuine 3-D solid is invalid offset() input — almost always a
+                # sign that a 2-D op in the child subtree was wrongly evaluated to
+                # a solid upstream.  Skip the offset (pass the child through) and
+                # flag it, rather than aborting the whole import.
+                msg = (f"offset() got a 3-D solid child ({n_solids} solid(s)) — "
+                       f"skipping offset; check 2-D op upstream. children="
+                       f"{_ch_types}")
                 write_log("Offset", msg)
-                App.Console.PrintError(f"OpenSCAD_Ext: {msg}\n")
-                raise ValueError(msg)
+                App.Console.PrintWarning(f"OpenSCAD_Ext: {msg}\n")
+                offset_results.append((shape, pl))
+                continue
 
             try:
                 if abs(r) < 1e-9:

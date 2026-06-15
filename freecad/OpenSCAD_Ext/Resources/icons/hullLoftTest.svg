@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  hullLoftTest.svg  —  Test: Hull BRep Loft command
+  64×64 px  |  OpenSCAD_Ext workbench
+
+  Design: a lofted body bridging two end profiles (a smaller "back" profile on
+  the left and a larger "front" profile on the right), with faint ruled lines
+  suggesting the loft surface between them — the visual of hull_brep_loft taking
+  two shapes and bridging them.  A green check badge (bottom-right) marks this
+  as a test / verification command, setting it apart from the gold document
+  icons in the toolbar.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+
+  <!-- ── Back profile (left, partly hidden by the body) ── -->
+  <ellipse cx="17" cy="33" rx="7" ry="15"
+           fill="#4fa79c" stroke="#0c403a" stroke-width="1.5"/>
+
+  <!-- ── Loft body bridging the two profiles ── -->
+  <path d="M 17,18 L 45,11 L 45,53 L 17,48 Z"
+        fill="#82d2c8" stroke="#0c403a" stroke-width="1.5" stroke-linejoin="round"/>
+
+  <!-- ── Front profile (right, on top) ── -->
+  <ellipse cx="45" cy="32" rx="9" ry="21"
+           fill="#b6ece4" stroke="#0c403a" stroke-width="1.5"/>
+
+  <!-- ── Ruled "loft" lines between the profiles ── -->
+  <line x1="17" y1="18" x2="45" y2="11" stroke="#0c403a" stroke-width="1"   opacity="0.55"/>
+  <line x1="17" y1="48" x2="45" y2="53" stroke="#0c403a" stroke-width="1"   opacity="0.55"/>
+  <line x1="22" y1="22" x2="45" y2="18" stroke="#0c403a" stroke-width="0.8" opacity="0.40"/>
+  <line x1="22" y1="44" x2="45" y2="46" stroke="#0c403a" stroke-width="0.8" opacity="0.40"/>
+
+  <!-- ── Test badge: green disc with a white check ── -->
+  <circle cx="51" cy="52" r="11" fill="#4e9a06" stroke="#1f3d00" stroke-width="1.5"/>
+  <path d="M 45,52 L 49.5,57 L 57,47" fill="none"
+        stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

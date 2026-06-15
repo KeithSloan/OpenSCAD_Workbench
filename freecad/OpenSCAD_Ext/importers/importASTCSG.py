@@ -269,6 +269,10 @@ def processCSG(docSrc, filename, fnmax_param=None, allow_wholefile_fallback=Fals
     _pAST_mod._fallback_used = False
     _pAST_mod._nodes_failed  = False
     _pAST_mod._fnmax = fnmax   # pass facet threshold to shape builders
+    # Directory + stem of the CSG being imported — used to save the input
+    # shapes of any failed BRep hull loft next to the CSG for inspection.
+    _pAST_mod._current_csg_dir  = os.path.dirname(os.path.abspath(filename))
+    _pAST_mod._current_csg_stem = name
 
     raw_ast_nodes = parse_csg_file_to_AST_nodes(filename)
     ast_nodes = raw_ast_nodes
