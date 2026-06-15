@@ -210,16 +210,35 @@ def hull_brep_loft(shapes):
     cA = _cog(A)
     cB = _cog(B)
     d = cB - cA
-    if d.Length < TOL:
-        write_log("HullLoft", "COGs coincide — cannot determine axis")
-        return None
-    e_AB = _unit(d)
-    e_BA = Vector(-e_AB.x, -e_AB.y, -e_AB.z)
 
-    write_log("HullLoft",
-        f"axis: A=({cA.x:.1f},{cA.y:.1f},{cA.z:.1f}) "
-        f"B=({cB.x:.1f},{cB.y:.1f},{cB.z:.1f}) "
-        f"dir=({e_AB.x:.3f},{e_AB.y:.3f},{e_AB.z:.3f})")
+    bbA, bbB = A.BoundBox, B.BoundBox
+    size = max(bbA.DiagonalLength, bbB.DiagonalLength, TOL)
+
+    if d.Length > 0.05 * size:
+        # Well-separated centres → COG→COG axis is meaningful.
+        e_AB = _unit(d)
+        _dbg(f"axis: COG->COG |d|={d.Length:.2f} "
+             f"dir=({e_AB.x:.3f},{e_AB.y:.3f},{e_AB.z:.3f})")
+    else:
+        # Near-concentric centres of mass (common with center=true): the
+        # COG->COG vector is dominated by tiny in-plane asymmetry and points the
+        # wrong way (e.g. sideways across two tall coaxial prisms).  Fall back to
+        # the longest dimension of the COMBINED bounding box — the direction the
+        # two profiles are actually stacked / differ along.
+        xl = max(bbA.XMax, bbB.XMax) - min(bbA.XMin, bbB.XMin)
+        yl = max(bbA.YMax, bbB.YMax) - min(bbA.YMin, bbB.YMin)
+        zl = max(bbA.ZMax, bbB.ZMax) - min(bbA.ZMin, bbB.ZMin)
+        dims = sorted(((xl, Vector(1, 0, 0)),
+                       (yl, Vector(0, 1, 0)),
+                       (zl, Vector(0, 0, 1))),
+                      key=lambda t: t[0], reverse=True)
+        e_AB = dims[0][1]
+        if (bbB.Center - bbA.Center).dot(e_AB) < 0:
+            e_AB = Vector(-e_AB.x, -e_AB.y, -e_AB.z)
+        _dbg(f"axis: near-concentric (|d|={d.Length:.3f} < 5%*{size:.1f}) -> "
+             f"longest bbox dim ({e_AB.x:.0f},{e_AB.y:.0f},{e_AB.z:.0f})")
+
+    e_BA = Vector(-e_AB.x, -e_AB.y, -e_AB.z)
 
     # ── Extract silhouettes ───────────────────────────────────────────────
     _dbg("extracting silhouette A...")

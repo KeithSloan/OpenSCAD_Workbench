@@ -250,7 +250,7 @@ height.  No special-casing needed.
 
 ## Importer versioning
 - **ImportAstCSG** (`importers/importASTCSG.py`) is the active AST-based importer.
-  - Current version: `0.9.0`  (set via `__version__` at top of file)
+  - Current version: `0.10.0`  (set via `__version__` at top of file)
   - **Only bump `__version__` when the user confirms testing is complete and the
     change is ready to push to the main repo.** Do not bump during development
     iterations. Bug fix → patch (0.8.x → 0.8.x+1), significant new feature → minor

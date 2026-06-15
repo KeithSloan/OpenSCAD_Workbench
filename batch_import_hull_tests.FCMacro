@@ -16,7 +16,7 @@ import FreeCAD, FreeCADGui
 # CONFIG  — edit these
 # ----------------------------------------------------------------------------
 HULL_DIR  = "/Users/ksloan/Workbenches/OpenSCAD_Workbench/testcases/Hull_Tests/openflexure_csgs"
-ONLY      = ["compact_nut_seat.csg"]   # confirmation run; [] = every .csg/.scad
+ONLY      = []      # e.g. ["fitting_wedge.csg"] to limit; [] = every .csg/.scad
 SKIP      = []      # files that hang / are too slow — skip them
 KEEP_OPEN = False   # close each doc after import (faster, less memory); True to inspect
 SAVE_DIR  = None    # e.g. "/Users/ksloan/.../results"; saves <name>.FCStd if set

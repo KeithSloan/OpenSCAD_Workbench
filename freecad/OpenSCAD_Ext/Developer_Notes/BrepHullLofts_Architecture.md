@@ -125,6 +125,22 @@ Two directions (this branch is the restore point before trying them):
   piecewise, so the full outline is covered.  Lower effort; sufficient for
   aligned/corresponding outlines like the coaxial-prism case.
 
+### Axis selection (fixed)
+
+`hull_brep_loft` picks its loft axis as COG(A) → COG(B).  When the two shapes are
+**concentric** (common with `center=true`), the centres of mass nearly coincide
+and that vector collapses onto the tiny in-plane asymmetry — giving a wrong axis
+(e.g. sideways across two tall coaxial prisms), garbage silhouettes, and a
+`makeLoft` "command not done" failure.  This was the actual cause of
+`compact_nut_seat`'s first-hull failure (NOT the patch limitation).
+
+Fix: if `|COG_B − COG_A|` < 5 % of the shapes' size, fall back to the **longest
+dimension of the combined bounding box** as the axis.  This resolved the
+`compact_nut_seat` first hull (`axis: near-concentric → (0,0,1)`, `native loft
+OK`).  Note: the `HullLoftTest_CMD` test on the *saved* `.brep` pair passed even
+before this fix, because `exportBrep` drops the centring placement — the reloaded
+shapes sat z-offset, giving an easy axis.  Same geometry, different pose.
+
 ## Other known limitations (not blockers — faceted fallback is correct)
 
 - **Analytical hull ignores `$fn`/`fnmax`.** `normalize_primitives` reads a
