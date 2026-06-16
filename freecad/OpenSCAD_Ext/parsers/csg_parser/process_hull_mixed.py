@@ -29,8 +29,11 @@ The cylinder axis may point in any direction; an orthonormal basis
 Constraints
 -----------
   • All cylinders must have parallel axes (any direction, ±).
-  • All cylinders must have the same radius (r1 == r2, equal across all).
-  • Exactly one cube (world-axis-aligned).
+  • Each cylinder has a constant radius (r1 == r2); radii MAY differ between
+    cylinders.  Tapered cylinders (cones) are not handled.
+  • All cylinders must span the same axial extent (constant cross-section);
+    differing lengths need axial sectioning and fall back.
+  • One or more world-axis-aligned cubes.
 
 Returns None on any failure — the caller falls back to OpenSCAD CLI.
 """
@@ -227,14 +230,9 @@ def hull_cylinders_and_cube(normalized_hull, n_circle=64):
     if not cubes:
         _warn("hull_cylinders_and_cube: no cube found")
         return None
-    if len(cubes) > 1:
-        _warn(f"hull_cylinders_and_cube: {len(cubes)} cubes — only 1 supported")
-        return None
     if not cylinders:
         _warn("hull_cylinders_and_cube: no cylinders found")
         return None
-
-    cube = cubes[0]
 
     # ---------------------------------------------------------------- #
     # Validate: all cylinders have parallel axes
@@ -249,12 +247,14 @@ def hull_cylinders_and_cube(normalized_hull, n_circle=64):
     axis_dir = first_dir
 
     # ---------------------------------------------------------------- #
-    # Validate: uniform radius
+    # Validate: each cylinder has a constant radius (r1==r2).  Radii MAY
+    # differ between cylinders — the 2-D cross-section just includes each
+    # circle.  Tapered cylinders (cones) vary the cross-section axially and
+    # are not handled here.
     # ---------------------------------------------------------------- #
-    r = cylinders[0]["r1"]
     for cyl in cylinders:
-        if abs(cyl["r1"] - r) > 1e-6 or abs(cyl["r2"] - r) > 1e-6:
-            _warn("hull_cylinders_and_cube: non-uniform radii — skipping")
+        if abs(cyl["r1"] - cyl["r2"]) > 1e-6:
+            _warn("hull_cylinders_and_cube: tapered cylinder (cone) — skipping")
             return None
 
     # ---------------------------------------------------------------- #
@@ -284,19 +284,33 @@ def hull_cylinders_and_cube(normalized_hull, n_circle=64):
     a_cyl_min = min(a_cyl_mins)
     a_cyl_max = max(a_cyl_maxs)
 
-    sx, sy, sz = cube["size"]
-    corner = cube["corner"]
-    cube_corners_3d = [
-        corner + Vector(dx * sx, dy * sy, dz * sz)
-        for dx in (0, 1) for dy in (0, 1) for dz in (0, 1)
-    ]
+    # The middle section extrudes a CONSTANT cross-section over
+    # [a_cyl_min, a_cyl_max].  That is only valid if every cylinder spans the
+    # same axial range; differing cylinder lengths give a cross-section that
+    # changes along the axis (needs sectioning) — fall back for now.
+    if (max(a_cyl_mins) - min(a_cyl_mins) > 1e-6 or
+            max(a_cyl_maxs) - min(a_cyl_maxs) > 1e-6):
+        _warn("hull_cylinders_and_cube: cylinders span different axial extents "
+              "— skipping (needs sectioning)")
+        return None
+
+    # Combine ALL cubes' corners (supports more than one cube).
+    cube_corners_3d = []
+    for cb in cubes:
+        sx, sy, sz = cb["size"]
+        corner = cb["corner"]
+        cube_corners_3d.extend(
+            corner + Vector(dx * sx, dy * sy, dz * sz)
+            for dx in (0, 1) for dy in (0, 1) for dz in (0, 1)
+        )
     cube_axis_vals = [c.dot(axis_dir) for c in cube_corners_3d]
     a_cube_min = min(cube_axis_vals)
     a_cube_max = max(cube_axis_vals)
 
     write_log("Hull",
               f"hull_cylinders_and_cube: axis=({axis_dir.x:.2f},{axis_dir.y:.2f},{axis_dir.z:.2f}), "
-              f"r={r:.3f}, a_cube=[{a_cube_min:.3f},{a_cube_max:.3f}], "
+              f"{len(cubes)} cube(s), {len(cylinders)} cyl(s), "
+              f"a_cube=[{a_cube_min:.3f},{a_cube_max:.3f}], "
               f"a_cyl=[{a_cyl_min:.3f},{a_cyl_max:.3f}]")
 
     # ---------------------------------------------------------------- #
@@ -308,10 +322,11 @@ def hull_cylinders_and_cube(normalized_hull, n_circle=64):
     all_pts_2d = list(cube_pts_2d)
     for cyl in cylinders:
         cu, cv = proj_2d(cyl["base"])
+        rc = cyl["r1"]   # per-cylinder radius (radii may differ between cylinders)
         for k in range(n_circle):
             angle = 2.0 * math.pi * k / n_circle
-            all_pts_2d.append((cu + r * math.cos(angle),
-                               cv + r * math.sin(angle)))
+            all_pts_2d.append((cu + rc * math.cos(angle),
+                               cv + rc * math.sin(angle)))
 
     expanded_hull_2d = convex_hull_2d(all_pts_2d)
 

@@ -162,6 +162,13 @@ Walks hull children accumulating transform matrices into two buckets:
 
 Returns `None` on any failure → caller uses the faceted fallback.
 
+**Loft result is validated** in `try_hull`: a successful loft is accepted only
+when its volume is within 5% of the faceted convex hull (always correct) and
+`isValid()`.  OCC `ThruSections` can connect two equivalent-topology wires with
+the wrong vertex correspondence → a twisted/self-intersecting solid whose volume
+collapses (~9% in `compact_nut_seat`) yet still reports `isValid()==True`; such a
+loft would silently corrupt downstream booleans, so it's rejected → faceted.
+
 When a loft fails, `try_hull` calls `_export_failed_loft(all_shapes)`, which saves
 the two input shapes as `<csg-stem>_loftfail_<n>_A.brep` / `_B.brep` (plus an
 `_info.txt` with placement/bbox/validity) **in the same directory as the CSG**

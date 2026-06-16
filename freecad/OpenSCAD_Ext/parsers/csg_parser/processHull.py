@@ -264,10 +264,15 @@ def try_hull(node):
         )
         import Part as _Part
 
+        # A shape is a "sphere" for hull_sphere_polyhedron only if it IS a full
+        # sphere (a single spherical face) — NOT merely any solid that happens to
+        # contain a spherical face (e.g. a clipped sphere from a difference, which
+        # has sphere + plane faces).  The latter must take the loft/faceted path.
         spheres, polys = [], []
         for s in all_shapes:
             try:
-                if any(isinstance(f.Surface, _Part.Sphere) for f in s.Faces):
+                faces = s.Faces
+                if len(faces) == 1 and isinstance(faces[0].Surface, _Part.Sphere):
                     spheres.append(s)
                 else:
                     polys.append(s)
@@ -287,31 +292,53 @@ def try_hull(node):
                 except Exception as ex:
                     _dbg(f"  sphere+poly err: {ex}")
 
-        # ── General silhouette + loft (smooth BRep, no faceting) ─────
+        # ── General silhouette + loft (smooth BRep) ──────────────────
+        loft_result = None
         if len(all_shapes) == 2:
             from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_brep_loft import (
                 hull_brep_loft
             )
             _dbg("  trying brep loft (2 shapes)")
             try:
-                result = hull_brep_loft(all_shapes)
-                if result is not None:
-                    _dbg("  brep loft OK")
-                    return result
-                _dbg("  brep loft returned None")
-                _export_failed_loft(all_shapes)
+                loft_result = hull_brep_loft(all_shapes)
             except Exception as ex:
                 _dbg(f"  brep loft err: {ex}")
+                loft_result = None
+            if loft_result is None:
                 _export_failed_loft(all_shapes)
 
-        # ── General BRep faceted (last resort) ────────────────────────
-        _dbg("  loft unavailable → faceted BRep fallback")
+        # ── Faceted convex hull: always geometrically correct ─────────
+        # Computed both as the fallback AND as a yardstick to validate the loft.
+        # A loft can report "OK" yet be twisted/self-intersecting (wrong vertex
+        # correspondence), which then corrupts downstream OCC booleans.  Accept
+        # the smooth loft ONLY when its volume matches the faceted hull and it is
+        # a valid solid; otherwise use the faceted hull.
+        faceted = None
         try:
-            result = hull_brep_shapes(all_shapes)
-            _dbg("  general BRep (faceted) OK")
-            return result
+            faceted = hull_brep_shapes(all_shapes)
         except Exception as ex:
             _dbg(f"  general BRep err: {ex}")
+
+        if loft_result is not None:
+            accept = False
+            try:
+                if faceted is not None and faceted.Volume > 1e-9:
+                    rel = abs(loft_result.Volume - faceted.Volume) / faceted.Volume
+                    accept = (rel < 0.05) and loft_result.isValid()
+                    _dbg(f"  loft vol={loft_result.Volume:.1f} "
+                         f"faceted={faceted.Volume:.1f} rel={rel:.3f} "
+                         f"valid={loft_result.isValid()} -> "
+                         f"{'ACCEPT loft' if accept else 'REJECT loft -> faceted'}")
+                else:
+                    accept = bool(loft_result.isValid())  # no yardstick — accept if valid
+            except Exception:
+                accept = False
+            if accept:
+                return loft_result
+
+        if faceted is not None:
+            _dbg("  using faceted BRep")
+            return faceted
 
     _dbg("hull: no native path succeeded → returning None")
     return None
