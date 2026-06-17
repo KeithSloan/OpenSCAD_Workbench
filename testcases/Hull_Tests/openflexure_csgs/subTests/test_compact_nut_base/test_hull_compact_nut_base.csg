@@ -1,0 +1,46 @@
+group() {
+	hull() {
+										linear_extrude(height = 51, center = true, $fn = 0, $fa = 12, $fs = 2) {
+											group() {
+												union() {
+													group() {
+														group() {
+															multmatrix([[1, 0, 0, 6.03586], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																circle($fn = 0, $fa = 12, $fs = 2, r = 8.06439);
+															}
+														}
+														multmatrix([[-1, -0, -0, 0], [-0, 1, -0, 0], [-0, -0, 1, 0], [0, 0, 0, 1]]) {
+															group() {
+																multmatrix([[1, 0, 0, 6.03586], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																	circle($fn = 0, $fa = 12, $fs = 2, r = 8.06439);
+																}
+															}
+														}
+													}
+													square(size = [12.0717, 16.1288], center = true);
+												}
+											}
+										}
+										linear_extrude(height = 54, center = true, $fn = 0, $fa = 12, $fs = 2) {
+											group() {
+												union() {
+													group() {
+														group() {
+															multmatrix([[1, 0, 0, 6.03586], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																circle($fn = 0, $fa = 12, $fs = 2, r = 6.06439);
+															}
+														}
+														multmatrix([[-1, -0, -0, 0], [-0, 1, -0, 0], [-0, -0, 1, 0], [0, 0, 0, 1]]) {
+															group() {
+																multmatrix([[1, 0, 0, 6.03586], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
+																	circle($fn = 0, $fa = 12, $fs = 2, r = 6.06439);
+																}
+															}
+														}
+													}
+													square(size = [12.0717, 12.1288], center = true);
+												}
+											}
+										}
+									}
+}

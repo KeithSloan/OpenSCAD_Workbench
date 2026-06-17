@@ -672,6 +672,46 @@ def process_AST_node(node):
             if not isinstance(m, App.Matrix):
                 raise TypeError(f"multmatrix param is not Matrix: {type(m)}")
 
+            # App.Placement(m) cannot represent a reflection (negative
+            # determinant — OpenSCAD mirror() emits e.g. diag(1,1,-1)): it
+            # silently drops the mirror and keeps only a rotation, so a reflected
+            # subtree lands wrong.  For 3-D solids we bake the full transform
+            # (m ∘ pl) into the geometry — AND reverse the orientation, because a
+            # reflected solid comes out inside-out (face normals flipped inward),
+            # which makes downstream OCC booleans misbehave (parts won't merge /
+            # subtract wrong).  2-D faces stay on the placement path: their
+            # extrude/union pipeline doesn't accept baked faces, and the 2-D
+            # mirrors in practice wrap symmetric profiles (circles) where the
+            # dropped reflection is harmless.
+            try:
+                det = m.determinant()
+            except Exception:
+                det = 1.0
+            if det < 0:
+                write_log("Transform", f"multmatrix reflection det={det:.3f}")
+                results = []
+                for child in node.children:
+                    for shape, pl in _as_list(process_AST_node(child)):
+                        if shape is None:
+                            continue
+                        is_solid = False
+                        try:
+                            is_solid = len(shape.Solids) > 0
+                        except Exception:
+                            pass
+                        if is_solid:
+                            try:
+                                s = shape.copy()
+                                s = s.transformGeometry(m.multiply(pl.Matrix))
+                                results.append((s, App.Placement()))
+                                continue
+                            except Exception as ex:
+                                write_log("Transform",
+                                          f"reflection bake failed: {ex}")
+                        # 2-D / fallback: placement path (drops reflection)
+                        results.append((shape, App.Placement(m).multiply(pl)))
+                return results
+
             trans_pl = App.Placement(m)
 
         results = []

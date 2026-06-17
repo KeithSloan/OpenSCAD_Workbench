@@ -12,6 +12,23 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_cubes import hull_cube
 # Set False before merging to main (Report View policy: silent normal ops).
 HULL_DEBUG = True
 
+# Debug halt: when True, the import aborts immediately after the FIRST hull is
+# accepted — the accepted solid is written to <csg-dir>/concentric_debug/
+# hull_result.brep first.  Lets you inspect a single hull in isolation without
+# the rest of the model building on top of it.  Set False for normal imports.
+HULL_STOP_AFTER_FIRST = False
+
+# Diagnostic: when True, NEVER accept a smooth loft — always use the faceted
+# (planar) hull.  Used to test whether a smooth lofted BRep base is what breaks
+# the downstream OCC booleans on the full model.  Set False for normal imports.
+HULL_FORCE_FACETED = False
+
+
+class HullDebugStop(BaseException):
+    """Raised to halt the whole import after the first accepted hull (debug).
+    Subclasses BaseException so ordinary `except Exception` handlers don't
+    swallow it."""
+
 
 def _dbg(msg):
     """Log to file always; mirror to the Report View while HULL_DEBUG is on."""
@@ -62,6 +79,41 @@ def _export_failed_loft(shapes):
         _dbg(f"  saved failed-loft shapes → {stem}_loftfail_{n}_A/B.brep (next to CSG)")
     except Exception as ex:
         _dbg(f"  failed-loft export error: {ex}")
+
+
+def _stop_after_hull(solid):
+    """Make the first accepted hull visible on its own for inspection: add it as
+    a Part::Feature to the active document AND write it to
+    <csg-dir>/concentric_debug/hull_result.brep, then raise HullDebugStop to
+    abort the rest of the import (debug aid — see HULL_STOP_AFTER_FIRST)."""
+    # Show it in the 3D view so it survives the abort (the importer never reaches
+    # its own object-creation step once we raise).
+    try:
+        doc = FreeCAD.ActiveDocument or FreeCAD.newDocument("HullDebug")
+        obj = doc.addObject("Part::Feature", "hull_result")
+        obj.Shape = solid
+        doc.recompute()
+        try:
+            import FreeCADGui
+            FreeCADGui.ActiveDocument.ActiveView.fitAll()
+        except Exception:
+            pass
+        _dbg("  HULL_STOP_AFTER_FIRST: added 'hull_result' to the active document")
+    except Exception as ex:
+        _dbg(f"  HULL_STOP_AFTER_FIRST: could not add object: {ex}")
+    try:
+        import os
+        from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_brep_loft import DEBUG_DIR
+        d = DEBUG_DIR
+        os.makedirs(d, exist_ok=True)
+        fn = os.path.join(d, "hull_result.brep")
+        solid.exportBrep(fn)
+        _dbg(f"  HULL_STOP_AFTER_FIRST: wrote {fn} "
+             f"(vol={getattr(solid, 'Volume', 0):.1f} "
+             f"valid={solid.isValid()} closed={solid.isClosed()}) — halting import")
+    except Exception as ex:
+        _dbg(f"  HULL_STOP_AFTER_FIRST: export failed: {ex} — halting anyway")
+    raise HullDebugStop("halted after first accepted hull (HULL_STOP_AFTER_FIRST)")
 
 
 def _warn(msg):
@@ -298,14 +350,17 @@ def try_hull(node):
             from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_brep_loft import (
                 hull_brep_loft
             )
-            _dbg("  trying brep loft (2 shapes)")
-            try:
-                loft_result = hull_brep_loft(all_shapes)
-            except Exception as ex:
-                _dbg(f"  brep loft err: {ex}")
-                loft_result = None
-            if loft_result is None:
-                _export_failed_loft(all_shapes)
+            if HULL_FORCE_FACETED:
+                _dbg("  HULL_FORCE_FACETED -> skipping smooth loft")
+            else:
+                _dbg("  trying brep loft (2 shapes)")
+                try:
+                    loft_result = hull_brep_loft(all_shapes)
+                except Exception as ex:
+                    _dbg(f"  brep loft err: {ex}")
+                    loft_result = None
+                if loft_result is None:
+                    _export_failed_loft(all_shapes)
 
         # ── Faceted convex hull: always geometrically correct ─────────
         # Computed both as the fallback AND as a yardstick to validate the loft.
@@ -334,10 +389,14 @@ def try_hull(node):
             except Exception:
                 accept = False
             if accept:
+                if HULL_STOP_AFTER_FIRST:
+                    _stop_after_hull(loft_result)
                 return loft_result
 
         if faceted is not None:
             _dbg("  using faceted BRep")
+            if HULL_STOP_AFTER_FIRST:
+                _stop_after_hull(faceted)
             return faceted
 
     _dbg("hull: no native path succeeded → returning None")

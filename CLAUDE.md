@@ -178,6 +178,36 @@ being imported, for offline inspection.  The CSG dir/stem are propagated from
 The `HullLoftTest_CMD` GUI command (`commands/hullLoftTest.py`) lofts the two
 selected objects so a failed pair can be reloaded and iterated on in isolation.
 
+### Concentric coaxial prisms — smooth hull (`hull_concentric_sections`)
+The silhouette-loft above has no single A→B bridge band for **concentric** shapes
+(two coaxial near-concentric prisms, e.g. `compact_nut_seat`'s base = two
+`center=true` extruded `union(square, 2 circles)` profiles, one wide+short, one
+thin+tall).  When the COGs are near-coincident (`|d| ≤ 5%·size`), `hull_brep_loft`
+routes to `hull_concentric_sections(A, B, axis)`:
+1. `A.fuse(B)`, then for each end where the narrower shape protrudes past the
+   wider, fuse a **taper solid** (`_frustum_solid`) lofting the wider shape's
+   end-cap wire to the narrower's; `removeSplitter()`.
+2. **`_cap_wire(shape, axis, want_max)`** returns each shape's REAL terminal cap
+   outline (no `slice()`).  Crucially the cap is often **tiled**: a 2-D
+   `union(square, 2 circles)` extrude leaves the end cap as several coplanar
+   sub-faces sharing internal seam edges.  Taking one sub-face's `OuterWire`
+   would bridge only that tile and drop the straight "square bits" from the
+   taper.  So `_cap_wire` collects ALL coplanar cap faces at the extreme axial
+   level and rebuilds the outer outline as the **edges used by exactly one tile**
+   (shared internal seams appear twice and cancel) → the full mixed line+arc
+   outline, identical topology between wide and narrow.
+3. **`_piecewise_bridge`** pairs the two cap wires edge-for-edge (correspondence
+   chosen explicitly, so OCC never twists — cf. OCCT #1315); **Line↔Line pairs
+   build exact planar quads** (so `removeSplitter` merges them with the body's
+   coplanar flat faces — a ruled BSpline would leave a spurious seam), arc↔arc
+   pairs stay smooth ruled surfaces.
+
+> Developer .brep dumps (cap wires, tapers, OCCT repro) are gated behind
+> `process_hull_brep_loft.EXPORT_DEBUG` (default False → never written on a
+> normal import); when on they go to `DEBUG_DIR`.  Dev toggles in `processHull`:
+> `HULL_STOP_AFTER_FIRST` (halt after first accepted hull, add it to the doc),
+> `HULL_FORCE_FACETED` (never accept a smooth loft).  All default False.
+
 ### Hull — known limitations & roadmap (see `Developer_Notes/BrepHullLofts_Architecture.md`)
 - **Single-loft limitation:** `hull_brep_loft` uses one silhouette loop per shape
   + one `makeLoft`; mismatched outline topology only partially bridges. The true
@@ -257,7 +287,7 @@ height.  No special-casing needed.
 
 ## Importer versioning
 - **ImportAstCSG** (`importers/importASTCSG.py`) is the active AST-based importer.
-  - Current version: `0.10.0`  (set via `__version__` at top of file)
+  - Current version: `0.11.0`  (set via `__version__` at top of file)
   - **Only bump `__version__` when the user confirms testing is complete and the
     change is ready to push to the main repo.** Do not bump during development
     iterations. Bug fix → patch (0.8.x → 0.8.x+1), significant new feature → minor
@@ -290,6 +320,28 @@ Do **not** use `ast.literal_eval()` directly for named parameter values —
 Python rejects lowercase booleans and falls back to a raw string, which is
 truthy in Python and silently misapplies centering to every primitive.
 
+## Transforms — `multmatrix` reflections (`processAST.py`)
+Transforms propagate top-down as `App.Placement` and are applied (baked) at the
+boolean/primitive "sites".  A **reflection** (an OpenSCAD `mirror()`, which emits
+a `multmatrix` with **negative determinant**, e.g. `diag(1,1,-1)`) CANNOT be
+represented by an `App.Placement` (rotation + translation only): `App.Placement(m)`
+silently drops the mirror and keeps a rotation, so a mirrored subtree lands in the
+wrong orientation.
+
+Handling in the `multmatrix` branch: when `m.determinant() < 0` **and** the child
+is a **3-D solid**, bake the full transform into the geometry —
+`s.transformGeometry(m.multiply(pl.Matrix))` — and return an **identity**
+Placement.  Notes:
+- **Do NOT `reverse()` the result.** `transformGeometry` already produces a
+  correctly-oriented mirrored solid; an extra `reverse()` turns it inside-out, so
+  a later `difference()` acts like an `intersection()` (verified on
+  `subTests/test_mirror/test_mirror_solid.scad`: block − mirror(L) must give an
+  L-notch, not the L).
+- **2-D faces stay on the placement path** (`App.Placement(m).multiply(pl)`):
+  their extrude/union pipeline does not accept a baked face (yields a Null
+  extrude), and the 2-D mirrors in practice wrap symmetric profiles (a circle)
+  where the dropped reflection is harmless.
+
 ## 2D operations — `offset` (`processAST.py`)
 OpenSCAD's `offset()` is a **2-D** operation. The handler dispatches on the
 child's dimensionality:
@@ -318,4 +370,15 @@ child's dimensionality:
 `testcases/Hull_Tests/BRepHull/` — e.g. `test_hull_linear_extrude.csg`
 (`hull()` of a `linear_extrude(offset(square))` slab + a translated cylinder;
 exercises the 2-D offset fix and the curved-silhouette loft path).
+
+### `compact_nut_seat` isolation sub-tests (`testcases/Hull_Tests/openflexure_csgs/subTests/`)
+Minimal reproducers carved out of `compact_nut_seat_fn0.csg` while debugging:
+- `test_compact_nut_base/` — the first hull only (two concentric extruded
+  `union(square, 2 circles)` prisms).  Exercises `hull_concentric_sections` +
+  the `_cap_wire` cap-tile reconstruction.  **Imports smooth & correct.**
+- `test_mirror/test_mirror_solid.scad` — minimal `multmatrix` reflection test
+  (union of an L + its X-mirror; block − mirror(L) notch).  **Correct.**
+- `test_compact_nut_arms/` — `test_halfA.csg` (base block, correct), `test_halfB.csg`
+  (the arms subtree), `test_arm1.csg` (a single arm).  **KNOWN-BROKEN:** a single
+  arm imports as "missing arm" in native BRep — see TODO below / `Developer_Notes`.
 
