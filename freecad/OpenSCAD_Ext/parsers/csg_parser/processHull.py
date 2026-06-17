@@ -10,7 +10,7 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_cubes import hull_cube
 # Dev instrumentation.  While True, the hull dispatch trace is mirrored to the
 # FreeCAD Report View; everything is always written to workbench.log regardless.
 # Set False before merging to main (Report View policy: silent normal ops).
-HULL_DEBUG = True
+HULL_DEBUG = False
 
 # Debug halt: when True, the import aborts immediately after the FIRST hull is
 # accepted — the accepted solid is written to <csg-dir>/concentric_debug/
