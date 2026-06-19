@@ -201,6 +201,14 @@ routes to `hull_concentric_sections(A, B, axis)`:
    build exact planar quads** (so `removeSplitter` merges them with the body's
    coplanar flat faces — a ruled BSpline would leave a spurious seam), arc↔arc
    pairs stay smooth ruled surfaces.
+   - **Rotation alignment is by EDGE-TYPE SEQUENCE, then best angular fit.**
+     Matching only the first edge by angle is ambiguous for profiles with several
+     collinear edges or symmetry — a two-rounded-end outline
+     `[L,L,L,C,C,L,L,L,C,C]` (`union(square, 2 circles)`) has two valid rotations
+     and could land one edge off, pairing a Line with a Circle → an open,
+     invalid frustum → loft rejected → faceted.  So restrict candidate rotations
+     to those whose edge-type sequence matches, then pick the one with the least
+     total angular mismatch over ALL edges.
 
 > Developer .brep dumps (cap wires, tapers, OCCT repro) are gated behind
 > `process_hull_brep_loft.EXPORT_DEBUG` (default False → never written on a
@@ -287,7 +295,7 @@ height.  No special-casing needed.
 
 ## Importer versioning
 - **ImportAstCSG** (`importers/importASTCSG.py`) is the active AST-based importer.
-  - Current version: `0.11.0`  (set via `__version__` at top of file)
+  - Current version: `0.12.0`  (set via `__version__` at top of file)
   - **Only bump `__version__` when the user confirms testing is complete and the
     change is ready to push to the main repo.** Do not bump during development
     iterations. Bug fix → patch (0.8.x → 0.8.x+1), significant new feature → minor
@@ -328,19 +336,46 @@ represented by an `App.Placement` (rotation + translation only): `App.Placement(
 silently drops the mirror and keeps a rotation, so a mirrored subtree lands in the
 wrong orientation.
 
-Handling in the `multmatrix` branch: when `m.determinant() < 0` **and** the child
-is a **3-D solid**, bake the full transform into the geometry —
-`s.transformGeometry(m.multiply(pl.Matrix))` — and return an **identity**
-Placement.  Notes:
-- **Do NOT `reverse()` the result.** `transformGeometry` already produces a
-  correctly-oriented mirrored solid; an extra `reverse()` turns it inside-out, so
-  a later `difference()` acts like an `intersection()` (verified on
+Handling in the `multmatrix` branch (`m.determinant() < 0`), split by child type:
+
+- **3-D solid → bake** the full transform into the geometry:
+  `s.transformGeometry(m.multiply(pl.Matrix))`, return an **identity** Placement.
+  **Do NOT `reverse()`.** `transformGeometry` already yields a correctly-oriented
+  mirrored solid; an extra `reverse()` turns it inside-out, so a later
+  `difference()` acts like an `intersection()` (verified on
   `subTests/test_mirror/test_mirror_solid.scad`: block − mirror(L) must give an
   L-notch, not the L).
-- **2-D faces stay on the placement path** (`App.Placement(m).multiply(pl)`):
-  their extrude/union pipeline does not accept a baked face (yields a Null
-  extrude), and the 2-D mirrors in practice wrap symmetric profiles (a circle)
-  where the dropped reflection is harmless.
+- **2-D face/wire → equivalent proper rotation via the placement path.** Baking a
+  2-D face breaks the extrude/union pipeline (Null extrude), but a 2-D profile
+  lives in the **z=0 plane**, where a reflection is identical to a *proper*
+  rotation that also flips Z (harmless at z=0).  So use `m' = m·diag(1,1,-1)`:
+  `det(m') = -det(m) > 0` (Placement-representable) and `m'·p == m·p` for every
+  z=0 point.  Return `App.Placement(m').multiply(pl)`.
+  **Why this matters:** the `compact_nut_seat` base profile is
+  `union(circle@+6.036, mirror(circle@+6.036), square)` — the *left* rounded end
+  is a translated `mirror(circle)`.  Dropping that reflection (old behaviour) left
+  the circle at +6.036 instead of −6.036, so the left end was silently missing.
+  diag(-1,1,1)·diag(1,1,-1) = diag(-1,1,-1) (180° about Y) places it at −6.036.
+
+## Booleans — oversized clip-tool clamp (`processAST.py`)
+OpenSCAD's half-space / clip idiom uses **999-scale solids** (`cube(999)`,
+`cylinder(h=999)`).  Fed straight into OCC `cut`/`common`, the 999-vs-10mm scale
+(ratio can reach ≈20000:1 with `h=0.05` features) is past OCC's floating-point
+boolean tolerance: the op **silently returns garbage** (no exception, reports
+valid) — e.g. an `intersection` whose result bbox spills to ±999 when an operand
+is only ~10 mm wide (`A∩B ⊆ A` is violated).  CGAL (OpenSCAD) handles it; OCC
+cannot.
+
+`_clamp_tool(tool, ref_bb, margin)` in the 3-D boolean loop clips an **oversized**
+tool to the other operand's bounding box (+margin) before `cut`/`common`.  This
+is **exact** — for `A.cut(B)` / `A.common(B)` the part of B outside A's bbox can't
+affect the result — and keeps OCC at a sane ~10 mm scale.  Only fires when the
+tool dwarfs the reference (≥4× in some axis).  It MITIGATES but does not fully
+cure the worst cases (the clamp's own `common` with the 999-tool can still leave
+stray ±999 geometry) — the underlying OCC defect is reported in
+`OCCT/intersection_bug/` (README + py/cpp repro, captured via the `EXPORT_BOOL_BUG`
+flag in processAST; default False).  `_adbg`/`_shp` give a `[BOOL]` operand/result
+trace gated by `processHull.HULL_DEBUG`.
 
 ## 2D operations — `offset` (`processAST.py`)
 OpenSCAD's `offset()` is a **2-D** operation. The handler dispatches on the

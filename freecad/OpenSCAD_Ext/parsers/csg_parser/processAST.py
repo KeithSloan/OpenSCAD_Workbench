@@ -45,6 +45,100 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.processMinkowski import (
     )    
 from freecad.OpenSCAD_Ext.parsers.csg_parser.process_text import process_text 
 
+def _adbg(msg):
+    """Log to file always; mirror to the Report View while processHull.HULL_DEBUG
+    is on.  Used for boolean-tree diagnostics (e.g. tracing where a subtree's
+    geometry vanishes)."""
+    write_log("Boolean", msg)
+    try:
+        from freecad.OpenSCAD_Ext.parsers.csg_parser import processHull as _ph
+        if _ph.HULL_DEBUG:
+            FreeCAD.Console.PrintMessage(f"[BOOL] {msg}\n")
+    except Exception:
+        pass
+
+
+def _shape_vol(s):
+    try:
+        return s.Volume
+    except Exception:
+        return -1.0
+
+
+# Capture the operands of an OCC boolean that returned garbage (a
+# difference/intersection result spilling outside op0's bbox) for an OCC bug
+# report.  OFF by default; set True, import the model, then build the report
+# from the dumped .brep files.
+EXPORT_BOOL_BUG = False   # capture OCC intersection-bug operands (dev only)
+_BOOL_BUG_DIR = ("/Users/ksloan/Workbenches/OpenSCAD_Workbench/"
+                 "OCCT/intersection_bug")
+_bool_bug_done = False
+
+
+def _export_bool_bug(opA, opB, result, node_type):
+    """Dump opA, opB (the boolean operands) and the garbage result as .brep."""
+    global _bool_bug_done
+    if _bool_bug_done:
+        return
+    _bool_bug_done = True
+    try:
+        import os
+        os.makedirs(_BOOL_BUG_DIR, exist_ok=True)
+        opA.exportBrep(os.path.join(_BOOL_BUG_DIR, "opA.brep"))
+        opB.exportBrep(os.path.join(_BOOL_BUG_DIR, "opB.brep"))
+        result.exportBrep(os.path.join(_BOOL_BUG_DIR, "result_garbage.brep"))
+        _adbg(f"  exported OCC {node_type} bug shapes -> {_BOOL_BUG_DIR} "
+              f"(opA bb={opA.BoundBox}, opB bb={opB.BoundBox}, "
+              f"result bb={result.BoundBox})")
+    except Exception as ex:
+        _adbg(f"  bool-bug export failed: {ex}")
+
+
+def _bbox_box(bb, margin):
+    """A Part box covering BoundBox *bb* expanded by *margin* on every side."""
+    return Part.makeBox(
+        bb.XLength + 2 * margin, bb.YLength + 2 * margin, bb.ZLength + 2 * margin,
+        App.Vector(bb.XMin - margin, bb.YMin - margin, bb.ZMin - margin))
+
+
+def _clamp_tool(tool, ref_bb, margin=5.0):
+    """Clip a boolean *tool* to *ref_bb* (+margin) when the tool dwarfs the
+    reference, so OCC stays at a sane scale.
+
+    OpenSCAD's half-space / clip idiom uses 999-size solids (`cube(999)` etc.).
+    Fed straight into OCC `cut`/`common`, the 999-vs-10mm scale mismatch makes
+    the boolean silently no-op or return a wrong (still-999-wide) result.  For
+    `A.cut(B)` / `A.common(B)` the part of B outside A's bounding box cannot
+    affect the result, so clamping B to A's bbox is EXACT — it only removes the
+    far-away geometry that confuses OCC.  Returns the original tool if it isn't
+    oversized or if the clamp fails."""
+    try:
+        tb = tool.BoundBox
+        if (tb.XLength <= ref_bb.XLength * 4 + 1 and
+                tb.YLength <= ref_bb.YLength * 4 + 1 and
+                tb.ZLength <= ref_bb.ZLength * 4 + 1):
+            return tool                      # not oversized — leave it
+        box = _bbox_box(ref_bb, margin)
+        clamped = box.common(tool)          # box as surviving operand (cleaner)
+        if clamped is None or clamped.isNull() or _shape_vol(clamped) < 1e-9:
+            return tool
+        # If OCC still left stray far-away geometry, fall back to keeping only the
+        # solids whose centre lies inside the clamp box.
+        cb = clamped.BoundBox
+        if (cb.XLength > box.BoundBox.XLength * 1.5 or
+                cb.YLength > box.BoundBox.YLength * 1.5 or
+                cb.ZLength > box.BoundBox.ZLength * 1.5):
+            inside = [s for s in clamped.Solids
+                      if box.BoundBox.isInside(s.CenterOfMass)]
+            if inside:
+                clamped = inside[0] if len(inside) == 1 else Part.makeCompound(inside)
+        _adbg(f"    clamped oversized tool {tb} -> {clamped.BoundBox}")
+        return clamped
+    except Exception as ex:
+        _adbg(f"    clamp failed ({ex}) — using tool as-is")
+        return tool
+
+
 # ---------------------------------------------------------------------------
 # Fallback tracking
 # ---------------------------------------------------------------------------
@@ -689,6 +783,14 @@ def process_AST_node(node):
                 det = 1.0
             if det < 0:
                 write_log("Transform", f"multmatrix reflection det={det:.3f}")
+                # For a 2-D profile (z=0 plane), a reflection is identical to a
+                # PROPER rotation that also flips Z (harmless at z=0):
+                # m·diag(1,1,-1) has positive determinant and the same effect on
+                # z=0 geometry, so it CAN be carried as an App.Placement — no
+                # baking, so the extrude/union pipeline stays happy and a
+                # translated mirror(circle) lands on the correct side.
+                _flipz = App.Matrix(); _flipz.A33 = -1.0
+                m_proper = m.multiply(_flipz)
                 results = []
                 for child in node.children:
                     for shape, pl in _as_list(process_AST_node(child)):
@@ -700,6 +802,11 @@ def process_AST_node(node):
                         except Exception:
                             pass
                         if is_solid:
+                            # 3-D: App.Placement can't hold a reflection, so bake
+                            # m∘pl into the geometry.  Do NOT reverse —
+                            # transformGeometry already yields a correctly-oriented
+                            # mirror; reversing inverts it (a later difference would
+                            # act like an intersection).
                             try:
                                 s = shape.copy()
                                 s = s.transformGeometry(m.multiply(pl.Matrix))
@@ -708,8 +815,11 @@ def process_AST_node(node):
                             except Exception as ex:
                                 write_log("Transform",
                                           f"reflection bake failed: {ex}")
-                        # 2-D / fallback: placement path (drops reflection)
-                        results.append((shape, App.Placement(m).multiply(pl)))
+                                results.append((shape, App.Placement(m).multiply(pl)))
+                        else:
+                            # 2-D: equivalent proper rotation via placement path.
+                            results.append((shape,
+                                            App.Placement(m_proper).multiply(pl)))
                 return results
 
             trans_pl = App.Placement(m)
@@ -1006,14 +1116,40 @@ def process_AST_node(node):
             # 3D Boolean operations
             result = shapes[0]
             _boolean_ok = True
-            for s in shapes[1:]:
+            def _shp(s):
+                try:
+                    b = s.BoundBox
+                    return (f"vol={_shape_vol(s):.1f} solids={len(s.Solids)} "
+                            f"valid={s.isValid()} bb=[{b.XMin:.1f},{b.YMin:.1f},"
+                            f"{b.ZMin:.1f} .. {b.XMax:.1f},{b.YMax:.1f},{b.ZMax:.1f}]")
+                except Exception as ex:
+                    return f"vol={_shape_vol(s):.1f} (shp err {ex})"
+            _adbg(f"{node_type}: {len(shapes)} operand(s); op0 {_shp(shapes[0])}")
+            for i, s in enumerate(shapes[1:], start=1):
+                _adbg(f"  {node_type} op{i}: {_shp(s)}")
+                prev_result = result
                 try:
                     if node_type == "union":
                         result = result.fuse(s)
                     elif node_type == "difference":
-                        result = result.cut(s)
+                        # Clip an oversized subtrahend to the body's region first.
+                        result = result.cut(_clamp_tool(s, result.BoundBox))
                     elif node_type == "intersection":
-                        result = result.common(s)
+                        # Clip whichever operand dwarfs the other to its bbox.
+                        if s.BoundBox.DiagonalLength > result.BoundBox.DiagonalLength:
+                            result = result.common(_clamp_tool(s, result.BoundBox))
+                        else:
+                            result = _clamp_tool(result, s.BoundBox).common(s)
+                    _adbg(f"  -> after op{i}: result {_shp(result)}"
+                          + ("  *** COLLAPSED ***" if _shape_vol(result) < 1e-3 else ""))
+                    # OCC bug capture: a difference/intersection result must be a
+                    # subset of op0 — if it spilled outside, OCC returned garbage.
+                    if EXPORT_BOOL_BUG and node_type in ("difference", "intersection"):
+                        ob, rb, TB = prev_result.BoundBox, result.BoundBox, 1.0
+                        if (rb.XMin < ob.XMin - TB or rb.XMax > ob.XMax + TB or
+                                rb.YMin < ob.YMin - TB or rb.YMax > ob.YMax + TB or
+                                rb.ZMin < ob.ZMin - TB or rb.ZMax > ob.ZMax + TB):
+                            _export_bool_bug(prev_result, s, result, node_type)
                 except Exception as e:
                     # OCC boolean failed — don't silently continue with an
                     # incorrect partial result (e.g. a body with the dogleg

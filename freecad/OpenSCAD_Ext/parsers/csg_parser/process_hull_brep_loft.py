@@ -264,10 +264,37 @@ def _piecewise_bridge(wA, wB, axis):
     def ang(p, c):
         return math.atan2(p.dot(uy) - c[1], p.dot(ux) - c[0])
 
-    # Rotate eB so its first edge aligns angularly with eA's first edge.
-    a0 = ang(ptsA[0], cA)
-    j = min(range(len(eB)),
-            key=lambda k: abs(_ang_diff(ang(ptsB[k], cB), a0)))
+    # Rotate eB so it aligns with eA.  Matching only the first edge by angle is
+    # ambiguous when a profile has several collinear edges or repeats (e.g. a
+    # symmetric two-rounded-end outline [L,L,L,C,C,L,L,L,C,C] has two valid
+    # rotations) — it can land one edge off, pairing a Line with a Circle.
+    # Instead: restrict to rotations whose EDGE-TYPE sequence matches eA, then
+    # pick the one with the smallest total angular mismatch over ALL edges.
+    n = len(eB)
+
+    def _etype(e):
+        c = e.Curve
+        if isinstance(c, Part.Circle):
+            return "C"
+        if isinstance(c, Part.Line):
+            return "L"
+        return "?"
+
+    tA = [_etype(e) for e in eA]
+    tB = [_etype(e) for e in eB]
+    angA = [ang(p, cA) for p in ptsA]
+    angB = [ang(p, cB) for p in ptsB]
+
+    cands = [j for j in range(n)
+             if all(tA[k] == tB[(k + j) % n] for k in range(n))]
+    if not cands:
+        cands = list(range(n))   # topology differs — fall back to all rotations
+
+    def _total_mismatch(j):
+        return sum(abs(_ang_diff(angA[k], angB[(k + j) % n]))
+                   for k in range(n))
+
+    j = min(cands, key=_total_mismatch)
     eB = eB[j:] + eB[:j]
 
     _dbg(f"  bridge pairing ({len(eA)} edges): " + ", ".join(
