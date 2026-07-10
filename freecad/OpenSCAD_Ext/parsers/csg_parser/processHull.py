@@ -10,7 +10,7 @@ from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_cubes import hull_cube
 # Dev instrumentation.  While True, the hull dispatch trace is mirrored to the
 # FreeCAD Report View; everything is always written to workbench.log regardless.
 # Set False before merging to main (Report View policy: silent normal ops).
-HULL_DEBUG = False
+HULL_DEBUG = True
 
 # Debug halt: when True, the import aborts immediately after the FIRST hull is
 # accepted — the accepted solid is written to <csg-dir>/concentric_debug/
@@ -151,8 +151,17 @@ def try_hull(node):
     matrices = []
     shapes = []
 
-    def _extract_shape(result):
-        """Extract a Part.Shape from a process_AST_node return value."""
+    def _extract_shape(result, matrix=None):
+        """Extract a Part.Shape from a process_AST_node return value.
+
+        Applies the child's own placement AND the accumulated parent transform
+        *matrix* (the chain of group/multmatrix ancestors descended through to
+        reach this complex child).  Without the latter, an evaluated complex
+        child (e.g. a ``difference``) is left in its local frame while sibling
+        primitives — which DO get the accumulated matrix below — are correctly
+        placed, so the two land in different coordinate systems and the hull is
+        computed on mis-placed geometry.
+        """
         if result is None:
             return
         items = result if isinstance(result, list) else [result]
@@ -166,6 +175,9 @@ def try_hull(node):
                 if pl is not None and hasattr(pl, 'Matrix'):
                     s = s.copy()
                     s.transformShape(pl.Matrix)
+                if matrix is not None:
+                    s = s.copy()
+                    s.transformShape(matrix)
                 if hasattr(s, 'BoundBox'):
                     shapes.append(s)
 
@@ -221,7 +233,7 @@ def try_hull(node):
                 if not found:
                     _dbg("intersection: no usable primitive, creating shape")
                     try:
-                        _extract_shape(process_AST_node(child))
+                        _extract_shape(process_AST_node(child), matrix)
                     except Exception as ex:
                         _dbg(f"  intersection shape failed: {ex}")
 
@@ -230,7 +242,7 @@ def try_hull(node):
                 _dbg(f"Descending into '{nt}' — creating child shape")
                 try:
                     n_before = len(shapes)
-                    _extract_shape(process_AST_node(child))
+                    _extract_shape(process_AST_node(child), matrix)
                     if len(shapes) == n_before:
                         _dbg(f"  '{nt}' produced no shape")
                 except Exception as ex:
@@ -346,16 +358,19 @@ def try_hull(node):
 
         # ── General silhouette + loft (smooth BRep) ──────────────────
         loft_result = None
-        if len(all_shapes) == 2:
+        if len(all_shapes) >= 2:
             from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_brep_loft import (
-                hull_brep_loft
+                hull_brep_loft_multi
             )
             if HULL_FORCE_FACETED:
                 _dbg("  HULL_FORCE_FACETED -> skipping smooth loft")
             else:
-                _dbg("  trying brep loft (2 shapes)")
+                _dbg(f"  trying brep loft ({len(all_shapes)} shapes)")
                 try:
-                    loft_result = hull_brep_loft(all_shapes)
+                    # len==2 lofts directly; len>2 clusters into 2 connected
+                    # ends, fuses each (lossless), then lofts.  Returns None for
+                    # genuine multi-lobe hulls -> faceted fallback below.
+                    loft_result = hull_brep_loft_multi(all_shapes)
                 except Exception as ex:
                     _dbg(f"  brep loft err: {ex}")
                     loft_result = None
@@ -392,6 +407,43 @@ def try_hull(node):
                 if HULL_STOP_AFTER_FIRST:
                     _stop_after_hull(loft_result)
                 return loft_result
+
+        # ── Smooth section-loft fallback (oblique bridges) ────────────
+        # The cap-rim silhouette loft underestimates an OBLIQUE bridge (cap-to-
+        # cap frustum, ~half volume — rejected above).  Slice the convex hull
+        # perpendicular to its elongation axis and loft smooth outlines, which
+        # capture the full tangent envelope.  Validated against the faceted
+        # volume, so it never regresses a case that already worked.
+        #
+        # GATED on a built-but-rejected silhouette loft (loft_result is not
+        # None): that is exactly the oblique-underestimate signature.  Hulls
+        # that never produced a loft (e.g. the coaxial nut-trap, which needs
+        # axial sectioning instead) skip this — otherwise the section-loft would
+        # run on every faceted hull in the model and the import would crawl.
+        if (not HULL_FORCE_FACETED) and loft_result is not None \
+                and faceted is not None and faceted.Volume > 1e-9:
+            try:
+                from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_brep_loft import (
+                    hull_loft_sections
+                )
+                sect = hull_loft_sections(all_shapes)
+            except Exception as ex:
+                _dbg(f"  section-loft err: {ex}")
+                sect = None
+            if sect is not None:
+                try:
+                    rel = abs(sect.Volume - faceted.Volume) / faceted.Volume
+                    ok = (rel < 0.05) and sect.isValid()
+                    _dbg(f"  section-loft vol={sect.Volume:.1f} "
+                         f"faceted={faceted.Volume:.1f} rel={rel:.3f} "
+                         f"valid={sect.isValid()} -> "
+                         f"{'ACCEPT section-loft' if ok else 'reject -> faceted'}")
+                    if ok:
+                        if HULL_STOP_AFTER_FIRST:
+                            _stop_after_hull(sect)
+                        return sect
+                except Exception as ex:
+                    _dbg(f"  section-loft check err: {ex}")
 
         if faceted is not None:
             _dbg("  using faceted BRep")

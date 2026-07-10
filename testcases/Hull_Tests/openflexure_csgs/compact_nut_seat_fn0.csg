@@ -8,10 +8,828 @@ group() {
 							group() {
 								hull() {
 									linear_extrude(height = 51, center = true, $fn = 0, $fa = 12, $fs = 2) {
-										group() {
+					16:19:49  Processing : /Users/ksloan/Workbenches/OpenSCAD_Workbench/testcases/Hull_Tests/openflexure_csgs/subTests/test_compact_nut_arms/test_arm1.csg
+16:19:49  [HULL] Descending into 'difference' — creating child shape
+16:19:49  [BOOL] difference: 2 operand(s); op0 vol=523.6 solids=1 valid=True bb=[-5.0,-5.0,-5.0 .. 5.0,5.0,5.0]
+16:19:49  [BOOL]   difference op1: vol=970299.0 solids=1 valid=True bb=[-49.5,-49.5,0.0 .. 49.5,49.5,99.0]
+16:19:49  [BOOL]     clamped oversized tool BoundBox (-49.5, -49.5, 0, 49.5, 49.5, 99) -> BoundBox (-10, -10, 0, 10, 10, 10)
+16:19:49  [BOOL]   -> after op1: result vol=261.8 solids=1 valid=True bb=[-5.0,-5.0,-5.0 .. 5.0,5.0,0.0]
+16:19:49  [HULL] Collected: 2 primitives, 1 complex shapes
+16:19:49  [HULL] Path 2: shape-based with 3 total shape(s)
+16:19:49  [HULL]   classified: spheres=0 polys=3
+16:19:49  [HULL]   trying brep loft (3 shapes)
+16:19:49  [LOFT] cluster+fuse: 3 shapes -> 2 connected end(s) (sizes [2, 1])
+16:19:49  [LOFT]   fused ends: faces=[4, 3] -> 2-shape loft
+16:19:49  [LOFT] hull_brep_loft called
+16:19:49  [LOFT] A faces=4 B faces=3
+16:19:49  [LOFT] axis: COG->COG |d|=23.85 dir=(-0.734,0.512,-0.447)
+16:19:49  [LOFT] extracting silhouette A...
+16:19:49  [LOFT]  faces: outer=1 inner=1 transv=0 curved=2
+16:19:49  [LOFT]  silhouette: 1 edges → 1 wire(s)
+16:19:49  [LOFT]  A: 1 cap faces, 1 wires
+16:19:49  [LOFT] extracting silhouette B...
+16:19:49  [LOFT]  faces: outer=1 inner=1 transv=0 curved=1
+16:19:49  [LOFT]  silhouette: 1 edges → 1 wire(s)
+16:19:49  [LOFT]  B: 1 cap faces, 1 wires
+16:19:49  [LOFT] building bridge (makeLoft): 1×1 wire pairs
+16:19:49  [LOFT]  native loft OK
+16:19:49  [HULL]   loft vol=1362.7 faceted=2757.1 rel=0.506 valid=True -> REJECT loft -> faceted
+16:19:49  [LOFT]   section axis: cylinder (0.000,0.000,1.000)
+16:19:49  [LOFT]   section-loft end-fuse: kept 0/3 originals
+16:19:49  [LOFT]   section-loft: 20 slices vol=2723.4 valid=True closed=True
+16:19:49  [HULL]   section-loft vol=2723.4 faceted=2757.1 rel=0.012 valid=True -> ACCEPT section-loft
+16:19:49  [BOOL] union: 2 operand(s); op0 vol=911.1 solids=1 valid=True bb=[12.5,-17.2,27.0 .. 22.5,-7.2,38.6]
+16:19:49  [BOOL]   union op1: vol=2723.4 solids=1 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,26.7]
+16:19:49  [BOOL]   -> after op1: result vol=3634.3 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:19:49  [BOOL] union: 7 operand(s); op0 vol=3296.7 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,0.5]
+16:19:49  [BOOL]   union op1: vol=6.0 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,1.0]
+16:19:49  [BOOL]   -> after op1: result vol=3302.1 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,1.0]
+16:19:49  [BOOL]   union op2: vol=5.0 solids=1 valid=True bb=[-1.7,-1.7,1.0 .. 1.7,1.7,1.5]
+16:19:49  [BOOL]   -> after op2: result vol=3306.7 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,1.5]
+16:19:49  [BOOL]   union op3: vol=4.8 solids=1 valid=True bb=[-1.7,-1.7,1.4 .. 1.7,1.7,2.0]
+16:19:49  [BOOL]   -> after op3: result vol=3311.0 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.0]
+16:19:49  [BOOL]   union op4: vol=4.7 solids=1 valid=True bb=[-1.7,-1.7,1.9 .. 1.7,1.7,2.5]
+16:19:49  [BOOL]   -> after op4: result vol=3315.3 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.5]
+16:19:49  [BOOL]   union op5: vol=8540.6 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,999.0]
+16:19:49  [BOOL]   -> after op5: result vol=11838.8 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,999.0]
+16:19:49  [BOOL]   union op6: vol=2819950325.8 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,0.0]
+16:19:49  [BOOL]   -> after op6: result vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,999.0]
+16:19:49  [BOOL] intersection: 2 operand(s); op0 vol=287067.4 solids=1 valid=True bb=[-12.5,-6.5,-499.5 .. 12.5,6.5,499.5]
+16:19:49  [BOOL]   intersection op1: vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-974.0 .. 999.0,999.0,1024.0]
+16:19:49  [BOOL]     clamped oversized tool BoundBox (-999, -999, -974, 999, 999, 1024.05) -> BoundBox (-999, -999, -504.5, 999, 999, 504.5)
+16:19:49  [BOOL]   -> after op1: result vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:19:49  [HULL] Collected: 2 primitives, 0 complex shapes
+16:19:49  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:19:49  [HULL] Dispatch types={'cylinder'} n=2
+16:19:49  [HULL] Path 1: AST dispatch OK
+16:19:49  [HULL] Collected: 3 primitives, 0 complex shapes
+16:19:49  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:19:49  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:19:49  [Hull] hull_cylinders_and_cube: 3 primitives (1 cyl, 2 cube)
+16:19:49  [HULL] Path 1: AST dispatch OK
+16:19:49  [HULL] Collected: 3 primitives, 0 complex shapes
+16:19:49  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:19:49  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:19:49  [Hull] hull_cylinders_and_cube: 3 primitives (2 cyl, 1 cube)
+16:19:49  [Hull] hull_cylinders_and_cube: cylinders span different axial extents — skipping (needs sectioning)
+16:19:49  [HULL] Path 1: AST dispatch returned None
+16:19:49  [HULL] Path 2: shape-based with 3 total shape(s)
+16:19:49  [HULL]   classified: spheres=0 polys=3
+16:19:49  [HULL]   trying brep loft (3 shapes)
+16:19:49  [LOFT] cluster+fuse: 3 shapes -> 1 connected end(s) (sizes [3])
+16:19:49  [LOFT]   not a 2-ended hull -> defer to fallback
+16:19:49  [HULL]   saved failed-loft shapes → test_arm1_loftfail_1_A/B.brep (next to CSG)
+16:19:49  [HULL]   using faceted BRep
+16:19:49  [HULL] Collected: 2 primitives, 0 complex shapes
+16:19:49  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:19:49  [HULL] Dispatch types={'cylinder'} n=2
+16:19:49  [HULL] Path 1: AST dispatch OK
+16:19:49  [BOOL] intersection: 2 operand(s); op0 vol=242.2 solids=1 valid=True bb=[-5.4,-1.7,0.0 .. 5.4,1.7,6.5]
+16:19:49  [BOOL]   intersection op1: vol=132.6 solids=1 valid=True bb=[-2.3,-2.7,0.0 .. 2.3,2.7,7.0]
+16:19:49  [BOOL]   -> after op1: result vol=101.7 solids=1 valid=True bb=[-2.3,-1.7,0.0 .. 2.3,1.7,6.5]
+16:19:49  [HULL] Collected: 2 primitives, 0 complex shapes
+16:19:49  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:19:49  [HULL] Dispatch types={'cube'} n=2
+16:19:49  [HULL] Path 1: AST dispatch OK
+16:19:49  [BOOL] union: 6 operand(s); op0 vol=19432.0 solids=1 valid=True bb=[-3.5,-3.5,0.0 .. 3.5,999.0,3.0]
+16:19:49  [BOOL]   union op1: vol=143.6 solids=1 valid=True bb=[-3.1,-3.5,-0.0 .. 3.1,3.5,4.0]
+16:19:49  [BOOL]   -> after op1: result vol=19462.9 solids=1 valid=True bb=[-3.5,-3.5,-0.0 .. 3.5,999.0,4.0]
+16:19:49  [BOOL]   union op2: vol=184.4 solids=1 valid=True bb=[-3.2,-3.2,0.0 .. 3.2,3.2,6.0]
+16:19:49  [BOOL]   -> after op2: result vol=19522.0 solids=1 valid=True bb=[-3.5,-3.5,-0.0 .. 3.5,999.0,6.0]
+16:19:49  [BOOL]   union op3: vol=101.7 solids=1 valid=True bb=[-2.3,-1.7,0.0 .. 2.3,1.7,6.5]
+16:19:49  [BOOL]   -> after op3: result vol=19529.9 solids=1 valid=True bb=[-3.5,-3.5,-0.0 .. 3.5,999.0,6.5]
+16:19:49  [BOOL]   union op4: vol=901.9 solids=1 valid=True bb=[-1.7,-1.7,-3.0 .. 1.7,1.7,96.0]
+16:19:49  [BOOL]   -> after op4: result vol=20372.5 solids=1 valid=True bb=[-3.5,-3.5,-3.0 .. 3.5,999.0,96.0]
+16:19:49  [BOOL]   union op5: vol=162.0 solids=1 valid=True bb=[-3.0,4.5,0.1 .. 3.0,13.5,3.1]
+16:19:49  [BOOL]   -> after op5: result vol=20377.9 solids=1 valid=True bb=[-3.5,-3.5,-3.0 .. 3.5,999.0,96.0]
+16:19:49  [BOOL] difference: 6 operand(s); op0 vol=3634.3 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:19:49  [BOOL]   difference op1: vol=961.7 solids=1 valid=True bb=[-16.0,-16.0,25.0 .. 16.0,16.0,27.1]
+16:19:49  [BOOL]   -> after op1: result vol=3630.2 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:19:49  [BOOL]   difference op2: vol=803443.5 solids=1 valid=True bb=[-16.0,-16.0,27.0 .. 16.0,16.0,1026.0]
+16:19:49  [BOOL]     clamped oversized tool BoundBox (-16, -16, 27, 16, 16, 1026) -> BoundBox (-9.23988, -16, 27, 16, 9.31098, 43.6)
+16:19:49  [BOOL]   -> after op2: result vol=3630.2 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:19:49  [BOOL]   difference op3: vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:19:49  [BOOL]     clamped oversized tool BoundBox (-999, -999, -499.5, 999, 999, 499.5) -> BoundBox (-999, -999, 1.20048, 999, 999, 43.6)
+16:19:49  [BOOL]   -> after op3: result vol=2034.3 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:19:49  [BOOL]   difference op4: vol=3959.2 solids=1 valid=True bb=[8.9,-15.7,38.0 .. 16.1,-8.6,138.0]
+16:19:49  [BOOL]   -> after op4: result vol=2024.4 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:19:49  [BOOL]   difference op5: vol=20377.9 solids=1 valid=True bb=[-981.5,-15.7,26.9 .. 21.0,-8.7,126.0]
+16:19:49  [BOOL]   -> after op5: result vol=1728.8 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:34:44  Save auto-recovery file in 0.083760s
+16:35:29  Processing : /Users/ksloan/Workbenches/OpenSCAD_Workbench/testcases/Hull_Tests/openflexure_csgs/compact_nut_seat_fn0.csg
+16:35:29  [HULL] Descending into 'linear_extrude' — creating child shape
+16:35:29  [HULL] Descending into 'linear_extrude' — creating child shape
+16:35:29  [HULL] Collected: 0 primitives, 2 complex shapes
+16:35:29  [HULL] Path 2: shape-based with 2 total shape(s)
+16:35:29  [HULL]   classified: spheres=0 polys=2
+16:35:29  [HULL]   trying brep loft (2 shapes)
+16:35:29  [LOFT] hull_brep_loft called
+16:35:29  [LOFT] A faces=24 B faces=24
+16:35:29  [LOFT] axis: near-concentric (|d|=0.000 < 5%*60.5) -> longest bbox dim (0,0,1)
+16:35:29  [LOFT]   cap: 7 coplanar tiles -> 10 boundary edges (of 17)
+16:35:29  [LOFT]   cap: 7 coplanar tiles -> 10 boundary edges (of 17)
+16:35:29  [LOFT]   cap: 7 coplanar tiles -> 10 boundary edges (of 17)
+16:35:29  [LOFT]   cap: 7 coplanar tiles -> 10 boundary edges (of 17)
+16:35:29  [LOFT]   concentric: wide axial=[-25.50,25.50] narrow axial=[-27.00,27.00]
+16:35:29  [LOFT]   concentric: capW_top edges=[Line,Line,Line,Circ,Circ,Line,Line,Line,Circ,Circ] capN_top edges=[Line,Line,Line,Circ,Circ,Line,Line,Line,Circ,Circ]
+16:35:29  [LOFT]   bridge pairing (10 edges): Line->Line, Line->Line, Line->Line, Circle->Circle, Circle->Circle, Line->Line, Line->Line, Line->Line, Circle->Circle, Circle->Circle
+16:35:29  [LOFT]   frustum[top]: 12 faces -> 1 shell(s), shell.closed=True
+16:35:29  [LOFT]   frustum[top]: solid vol=492.6 closed=True valid=True
+16:35:29  [LOFT]   bridge pairing (10 edges): Line->Line, Line->Line, Circle->Circle, Circle->Circle, Line->Line, Line->Line, Line->Line, Circle->Circle, Circle->Circle, Line->Line
+16:35:29  [LOFT]   frustum[bot]: 12 faces -> 1 shell(s), shell.closed=True
+16:35:29  [LOFT]   frustum[bot]: solid vol=492.6 closed=True valid=True
+16:35:29  [LOFT]   concentric multi-section hull: vol=21334.9 valid=True closed=True
+16:35:29  [HULL]   loft vol=21334.9 faceted=21016.3 rel=0.015 valid=True -> ACCEPT loft
+16:35:29  [BOOL] difference: 2 operand(s); op0 vol=21334.9 solids=1 valid=True bb=[-14.1,-8.1,-27.0 .. 14.1,8.1,27.0]
+16:35:29  [BOOL]   difference op1: vol=2819950325.8 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,0.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-999, -999, -999, 999, 999, 0) -> BoundBox (-999, -999, -32, 999, 999, 0)
+16:35:29  [BOOL]   -> after op1: result vol=10667.4 solids=1 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,27.0]
+16:35:29  [HULL] Descending into 'difference' — creating child shape
+16:35:29  [BOOL] difference: 2 operand(s); op0 vol=523.6 solids=1 valid=True bb=[-5.0,-5.0,-5.0 .. 5.0,5.0,5.0]
+16:35:29  [BOOL]   difference op1: vol=970299.0 solids=1 valid=True bb=[-49.5,-49.5,0.0 .. 49.5,49.5,99.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-49.5, -49.5, 0, 49.5, 49.5, 99) -> BoundBox (-10, -10, 0, 10, 10, 10)
+16:35:29  [BOOL]   -> after op1: result vol=261.8 solids=1 valid=True bb=[-5.0,-5.0,-5.0 .. 5.0,5.0,0.0]
+16:35:29  [HULL] Collected: 2 primitives, 1 complex shapes
+16:35:29  [HULL] Path 2: shape-based with 3 total shape(s)
+16:35:29  [HULL]   classified: spheres=0 polys=3
+16:35:29  [HULL]   trying brep loft (3 shapes)
+16:35:29  [LOFT] cluster+fuse: 3 shapes -> 2 connected end(s) (sizes [2, 1])
+16:35:29  [LOFT]   fused ends: faces=[4, 3] -> 2-shape loft
+16:35:29  [LOFT] hull_brep_loft called
+16:35:29  [LOFT] A faces=4 B faces=3
+16:35:29  [LOFT] axis: COG->COG |d|=23.85 dir=(-0.734,0.512,-0.447)
+16:35:29  [LOFT] extracting silhouette A...
+16:35:29  [LOFT]  faces: outer=1 inner=1 transv=0 curved=2
+16:35:29  [LOFT]  silhouette: 1 edges → 1 wire(s)
+16:35:29  [LOFT]  A: 1 cap faces, 1 wires
+16:35:29  [LOFT] extracting silhouette B...
+16:35:29  [LOFT]  faces: outer=1 inner=1 transv=0 curved=1
+16:35:29  [LOFT]  silhouette: 1 edges → 1 wire(s)
+16:35:29  [LOFT]  B: 1 cap faces, 1 wires
+16:35:29  [LOFT] building bridge (makeLoft): 1×1 wire pairs
+16:35:29  [LOFT]  native loft OK
+16:35:29  [HULL]   loft vol=1362.7 faceted=2757.1 rel=0.506 valid=True -> REJECT loft -> faceted
+16:35:29  [LOFT]   section axis: cylinder (0.000,0.000,1.000)
+16:35:29  [LOFT]   section-loft end-fuse: kept 0/3 originals
+16:35:29  [LOFT]   section-loft: 20 slices vol=2723.4 valid=True closed=True
+16:35:29  [HULL]   section-loft vol=2723.4 faceted=2757.1 rel=0.012 valid=True -> ACCEPT section-loft
+16:35:29  [BOOL] union: 2 operand(s); op0 vol=911.1 solids=1 valid=True bb=[12.5,-17.2,27.0 .. 22.5,-7.2,38.6]
+16:35:29  [BOOL]   union op1: vol=2723.4 solids=1 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,26.7]
+16:35:29  [BOOL]   -> after op1: result vol=3634.3 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL] union: 7 operand(s); op0 vol=3296.7 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,0.5]
+16:35:29  [BOOL]   union op1: vol=6.0 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,1.0]
+16:35:29  [BOOL]   -> after op1: result vol=3302.1 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,1.0]
+16:35:29  [BOOL]   union op2: vol=5.0 solids=1 valid=True bb=[-1.7,-1.7,1.0 .. 1.7,1.7,1.5]
+16:35:29  [BOOL]   -> after op2: result vol=3306.7 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,1.5]
+16:35:29  [BOOL]   union op3: vol=4.8 solids=1 valid=True bb=[-1.7,-1.7,1.4 .. 1.7,1.7,2.0]
+16:35:29  [BOOL]   -> after op3: result vol=3311.0 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.0]
+16:35:29  [BOOL]   union op4: vol=4.7 solids=1 valid=True bb=[-1.7,-1.7,1.9 .. 1.7,1.7,2.5]
+16:35:29  [BOOL]   -> after op4: result vol=3315.3 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.5]
+16:35:29  [BOOL]   union op5: vol=8540.6 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,999.0]
+16:35:29  [BOOL]   -> after op5: result vol=11838.8 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,999.0]
+16:35:29  [BOOL]   union op6: vol=2819950325.8 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,0.0]
+16:35:29  [BOOL]   -> after op6: result vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,999.0]
+16:35:29  [BOOL] intersection: 2 operand(s); op0 vol=287067.4 solids=1 valid=True bb=[-12.5,-6.5,-499.5 .. 12.5,6.5,499.5]
+16:35:29  [BOOL]   intersection op1: vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-974.0 .. 999.0,999.0,1024.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-999, -999, -974, 999, 999, 1024.05) -> BoundBox (-999, -999, -504.5, 999, 999, 504.5)
+16:35:29  [BOOL]   -> after op1: result vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:35:29  [HULL] Collected: 2 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:35:29  [HULL] Dispatch types={'cylinder'} n=2
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [HULL] Collected: 3 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:35:29  [Hull] hull_cylinders_and_cube: 3 primitives (1 cyl, 2 cube)
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [HULL] Collected: 3 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:35:29  [Hull] hull_cylinders_and_cube: 3 primitives (2 cyl, 1 cube)
+16:35:29  [Hull] hull_cylinders_and_cube: cylinders span different axial extents — skipping (needs sectioning)
+16:35:29  [HULL] Path 1: AST dispatch returned None
+16:35:29  [HULL] Path 2: shape-based with 3 total shape(s)
+16:35:29  [HULL]   classified: spheres=0 polys=3
+16:35:29  [HULL]   trying brep loft (3 shapes)
+16:35:29  [LOFT] cluster+fuse: 3 shapes -> 1 connected end(s) (sizes [3])
+16:35:29  [LOFT]   not a 2-ended hull -> defer to fallback
+16:35:29  [HULL]   saved failed-loft shapes → compact_nut_seat_fn0_loftfail_2_A/B.brep (next to CSG)
+16:35:29  [HULL]   using faceted BRep
+16:35:29  [HULL] Collected: 2 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:35:29  [HULL] Dispatch types={'cylinder'} n=2
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [BOOL] intersection: 2 operand(s); op0 vol=242.2 solids=1 valid=True bb=[-5.4,-1.7,0.0 .. 5.4,1.7,6.5]
+16:35:29  [BOOL]   intersection op1: vol=132.6 solids=1 valid=True bb=[-2.3,-2.7,0.0 .. 2.3,2.7,7.0]
+16:35:29  [BOOL]   -> after op1: result vol=101.7 solids=1 valid=True bb=[-2.3,-1.7,0.0 .. 2.3,1.7,6.5]
+16:35:29  [HULL] Collected: 2 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube'} n=2
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [BOOL] union: 6 operand(s); op0 vol=19432.0 solids=1 valid=True bb=[-3.5,-3.5,0.0 .. 3.5,999.0,3.0]
+16:35:29  [BOOL]   union op1: vol=143.6 solids=1 valid=True bb=[-3.1,-3.5,-0.0 .. 3.1,3.5,4.0]
+16:35:29  [BOOL]   -> after op1: result vol=19462.9 solids=1 valid=True bb=[-3.5,-3.5,-0.0 .. 3.5,999.0,4.0]
+16:35:29  [BOOL]   union op2: vol=184.4 solids=1 valid=True bb=[-3.2,-3.2,0.0 .. 3.2,3.2,6.0]
+16:35:29  [BOOL]   -> after op2: result vol=19522.0 solids=1 valid=True bb=[-3.5,-3.5,-0.0 .. 3.5,999.0,6.0]
+16:35:29  [BOOL]   union op3: vol=101.7 solids=1 valid=True bb=[-2.3,-1.7,0.0 .. 2.3,1.7,6.5]
+16:35:29  [BOOL]   -> after op3: result vol=19529.9 solids=1 valid=True bb=[-3.5,-3.5,-0.0 .. 3.5,999.0,6.5]
+16:35:29  [BOOL]   union op4: vol=901.9 solids=1 valid=True bb=[-1.7,-1.7,-3.0 .. 1.7,1.7,96.0]
+16:35:29  [BOOL]   -> after op4: result vol=20372.5 solids=1 valid=True bb=[-3.5,-3.5,-3.0 .. 3.5,999.0,96.0]
+16:35:29  [BOOL]   union op5: vol=162.0 solids=1 valid=True bb=[-3.0,4.5,0.1 .. 3.0,13.5,3.1]
+16:35:29  [BOOL]   -> after op5: result vol=20377.9 solids=1 valid=True bb=[-3.5,-3.5,-3.0 .. 3.5,999.0,96.0]
+16:35:29  [BOOL] difference: 6 operand(s); op0 vol=3634.3 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL]   difference op1: vol=961.7 solids=1 valid=True bb=[-16.0,-16.0,25.0 .. 16.0,16.0,27.1]
+16:35:29  [BOOL]   -> after op1: result vol=3630.2 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL]   difference op2: vol=803443.5 solids=1 valid=True bb=[-16.0,-16.0,27.0 .. 16.0,16.0,1026.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-16, -16, 27, 16, 16, 1026) -> BoundBox (-9.23988, -16, 27, 16, 9.31098, 43.6)
+16:35:29  [BOOL]   -> after op2: result vol=3630.2 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL]   difference op3: vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-999, -999, -499.5, 999, 999, 499.5) -> BoundBox (-999, -999, 1.20048, 999, 999, 43.6)
+16:35:29  [BOOL]   -> after op3: result vol=2034.3 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op4: vol=3959.2 solids=1 valid=True bb=[8.9,-15.7,38.0 .. 16.1,-8.6,138.0]
+16:35:29  [BOOL]   -> after op4: result vol=2024.4 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op5: vol=20377.9 solids=1 valid=True bb=[-981.5,-15.7,26.9 .. 21.0,-8.7,126.0]
+16:35:29  [BOOL]   -> after op5: result vol=1728.8 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [HULL] Descending into 'difference' — creating child shape
+16:35:29  [BOOL] difference: 2 operand(s); op0 vol=523.6 solids=1 valid=True bb=[-5.0,-5.0,-5.0 .. 5.0,5.0,5.0]
+16:35:29  [BOOL]   difference op1: vol=970299.0 solids=1 valid=True bb=[-49.5,-49.5,0.0 .. 49.5,49.5,99.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-49.5, -49.5, 0, 49.5, 49.5, 99) -> BoundBox (-10, -10, 0, 10, 10, 10)
+16:35:29  [BOOL]   -> after op1: result vol=261.8 solids=1 valid=True bb=[-5.0,-5.0,-5.0 .. 5.0,5.0,0.0]
+16:35:29  [HULL] Collected: 2 primitives, 1 complex shapes
+16:35:29  [HULL] Path 2: shape-based with 3 total shape(s)
+16:35:29  [HULL]   classified: spheres=0 polys=3
+16:35:29  [HULL]   trying brep loft (3 shapes)
+16:35:29  [LOFT] cluster+fuse: 3 shapes -> 2 connected end(s) (sizes [2, 1])
+16:35:29  [LOFT]   fused ends: faces=[4, 3] -> 2-shape loft
+16:35:29  [LOFT] hull_brep_loft called
+16:35:29  [LOFT] A faces=4 B faces=3
+16:35:29  [LOFT] axis: COG->COG |d|=23.85 dir=(-0.734,0.512,-0.447)
+16:35:29  [LOFT] extracting silhouette A...
+16:35:29  [LOFT]  faces: outer=1 inner=1 transv=0 curved=2
+16:35:29  [LOFT]  silhouette: 1 edges → 1 wire(s)
+16:35:29  [LOFT]  A: 1 cap faces, 1 wires
+16:35:29  [LOFT] extracting silhouette B...
+16:35:29  [LOFT]  faces: outer=1 inner=1 transv=0 curved=1
+16:35:29  [LOFT]  silhouette: 1 edges → 1 wire(s)
+16:35:29  [LOFT]  B: 1 cap faces, 1 wires
+16:35:29  [LOFT] building bridge (makeLoft): 1×1 wire pairs
+16:35:29  [LOFT]  native loft OK
+16:35:29  [HULL]   loft vol=1362.7 faceted=2757.1 rel=0.506 valid=True -> REJECT loft -> faceted
+16:35:29  [LOFT]   section axis: cylinder (0.000,0.000,1.000)
+16:35:29  [LOFT]   section-loft end-fuse: kept 0/3 originals
+16:35:29  [LOFT]   section-loft: 20 slices vol=2723.4 valid=True closed=True
+16:35:29  [HULL]   section-loft vol=2723.4 faceted=2757.1 rel=0.012 valid=True -> ACCEPT section-loft
+16:35:29  [BOOL] union: 2 operand(s); op0 vol=911.1 solids=1 valid=True bb=[12.5,-17.2,27.0 .. 22.5,-7.2,38.6]
+16:35:29  [BOOL]   union op1: vol=2723.4 solids=1 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,26.7]
+16:35:29  [BOOL]   -> after op1: result vol=3634.3 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL] union: 7 operand(s); op0 vol=3296.7 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,0.5]
+16:35:29  [BOOL]   union op1: vol=6.0 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,1.0]
+16:35:29  [BOOL]   -> after op1: result vol=3302.1 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,1.0]
+16:35:29  [BOOL]   union op2: vol=5.0 solids=1 valid=True bb=[-1.7,-1.7,1.0 .. 1.7,1.7,1.5]
+16:35:29  [BOOL]   -> after op2: result vol=3306.7 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,1.5]
+16:35:29  [BOOL]   union op3: vol=4.8 solids=1 valid=True bb=[-1.7,-1.7,1.4 .. 1.7,1.7,2.0]
+16:35:29  [BOOL]   -> after op3: result vol=3311.0 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.0]
+16:35:29  [BOOL]   union op4: vol=4.7 solids=1 valid=True bb=[-1.7,-1.7,1.9 .. 1.7,1.7,2.5]
+16:35:29  [BOOL]   -> after op4: result vol=3315.3 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.5]
+16:35:29  [BOOL]   union op5: vol=8540.6 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,999.0]
+16:35:29  [BOOL]   -> after op5: result vol=11838.8 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,999.0]
+16:35:29  [BOOL]   union op6: vol=2819950325.8 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,0.0]
+16:35:29  [BOOL]   -> after op6: result vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,999.0]
+16:35:29  [BOOL] intersection: 2 operand(s); op0 vol=287067.4 solids=1 valid=True bb=[-12.5,-6.5,-499.5 .. 12.5,6.5,499.5]
+16:35:29  [BOOL]   intersection op1: vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-974.0 .. 999.0,999.0,1024.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-999, -999, -974, 999, 999, 1024.05) -> BoundBox (-999, -999, -504.5, 999, 999, 504.5)
+16:35:29  [BOOL]   -> after op1: result vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:35:29  [HULL] Collected: 2 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:35:29  [HULL] Dispatch types={'cylinder'} n=2
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [HULL] Collected: 3 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:35:29  [Hull] hull_cylinders_and_cube: 3 primitives (1 cyl, 2 cube)
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [HULL] Collected: 3 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:35:29  [Hull] hull_cylinders_and_cube: 3 primitives (2 cyl, 1 cube)
+16:35:29  [Hull] hull_cylinders_and_cube: cylinders span different axial extents — skipping (needs sectioning)
+16:35:29  [HULL] Path 1: AST dispatch returned None
+16:35:29  [HULL] Path 2: shape-based with 3 total shape(s)
+16:35:29  [HULL]   classified: spheres=0 polys=3
+16:35:29  [HULL]   trying brep loft (3 shapes)
+16:35:29  [LOFT] cluster+fuse: 3 shapes -> 1 connected end(s) (sizes [3])
+16:35:29  [LOFT]   not a 2-ended hull -> defer to fallback
+16:35:29  [HULL]   saved failed-loft shapes → compact_nut_seat_fn0_loftfail_3_A/B.brep (next to CSG)
+16:35:29  [HULL]   using faceted BRep
+16:35:29  [HULL] Collected: 2 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:35:29  [HULL] Dispatch types={'cylinder'} n=2
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [BOOL] intersection: 2 operand(s); op0 vol=242.2 solids=1 valid=True bb=[-5.4,-1.7,0.0 .. 5.4,1.7,6.5]
+16:35:29  [BOOL]   intersection op1: vol=132.6 solids=1 valid=True bb=[-2.3,-2.7,0.0 .. 2.3,2.7,7.0]
+16:35:29  [BOOL]   -> after op1: result vol=101.7 solids=1 valid=True bb=[-2.3,-1.7,0.0 .. 2.3,1.7,6.5]
+16:35:29  [HULL] Collected: 2 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube'} n=2
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [BOOL] union: 6 operand(s); op0 vol=19432.0 solids=1 valid=True bb=[-3.5,-3.5,0.0 .. 3.5,999.0,3.0]
+16:35:29  [BOOL]   union op1: vol=141.4 solids=1 valid=True bb=[-3.0,-3.5,0.0 .. 3.0,3.5,4.0]
+16:35:29  [BOOL]   -> after op1: result vol=19432.0 solids=1 valid=True bb=[-3.5,-3.5,0.0 .. 3.5,999.0,3.0]
+16:35:29  [BOOL]   union op2: vol=184.4 solids=1 valid=True bb=[-3.2,-3.2,0.0 .. 3.2,3.2,6.0]
+16:35:29  [BOOL]   -> after op2: result vol=19519.3 solids=1 valid=True bb=[-3.5,-3.5,0.0 .. 3.5,999.0,6.0]
+16:35:29  [BOOL]   union op3: vol=101.7 solids=1 valid=True bb=[-2.3,-1.7,0.0 .. 2.3,1.7,6.5]
+16:35:29  [BOOL]   -> after op3: result vol=19527.1 solids=1 valid=True bb=[-3.5,-3.5,0.0 .. 3.5,999.0,6.5]
+16:35:29  [BOOL]   union op4: vol=901.9 solids=1 valid=True bb=[-1.7,-1.7,-3.0 .. 1.7,1.7,96.0]
+16:35:29  [BOOL]   -> after op4: result vol=20369.8 solids=1 valid=True bb=[-3.5,-3.5,-3.0 .. 3.5,999.0,96.0]
+16:35:29  [BOOL]   union op5: vol=162.0 solids=1 valid=True bb=[-3.0,4.5,0.1 .. 3.0,13.5,3.1]
+16:35:29  [BOOL]   -> after op5: result vol=20375.2 solids=1 valid=True bb=[-3.5,-3.5,-3.0 .. 3.5,999.0,96.0]
+16:35:29  [BOOL] difference: 6 operand(s); op0 vol=3634.3 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL]   difference op1: vol=961.7 solids=1 valid=True bb=[-16.0,-16.0,25.0 .. 16.0,16.0,27.1]
+16:35:29  [BOOL]   -> after op1: result vol=3630.2 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL]   difference op2: vol=803443.5 solids=1 valid=True bb=[-16.0,-16.0,27.0 .. 16.0,16.0,1026.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-16, -16, 27, 16, 16, 1026) -> BoundBox (-9.23988, -16, 27, 16, 9.31098, 43.6)
+16:35:29  [BOOL]   -> after op2: result vol=3630.2 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL]   difference op3: vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-999, -999, -499.5, 999, 999, 499.5) -> BoundBox (-999, -999, 1.20048, 999, 999, 43.6)
+16:35:29  [BOOL]   -> after op3: result vol=2034.3 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op4: vol=3959.2 solids=1 valid=True bb=[8.9,-15.7,38.0 .. 16.1,-8.6,138.0]
+16:35:29  [BOOL]   -> after op4: result vol=2024.4 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op5: vol=20375.2 solids=1 valid=True bb=[-981.5,-15.7,26.9 .. 21.0,-8.7,126.0]
+16:35:29  [BOOL]   -> after op5: result vol=1731.5 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [BOOL] union: 3 operand(s); op0 vol=10667.4 solids=1 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,27.0]
+16:35:29  [BOOL]   union op1: vol=1728.8 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   -> after op1: result vol=12173.5 solids=2 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   union op2: vol=1737.6 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   -> after op2: result vol=13682.4 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL] union: 7 operand(s); op0 vol=3296.7 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,0.5]
+16:35:29  [BOOL]   union op1: vol=6.0 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,1.0]
+16:35:29  [BOOL]   -> after op1: result vol=3302.1 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,1.0]
+16:35:29  [BOOL]   union op2: vol=5.0 solids=1 valid=True bb=[-1.7,-1.7,1.0 .. 1.7,1.7,1.5]
+16:35:29  [BOOL]   -> after op2: result vol=3306.7 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,1.5]
+16:35:29  [BOOL]   union op3: vol=4.8 solids=1 valid=True bb=[-1.7,-1.7,1.4 .. 1.7,1.7,2.0]
+16:35:29  [BOOL]   -> after op3: result vol=3311.0 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.0]
+16:35:29  [BOOL]   union op4: vol=4.7 solids=1 valid=True bb=[-1.7,-1.7,1.9 .. 1.7,1.7,2.5]
+16:35:29  [BOOL]   -> after op4: result vol=3315.3 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.5]
+16:35:29  [BOOL]   union op5: vol=8540.6 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,999.0]
+16:35:29  [BOOL]   -> after op5: result vol=11838.8 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,999.0]
+16:35:29  [BOOL]   union op6: vol=2819950325.8 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,0.0]
+16:35:29  [BOOL]   -> after op6: result vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,999.0]
+16:35:29  [BOOL] intersection: 2 operand(s); op0 vol=287067.4 solids=1 valid=True bb=[-12.5,-6.5,-499.5 .. 12.5,6.5,499.5]
+16:35:29  [BOOL]   intersection op1: vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-974.0 .. 999.0,999.0,1024.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-999, -999, -974, 999, 999, 1024.05) -> BoundBox (-999, -999, -504.5, 999, 999, 504.5)
+16:35:29  [BOOL]   -> after op1: result vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:35:29  [HULL] Collected: 3 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:35:29  [Hull] hull_cylinders_and_cube: 3 primitives (1 cyl, 2 cube)
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [HULL] Collected: 3 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:35:29  [Hull] hull_cylinders_and_cube: 3 primitives (2 cyl, 1 cube)
+16:35:29  [Hull] hull_cylinders_and_cube: cylinders span different axial extents — skipping (needs sectioning)
+16:35:29  [HULL] Path 1: AST dispatch returned None
+16:35:29  [HULL] Path 2: shape-based with 3 total shape(s)
+16:35:29  [HULL]   classified: spheres=0 polys=3
+16:35:29  [HULL]   trying brep loft (3 shapes)
+16:35:29  [LOFT] cluster+fuse: 3 shapes -> 1 connected end(s) (sizes [3])
+16:35:29  [LOFT]   not a 2-ended hull -> defer to fallback
+16:35:29  [HULL]   saved failed-loft shapes → compact_nut_seat_fn0_loftfail_4_A/B.brep (next to CSG)
+16:35:29  [HULL]   using faceted BRep
+16:35:29  [HULL] Collected: 2 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:35:29  [HULL] Dispatch types={'cylinder'} n=2
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [BOOL] intersection: 2 operand(s); op0 vol=253.4 solids=1 valid=True bb=[-5.4,-1.7,0.0 .. 5.4,1.7,6.8]
+16:35:29  [BOOL]   intersection op1: vol=138.3 solids=1 valid=True bb=[-2.3,-2.7,0.0 .. 2.3,2.7,7.3]
+16:35:29  [BOOL]   -> after op1: result vol=106.4 solids=1 valid=True bb=[-2.3,-1.7,0.0 .. 2.3,1.7,6.8]
+16:35:29  [BOOL] difference: 7 operand(s); op0 vol=13682.4 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op1: vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-999, -999, -499.5, 999, 999, 499.5) -> BoundBox (-999, -999, -5, 999, 999, 43.6)
+16:35:29  [BOOL]   -> after op1: result vol=6463.1 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op2: vol=2022.5 solids=1 valid=True bb=[-5.2,-12.1,-12.0 .. 5.2,-4.0,12.0]
+16:35:29  [BOOL]   -> after op2: result vol=6262.5 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op3: vol=21375.2 solids=1 valid=True bb=[-3.5,-3.5,12.5 .. 3.5,999.0,15.8]
+16:35:29  [BOOL]   -> after op3: result vol=6225.9 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op4: vol=152.3 solids=1 valid=True bb=[-3.0,-3.5,12.5 .. 3.0,3.5,16.8]
+16:35:29  [BOOL]   -> after op4: result vol=6225.9 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op5: vol=194.2 solids=1 valid=True bb=[-3.2,-3.2,12.5 .. 3.2,3.2,18.8]
+16:35:29  [BOOL]   -> after op5: result vol=6225.9 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op6: vol=106.4 solids=1 valid=True bb=[-2.3,-1.7,12.5 .. 2.3,1.7,19.3]
+16:35:29  [BOOL]   -> after op6: result vol=6225.9 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+					group() {
 											union() {
 												group() {
-													group() {
+						16:19:49  Processing : /Users/ksloan/Workbenches/OpenSCAD_Workbench/testcases/Hull_Tests/openflexure_csgs/subTests/test_compact_nut_arms/test_arm1.csg
+16:19:49  [HULL] Descending into 'difference' — creating child shape
+16:19:49  [BOOL] difference: 2 operand(s); op0 vol=523.6 solids=1 valid=True bb=[-5.0,-5.0,-5.0 .. 5.0,5.0,5.0]
+16:19:49  [BOOL]   difference op1: vol=970299.0 solids=1 valid=True bb=[-49.5,-49.5,0.0 .. 49.5,49.5,99.0]
+16:19:49  [BOOL]     clamped oversized tool BoundBox (-49.5, -49.5, 0, 49.5, 49.5, 99) -> BoundBox (-10, -10, 0, 10, 10, 10)
+16:19:49  [BOOL]   -> after op1: result vol=261.8 solids=1 valid=True bb=[-5.0,-5.0,-5.0 .. 5.0,5.0,0.0]
+16:19:49  [HULL] Collected: 2 primitives, 1 complex shapes
+16:19:49  [HULL] Path 2: shape-based with 3 total shape(s)
+16:19:49  [HULL]   classified: spheres=0 polys=3
+16:19:49  [HULL]   trying brep loft (3 shapes)
+16:19:49  [LOFT] cluster+fuse: 3 shapes -> 2 connected end(s) (sizes [2, 1])
+16:19:49  [LOFT]   fused ends: faces=[4, 3] -> 2-shape loft
+16:19:49  [LOFT] hull_brep_loft called
+16:19:49  [LOFT] A faces=4 B faces=3
+16:19:49  [LOFT] axis: COG->COG |d|=23.85 dir=(-0.734,0.512,-0.447)
+16:19:49  [LOFT] extracting silhouette A...
+16:19:49  [LOFT]  faces: outer=1 inner=1 transv=0 curved=2
+16:19:49  [LOFT]  silhouette: 1 edges → 1 wire(s)
+16:19:49  [LOFT]  A: 1 cap faces, 1 wires
+16:19:49  [LOFT] extracting silhouette B...
+16:19:49  [LOFT]  faces: outer=1 inner=1 transv=0 curved=1
+16:19:49  [LOFT]  silhouette: 1 edges → 1 wire(s)
+16:19:49  [LOFT]  B: 1 cap faces, 1 wires
+16:19:49  [LOFT] building bridge (makeLoft): 1×1 wire pairs
+16:19:49  [LOFT]  native loft OK
+16:19:49  [HULL]   loft vol=1362.7 faceted=2757.1 rel=0.506 valid=True -> REJECT loft -> faceted
+16:19:49  [LOFT]   section axis: cylinder (0.000,0.000,1.000)
+16:19:49  [LOFT]   section-loft end-fuse: kept 0/3 originals
+16:19:49  [LOFT]   section-loft: 20 slices vol=2723.4 valid=True closed=True
+16:19:49  [HULL]   section-loft vol=2723.4 faceted=2757.1 rel=0.012 valid=True -> ACCEPT section-loft
+16:19:49  [BOOL] union: 2 operand(s); op0 vol=911.1 solids=1 valid=True bb=[12.5,-17.2,27.0 .. 22.5,-7.2,38.6]
+16:19:49  [BOOL]   union op1: vol=2723.4 solids=1 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,26.7]
+16:19:49  [BOOL]   -> after op1: result vol=3634.3 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:19:49  [BOOL] union: 7 operand(s); op0 vol=3296.7 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,0.5]
+16:19:49  [BOOL]   union op1: vol=6.0 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,1.0]
+16:19:49  [BOOL]   -> after op1: result vol=3302.1 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,1.0]
+16:19:49  [BOOL]   union op2: vol=5.0 solids=1 valid=True bb=[-1.7,-1.7,1.0 .. 1.7,1.7,1.5]
+16:19:49  [BOOL]   -> after op2: result vol=3306.7 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,1.5]
+16:19:49  [BOOL]   union op3: vol=4.8 solids=1 valid=True bb=[-1.7,-1.7,1.4 .. 1.7,1.7,2.0]
+16:19:49  [BOOL]   -> after op3: result vol=3311.0 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.0]
+16:19:49  [BOOL]   union op4: vol=4.7 solids=1 valid=True bb=[-1.7,-1.7,1.9 .. 1.7,1.7,2.5]
+16:19:49  [BOOL]   -> after op4: result vol=3315.3 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.5]
+16:19:49  [BOOL]   union op5: vol=8540.6 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,999.0]
+16:19:49  [BOOL]   -> after op5: result vol=11838.8 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,999.0]
+16:19:49  [BOOL]   union op6: vol=2819950325.8 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,0.0]
+16:19:49  [BOOL]   -> after op6: result vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,999.0]
+16:19:49  [BOOL] intersection: 2 operand(s); op0 vol=287067.4 solids=1 valid=True bb=[-12.5,-6.5,-499.5 .. 12.5,6.5,499.5]
+16:19:49  [BOOL]   intersection op1: vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-974.0 .. 999.0,999.0,1024.0]
+16:19:49  [BOOL]     clamped oversized tool BoundBox (-999, -999, -974, 999, 999, 1024.05) -> BoundBox (-999, -999, -504.5, 999, 999, 504.5)
+16:19:49  [BOOL]   -> after op1: result vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:19:49  [HULL] Collected: 2 primitives, 0 complex shapes
+16:19:49  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:19:49  [HULL] Dispatch types={'cylinder'} n=2
+16:19:49  [HULL] Path 1: AST dispatch OK
+16:19:49  [HULL] Collected: 3 primitives, 0 complex shapes
+16:19:49  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:19:49  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:19:49  [Hull] hull_cylinders_and_cube: 3 primitives (1 cyl, 2 cube)
+16:19:49  [HULL] Path 1: AST dispatch OK
+16:19:49  [HULL] Collected: 3 primitives, 0 complex shapes
+16:19:49  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:19:49  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:19:49  [Hull] hull_cylinders_and_cube: 3 primitives (2 cyl, 1 cube)
+16:19:49  [Hull] hull_cylinders_and_cube: cylinders span different axial extents — skipping (needs sectioning)
+16:19:49  [HULL] Path 1: AST dispatch returned None
+16:19:49  [HULL] Path 2: shape-based with 3 total shape(s)
+16:19:49  [HULL]   classified: spheres=0 polys=3
+16:19:49  [HULL]   trying brep loft (3 shapes)
+16:19:49  [LOFT] cluster+fuse: 3 shapes -> 1 connected end(s) (sizes [3])
+16:19:49  [LOFT]   not a 2-ended hull -> defer to fallback
+16:19:49  [HULL]   saved failed-loft shapes → test_arm1_loftfail_1_A/B.brep (next to CSG)
+16:19:49  [HULL]   using faceted BRep
+16:19:49  [HULL] Collected: 2 primitives, 0 complex shapes
+16:19:49  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:19:49  [HULL] Dispatch types={'cylinder'} n=2
+16:19:49  [HULL] Path 1: AST dispatch OK
+16:19:49  [BOOL] intersection: 2 operand(s); op0 vol=242.2 solids=1 valid=True bb=[-5.4,-1.7,0.0 .. 5.4,1.7,6.5]
+16:19:49  [BOOL]   intersection op1: vol=132.6 solids=1 valid=True bb=[-2.3,-2.7,0.0 .. 2.3,2.7,7.0]
+16:19:49  [BOOL]   -> after op1: result vol=101.7 solids=1 valid=True bb=[-2.3,-1.7,0.0 .. 2.3,1.7,6.5]
+16:19:49  [HULL] Collected: 2 primitives, 0 complex shapes
+16:19:49  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:19:49  [HULL] Dispatch types={'cube'} n=2
+16:19:49  [HULL] Path 1: AST dispatch OK
+16:19:49  [BOOL] union: 6 operand(s); op0 vol=19432.0 solids=1 valid=True bb=[-3.5,-3.5,0.0 .. 3.5,999.0,3.0]
+16:19:49  [BOOL]   union op1: vol=143.6 solids=1 valid=True bb=[-3.1,-3.5,-0.0 .. 3.1,3.5,4.0]
+16:19:49  [BOOL]   -> after op1: result vol=19462.9 solids=1 valid=True bb=[-3.5,-3.5,-0.0 .. 3.5,999.0,4.0]
+16:19:49  [BOOL]   union op2: vol=184.4 solids=1 valid=True bb=[-3.2,-3.2,0.0 .. 3.2,3.2,6.0]
+16:19:49  [BOOL]   -> after op2: result vol=19522.0 solids=1 valid=True bb=[-3.5,-3.5,-0.0 .. 3.5,999.0,6.0]
+16:19:49  [BOOL]   union op3: vol=101.7 solids=1 valid=True bb=[-2.3,-1.7,0.0 .. 2.3,1.7,6.5]
+16:19:49  [BOOL]   -> after op3: result vol=19529.9 solids=1 valid=True bb=[-3.5,-3.5,-0.0 .. 3.5,999.0,6.5]
+16:19:49  [BOOL]   union op4: vol=901.9 solids=1 valid=True bb=[-1.7,-1.7,-3.0 .. 1.7,1.7,96.0]
+16:19:49  [BOOL]   -> after op4: result vol=20372.5 solids=1 valid=True bb=[-3.5,-3.5,-3.0 .. 3.5,999.0,96.0]
+16:19:49  [BOOL]   union op5: vol=162.0 solids=1 valid=True bb=[-3.0,4.5,0.1 .. 3.0,13.5,3.1]
+16:19:49  [BOOL]   -> after op5: result vol=20377.9 solids=1 valid=True bb=[-3.5,-3.5,-3.0 .. 3.5,999.0,96.0]
+16:19:49  [BOOL] difference: 6 operand(s); op0 vol=3634.3 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:19:49  [BOOL]   difference op1: vol=961.7 solids=1 valid=True bb=[-16.0,-16.0,25.0 .. 16.0,16.0,27.1]
+16:19:49  [BOOL]   -> after op1: result vol=3630.2 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:19:49  [BOOL]   difference op2: vol=803443.5 solids=1 valid=True bb=[-16.0,-16.0,27.0 .. 16.0,16.0,1026.0]
+16:19:49  [BOOL]     clamped oversized tool BoundBox (-16, -16, 27, 16, 16, 1026) -> BoundBox (-9.23988, -16, 27, 16, 9.31098, 43.6)
+16:19:49  [BOOL]   -> after op2: result vol=3630.2 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:19:49  [BOOL]   difference op3: vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:19:49  [BOOL]     clamped oversized tool BoundBox (-999, -999, -499.5, 999, 999, 499.5) -> BoundBox (-999, -999, 1.20048, 999, 999, 43.6)
+16:19:49  [BOOL]   -> after op3: result vol=2034.3 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:19:49  [BOOL]   difference op4: vol=3959.2 solids=1 valid=True bb=[8.9,-15.7,38.0 .. 16.1,-8.6,138.0]
+16:19:49  [BOOL]   -> after op4: result vol=2024.4 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:19:49  [BOOL]   difference op5: vol=20377.9 solids=1 valid=True bb=[-981.5,-15.7,26.9 .. 21.0,-8.7,126.0]
+16:19:49  [BOOL]   -> after op5: result vol=1728.8 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:34:44  Save auto-recovery file in 0.083760s
+16:35:29  Processing : /Users/ksloan/Workbenches/OpenSCAD_Workbench/testcases/Hull_Tests/openflexure_csgs/compact_nut_seat_fn0.csg
+16:35:29  [HULL] Descending into 'linear_extrude' — creating child shape
+16:35:29  [HULL] Descending into 'linear_extrude' — creating child shape
+16:35:29  [HULL] Collected: 0 primitives, 2 complex shapes
+16:35:29  [HULL] Path 2: shape-based with 2 total shape(s)
+16:35:29  [HULL]   classified: spheres=0 polys=2
+16:35:29  [HULL]   trying brep loft (2 shapes)
+16:35:29  [LOFT] hull_brep_loft called
+16:35:29  [LOFT] A faces=24 B faces=24
+16:35:29  [LOFT] axis: near-concentric (|d|=0.000 < 5%*60.5) -> longest bbox dim (0,0,1)
+16:35:29  [LOFT]   cap: 7 coplanar tiles -> 10 boundary edges (of 17)
+16:35:29  [LOFT]   cap: 7 coplanar tiles -> 10 boundary edges (of 17)
+16:35:29  [LOFT]   cap: 7 coplanar tiles -> 10 boundary edges (of 17)
+16:35:29  [LOFT]   cap: 7 coplanar tiles -> 10 boundary edges (of 17)
+16:35:29  [LOFT]   concentric: wide axial=[-25.50,25.50] narrow axial=[-27.00,27.00]
+16:35:29  [LOFT]   concentric: capW_top edges=[Line,Line,Line,Circ,Circ,Line,Line,Line,Circ,Circ] capN_top edges=[Line,Line,Line,Circ,Circ,Line,Line,Line,Circ,Circ]
+16:35:29  [LOFT]   bridge pairing (10 edges): Line->Line, Line->Line, Line->Line, Circle->Circle, Circle->Circle, Line->Line, Line->Line, Line->Line, Circle->Circle, Circle->Circle
+16:35:29  [LOFT]   frustum[top]: 12 faces -> 1 shell(s), shell.closed=True
+16:35:29  [LOFT]   frustum[top]: solid vol=492.6 closed=True valid=True
+16:35:29  [LOFT]   bridge pairing (10 edges): Line->Line, Line->Line, Circle->Circle, Circle->Circle, Line->Line, Line->Line, Line->Line, Circle->Circle, Circle->Circle, Line->Line
+16:35:29  [LOFT]   frustum[bot]: 12 faces -> 1 shell(s), shell.closed=True
+16:35:29  [LOFT]   frustum[bot]: solid vol=492.6 closed=True valid=True
+16:35:29  [LOFT]   concentric multi-section hull: vol=21334.9 valid=True closed=True
+16:35:29  [HULL]   loft vol=21334.9 faceted=21016.3 rel=0.015 valid=True -> ACCEPT loft
+16:35:29  [BOOL] difference: 2 operand(s); op0 vol=21334.9 solids=1 valid=True bb=[-14.1,-8.1,-27.0 .. 14.1,8.1,27.0]
+16:35:29  [BOOL]   difference op1: vol=2819950325.8 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,0.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-999, -999, -999, 999, 999, 0) -> BoundBox (-999, -999, -32, 999, 999, 0)
+16:35:29  [BOOL]   -> after op1: result vol=10667.4 solids=1 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,27.0]
+16:35:29  [HULL] Descending into 'difference' — creating child shape
+16:35:29  [BOOL] difference: 2 operand(s); op0 vol=523.6 solids=1 valid=True bb=[-5.0,-5.0,-5.0 .. 5.0,5.0,5.0]
+16:35:29  [BOOL]   difference op1: vol=970299.0 solids=1 valid=True bb=[-49.5,-49.5,0.0 .. 49.5,49.5,99.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-49.5, -49.5, 0, 49.5, 49.5, 99) -> BoundBox (-10, -10, 0, 10, 10, 10)
+16:35:29  [BOOL]   -> after op1: result vol=261.8 solids=1 valid=True bb=[-5.0,-5.0,-5.0 .. 5.0,5.0,0.0]
+16:35:29  [HULL] Collected: 2 primitives, 1 complex shapes
+16:35:29  [HULL] Path 2: shape-based with 3 total shape(s)
+16:35:29  [HULL]   classified: spheres=0 polys=3
+16:35:29  [HULL]   trying brep loft (3 shapes)
+16:35:29  [LOFT] cluster+fuse: 3 shapes -> 2 connected end(s) (sizes [2, 1])
+16:35:29  [LOFT]   fused ends: faces=[4, 3] -> 2-shape loft
+16:35:29  [LOFT] hull_brep_loft called
+16:35:29  [LOFT] A faces=4 B faces=3
+16:35:29  [LOFT] axis: COG->COG |d|=23.85 dir=(-0.734,0.512,-0.447)
+16:35:29  [LOFT] extracting silhouette A...
+16:35:29  [LOFT]  faces: outer=1 inner=1 transv=0 curved=2
+16:35:29  [LOFT]  silhouette: 1 edges → 1 wire(s)
+16:35:29  [LOFT]  A: 1 cap faces, 1 wires
+16:35:29  [LOFT] extracting silhouette B...
+16:35:29  [LOFT]  faces: outer=1 inner=1 transv=0 curved=1
+16:35:29  [LOFT]  silhouette: 1 edges → 1 wire(s)
+16:35:29  [LOFT]  B: 1 cap faces, 1 wires
+16:35:29  [LOFT] building bridge (makeLoft): 1×1 wire pairs
+16:35:29  [LOFT]  native loft OK
+16:35:29  [HULL]   loft vol=1362.7 faceted=2757.1 rel=0.506 valid=True -> REJECT loft -> faceted
+16:35:29  [LOFT]   section axis: cylinder (0.000,0.000,1.000)
+16:35:29  [LOFT]   section-loft end-fuse: kept 0/3 originals
+16:35:29  [LOFT]   section-loft: 20 slices vol=2723.4 valid=True closed=True
+16:35:29  [HULL]   section-loft vol=2723.4 faceted=2757.1 rel=0.012 valid=True -> ACCEPT section-loft
+16:35:29  [BOOL] union: 2 operand(s); op0 vol=911.1 solids=1 valid=True bb=[12.5,-17.2,27.0 .. 22.5,-7.2,38.6]
+16:35:29  [BOOL]   union op1: vol=2723.4 solids=1 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,26.7]
+16:35:29  [BOOL]   -> after op1: result vol=3634.3 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL] union: 7 operand(s); op0 vol=3296.7 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,0.5]
+16:35:29  [BOOL]   union op1: vol=6.0 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,1.0]
+16:35:29  [BOOL]   -> after op1: result vol=3302.1 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,1.0]
+16:35:29  [BOOL]   union op2: vol=5.0 solids=1 valid=True bb=[-1.7,-1.7,1.0 .. 1.7,1.7,1.5]
+16:35:29  [BOOL]   -> after op2: result vol=3306.7 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,1.5]
+16:35:29  [BOOL]   union op3: vol=4.8 solids=1 valid=True bb=[-1.7,-1.7,1.4 .. 1.7,1.7,2.0]
+16:35:29  [BOOL]   -> after op3: result vol=3311.0 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.0]
+16:35:29  [BOOL]   union op4: vol=4.7 solids=1 valid=True bb=[-1.7,-1.7,1.9 .. 1.7,1.7,2.5]
+16:35:29  [BOOL]   -> after op4: result vol=3315.3 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.5]
+16:35:29  [BOOL]   union op5: vol=8540.6 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,999.0]
+16:35:29  [BOOL]   -> after op5: result vol=11838.8 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,999.0]
+16:35:29  [BOOL]   union op6: vol=2819950325.8 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,0.0]
+16:35:29  [BOOL]   -> after op6: result vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,999.0]
+16:35:29  [BOOL] intersection: 2 operand(s); op0 vol=287067.4 solids=1 valid=True bb=[-12.5,-6.5,-499.5 .. 12.5,6.5,499.5]
+16:35:29  [BOOL]   intersection op1: vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-974.0 .. 999.0,999.0,1024.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-999, -999, -974, 999, 999, 1024.05) -> BoundBox (-999, -999, -504.5, 999, 999, 504.5)
+16:35:29  [BOOL]   -> after op1: result vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:35:29  [HULL] Collected: 2 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:35:29  [HULL] Dispatch types={'cylinder'} n=2
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [HULL] Collected: 3 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:35:29  [Hull] hull_cylinders_and_cube: 3 primitives (1 cyl, 2 cube)
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [HULL] Collected: 3 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:35:29  [Hull] hull_cylinders_and_cube: 3 primitives (2 cyl, 1 cube)
+16:35:29  [Hull] hull_cylinders_and_cube: cylinders span different axial extents — skipping (needs sectioning)
+16:35:29  [HULL] Path 1: AST dispatch returned None
+16:35:29  [HULL] Path 2: shape-based with 3 total shape(s)
+16:35:29  [HULL]   classified: spheres=0 polys=3
+16:35:29  [HULL]   trying brep loft (3 shapes)
+16:35:29  [LOFT] cluster+fuse: 3 shapes -> 1 connected end(s) (sizes [3])
+16:35:29  [LOFT]   not a 2-ended hull -> defer to fallback
+16:35:29  [HULL]   saved failed-loft shapes → compact_nut_seat_fn0_loftfail_2_A/B.brep (next to CSG)
+16:35:29  [HULL]   using faceted BRep
+16:35:29  [HULL] Collected: 2 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:35:29  [HULL] Dispatch types={'cylinder'} n=2
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [BOOL] intersection: 2 operand(s); op0 vol=242.2 solids=1 valid=True bb=[-5.4,-1.7,0.0 .. 5.4,1.7,6.5]
+16:35:29  [BOOL]   intersection op1: vol=132.6 solids=1 valid=True bb=[-2.3,-2.7,0.0 .. 2.3,2.7,7.0]
+16:35:29  [BOOL]   -> after op1: result vol=101.7 solids=1 valid=True bb=[-2.3,-1.7,0.0 .. 2.3,1.7,6.5]
+16:35:29  [HULL] Collected: 2 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube'} n=2
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [BOOL] union: 6 operand(s); op0 vol=19432.0 solids=1 valid=True bb=[-3.5,-3.5,0.0 .. 3.5,999.0,3.0]
+16:35:29  [BOOL]   union op1: vol=143.6 solids=1 valid=True bb=[-3.1,-3.5,-0.0 .. 3.1,3.5,4.0]
+16:35:29  [BOOL]   -> after op1: result vol=19462.9 solids=1 valid=True bb=[-3.5,-3.5,-0.0 .. 3.5,999.0,4.0]
+16:35:29  [BOOL]   union op2: vol=184.4 solids=1 valid=True bb=[-3.2,-3.2,0.0 .. 3.2,3.2,6.0]
+16:35:29  [BOOL]   -> after op2: result vol=19522.0 solids=1 valid=True bb=[-3.5,-3.5,-0.0 .. 3.5,999.0,6.0]
+16:35:29  [BOOL]   union op3: vol=101.7 solids=1 valid=True bb=[-2.3,-1.7,0.0 .. 2.3,1.7,6.5]
+16:35:29  [BOOL]   -> after op3: result vol=19529.9 solids=1 valid=True bb=[-3.5,-3.5,-0.0 .. 3.5,999.0,6.5]
+16:35:29  [BOOL]   union op4: vol=901.9 solids=1 valid=True bb=[-1.7,-1.7,-3.0 .. 1.7,1.7,96.0]
+16:35:29  [BOOL]   -> after op4: result vol=20372.5 solids=1 valid=True bb=[-3.5,-3.5,-3.0 .. 3.5,999.0,96.0]
+16:35:29  [BOOL]   union op5: vol=162.0 solids=1 valid=True bb=[-3.0,4.5,0.1 .. 3.0,13.5,3.1]
+16:35:29  [BOOL]   -> after op5: result vol=20377.9 solids=1 valid=True bb=[-3.5,-3.5,-3.0 .. 3.5,999.0,96.0]
+16:35:29  [BOOL] difference: 6 operand(s); op0 vol=3634.3 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL]   difference op1: vol=961.7 solids=1 valid=True bb=[-16.0,-16.0,25.0 .. 16.0,16.0,27.1]
+16:35:29  [BOOL]   -> after op1: result vol=3630.2 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL]   difference op2: vol=803443.5 solids=1 valid=True bb=[-16.0,-16.0,27.0 .. 16.0,16.0,1026.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-16, -16, 27, 16, 16, 1026) -> BoundBox (-9.23988, -16, 27, 16, 9.31098, 43.6)
+16:35:29  [BOOL]   -> after op2: result vol=3630.2 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL]   difference op3: vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-999, -999, -499.5, 999, 999, 499.5) -> BoundBox (-999, -999, 1.20048, 999, 999, 43.6)
+16:35:29  [BOOL]   -> after op3: result vol=2034.3 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op4: vol=3959.2 solids=1 valid=True bb=[8.9,-15.7,38.0 .. 16.1,-8.6,138.0]
+16:35:29  [BOOL]   -> after op4: result vol=2024.4 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op5: vol=20377.9 solids=1 valid=True bb=[-981.5,-15.7,26.9 .. 21.0,-8.7,126.0]
+16:35:29  [BOOL]   -> after op5: result vol=1728.8 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [HULL] Descending into 'difference' — creating child shape
+16:35:29  [BOOL] difference: 2 operand(s); op0 vol=523.6 solids=1 valid=True bb=[-5.0,-5.0,-5.0 .. 5.0,5.0,5.0]
+16:35:29  [BOOL]   difference op1: vol=970299.0 solids=1 valid=True bb=[-49.5,-49.5,0.0 .. 49.5,49.5,99.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-49.5, -49.5, 0, 49.5, 49.5, 99) -> BoundBox (-10, -10, 0, 10, 10, 10)
+16:35:29  [BOOL]   -> after op1: result vol=261.8 solids=1 valid=True bb=[-5.0,-5.0,-5.0 .. 5.0,5.0,0.0]
+16:35:29  [HULL] Collected: 2 primitives, 1 complex shapes
+16:35:29  [HULL] Path 2: shape-based with 3 total shape(s)
+16:35:29  [HULL]   classified: spheres=0 polys=3
+16:35:29  [HULL]   trying brep loft (3 shapes)
+16:35:29  [LOFT] cluster+fuse: 3 shapes -> 2 connected end(s) (sizes [2, 1])
+16:35:29  [LOFT]   fused ends: faces=[4, 3] -> 2-shape loft
+16:35:29  [LOFT] hull_brep_loft called
+16:35:29  [LOFT] A faces=4 B faces=3
+16:35:29  [LOFT] axis: COG->COG |d|=23.85 dir=(-0.734,0.512,-0.447)
+16:35:29  [LOFT] extracting silhouette A...
+16:35:29  [LOFT]  faces: outer=1 inner=1 transv=0 curved=2
+16:35:29  [LOFT]  silhouette: 1 edges → 1 wire(s)
+16:35:29  [LOFT]  A: 1 cap faces, 1 wires
+16:35:29  [LOFT] extracting silhouette B...
+16:35:29  [LOFT]  faces: outer=1 inner=1 transv=0 curved=1
+16:35:29  [LOFT]  silhouette: 1 edges → 1 wire(s)
+16:35:29  [LOFT]  B: 1 cap faces, 1 wires
+16:35:29  [LOFT] building bridge (makeLoft): 1×1 wire pairs
+16:35:29  [LOFT]  native loft OK
+16:35:29  [HULL]   loft vol=1362.7 faceted=2757.1 rel=0.506 valid=True -> REJECT loft -> faceted
+16:35:29  [LOFT]   section axis: cylinder (0.000,0.000,1.000)
+16:35:29  [LOFT]   section-loft end-fuse: kept 0/3 originals
+16:35:29  [LOFT]   section-loft: 20 slices vol=2723.4 valid=True closed=True
+16:35:29  [HULL]   section-loft vol=2723.4 faceted=2757.1 rel=0.012 valid=True -> ACCEPT section-loft
+16:35:29  [BOOL] union: 2 operand(s); op0 vol=911.1 solids=1 valid=True bb=[12.5,-17.2,27.0 .. 22.5,-7.2,38.6]
+16:35:29  [BOOL]   union op1: vol=2723.4 solids=1 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,26.7]
+16:35:29  [BOOL]   -> after op1: result vol=3634.3 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL] union: 7 operand(s); op0 vol=3296.7 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,0.5]
+16:35:29  [BOOL]   union op1: vol=6.0 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,1.0]
+16:35:29  [BOOL]   -> after op1: result vol=3302.1 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,1.0]
+16:35:29  [BOOL]   union op2: vol=5.0 solids=1 valid=True bb=[-1.7,-1.7,1.0 .. 1.7,1.7,1.5]
+16:35:29  [BOOL]   -> after op2: result vol=3306.7 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,1.5]
+16:35:29  [BOOL]   union op3: vol=4.8 solids=1 valid=True bb=[-1.7,-1.7,1.4 .. 1.7,1.7,2.0]
+16:35:29  [BOOL]   -> after op3: result vol=3311.0 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.0]
+16:35:29  [BOOL]   union op4: vol=4.7 solids=1 valid=True bb=[-1.7,-1.7,1.9 .. 1.7,1.7,2.5]
+16:35:29  [BOOL]   -> after op4: result vol=3315.3 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.5]
+16:35:29  [BOOL]   union op5: vol=8540.6 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,999.0]
+16:35:29  [BOOL]   -> after op5: result vol=11838.8 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,999.0]
+16:35:29  [BOOL]   union op6: vol=2819950325.8 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,0.0]
+16:35:29  [BOOL]   -> after op6: result vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,999.0]
+16:35:29  [BOOL] intersection: 2 operand(s); op0 vol=287067.4 solids=1 valid=True bb=[-12.5,-6.5,-499.5 .. 12.5,6.5,499.5]
+16:35:29  [BOOL]   intersection op1: vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-974.0 .. 999.0,999.0,1024.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-999, -999, -974, 999, 999, 1024.05) -> BoundBox (-999, -999, -504.5, 999, 999, 504.5)
+16:35:29  [BOOL]   -> after op1: result vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:35:29  [HULL] Collected: 2 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:35:29  [HULL] Dispatch types={'cylinder'} n=2
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [HULL] Collected: 3 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:35:29  [Hull] hull_cylinders_and_cube: 3 primitives (1 cyl, 2 cube)
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [HULL] Collected: 3 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:35:29  [Hull] hull_cylinders_and_cube: 3 primitives (2 cyl, 1 cube)
+16:35:29  [Hull] hull_cylinders_and_cube: cylinders span different axial extents — skipping (needs sectioning)
+16:35:29  [HULL] Path 1: AST dispatch returned None
+16:35:29  [HULL] Path 2: shape-based with 3 total shape(s)
+16:35:29  [HULL]   classified: spheres=0 polys=3
+16:35:29  [HULL]   trying brep loft (3 shapes)
+16:35:29  [LOFT] cluster+fuse: 3 shapes -> 1 connected end(s) (sizes [3])
+16:35:29  [LOFT]   not a 2-ended hull -> defer to fallback
+16:35:29  [HULL]   saved failed-loft shapes → compact_nut_seat_fn0_loftfail_3_A/B.brep (next to CSG)
+16:35:29  [HULL]   using faceted BRep
+16:35:29  [HULL] Collected: 2 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:35:29  [HULL] Dispatch types={'cylinder'} n=2
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [BOOL] intersection: 2 operand(s); op0 vol=242.2 solids=1 valid=True bb=[-5.4,-1.7,0.0 .. 5.4,1.7,6.5]
+16:35:29  [BOOL]   intersection op1: vol=132.6 solids=1 valid=True bb=[-2.3,-2.7,0.0 .. 2.3,2.7,7.0]
+16:35:29  [BOOL]   -> after op1: result vol=101.7 solids=1 valid=True bb=[-2.3,-1.7,0.0 .. 2.3,1.7,6.5]
+16:35:29  [HULL] Collected: 2 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube'} n=2
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [BOOL] union: 6 operand(s); op0 vol=19432.0 solids=1 valid=True bb=[-3.5,-3.5,0.0 .. 3.5,999.0,3.0]
+16:35:29  [BOOL]   union op1: vol=141.4 solids=1 valid=True bb=[-3.0,-3.5,0.0 .. 3.0,3.5,4.0]
+16:35:29  [BOOL]   -> after op1: result vol=19432.0 solids=1 valid=True bb=[-3.5,-3.5,0.0 .. 3.5,999.0,3.0]
+16:35:29  [BOOL]   union op2: vol=184.4 solids=1 valid=True bb=[-3.2,-3.2,0.0 .. 3.2,3.2,6.0]
+16:35:29  [BOOL]   -> after op2: result vol=19519.3 solids=1 valid=True bb=[-3.5,-3.5,0.0 .. 3.5,999.0,6.0]
+16:35:29  [BOOL]   union op3: vol=101.7 solids=1 valid=True bb=[-2.3,-1.7,0.0 .. 2.3,1.7,6.5]
+16:35:29  [BOOL]   -> after op3: result vol=19527.1 solids=1 valid=True bb=[-3.5,-3.5,0.0 .. 3.5,999.0,6.5]
+16:35:29  [BOOL]   union op4: vol=901.9 solids=1 valid=True bb=[-1.7,-1.7,-3.0 .. 1.7,1.7,96.0]
+16:35:29  [BOOL]   -> after op4: result vol=20369.8 solids=1 valid=True bb=[-3.5,-3.5,-3.0 .. 3.5,999.0,96.0]
+16:35:29  [BOOL]   union op5: vol=162.0 solids=1 valid=True bb=[-3.0,4.5,0.1 .. 3.0,13.5,3.1]
+16:35:29  [BOOL]   -> after op5: result vol=20375.2 solids=1 valid=True bb=[-3.5,-3.5,-3.0 .. 3.5,999.0,96.0]
+16:35:29  [BOOL] difference: 6 operand(s); op0 vol=3634.3 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL]   difference op1: vol=961.7 solids=1 valid=True bb=[-16.0,-16.0,25.0 .. 16.0,16.0,27.1]
+16:35:29  [BOOL]   -> after op1: result vol=3630.2 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL]   difference op2: vol=803443.5 solids=1 valid=True bb=[-16.0,-16.0,27.0 .. 16.0,16.0,1026.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-16, -16, 27, 16, 16, 1026) -> BoundBox (-9.23988, -16, 27, 16, 9.31098, 43.6)
+16:35:29  [BOOL]   -> after op2: result vol=3630.2 solids=2 valid=True bb=[-4.2,-18.2,6.2 .. 24.5,4.3,38.6]
+16:35:29  [BOOL]   difference op3: vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-999, -999, -499.5, 999, 999, 499.5) -> BoundBox (-999, -999, 1.20048, 999, 999, 43.6)
+16:35:29  [BOOL]   -> after op3: result vol=2034.3 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op4: vol=3959.2 solids=1 valid=True bb=[8.9,-15.7,38.0 .. 16.1,-8.6,138.0]
+16:35:29  [BOOL]   -> after op4: result vol=2024.4 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op5: vol=20375.2 solids=1 valid=True bb=[-981.5,-15.7,26.9 .. 21.0,-8.7,126.0]
+16:35:29  [BOOL]   -> after op5: result vol=1731.5 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [BOOL] union: 3 operand(s); op0 vol=10667.4 solids=1 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,27.0]
+16:35:29  [BOOL]   union op1: vol=1728.8 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   -> after op1: result vol=12173.5 solids=2 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   union op2: vol=1737.6 solids=2 valid=True bb=[-999.0,-999.0,8.3 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   -> after op2: result vol=13682.4 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL] union: 7 operand(s); op0 vol=3296.7 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,0.5]
+16:35:29  [BOOL]   union op1: vol=6.0 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,1.0]
+16:35:29  [BOOL]   -> after op1: result vol=3302.1 solids=1 valid=True bb=[-499.5,-1.6,-0.5 .. 499.5,1.6,1.0]
+16:35:29  [BOOL]   union op2: vol=5.0 solids=1 valid=True bb=[-1.7,-1.7,1.0 .. 1.7,1.7,1.5]
+16:35:29  [BOOL]   -> after op2: result vol=3306.7 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,1.5]
+16:35:29  [BOOL]   union op3: vol=4.8 solids=1 valid=True bb=[-1.7,-1.7,1.4 .. 1.7,1.7,2.0]
+16:35:29  [BOOL]   -> after op3: result vol=3311.0 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.0]
+16:35:29  [BOOL]   union op4: vol=4.7 solids=1 valid=True bb=[-1.7,-1.7,1.9 .. 1.7,1.7,2.5]
+16:35:29  [BOOL]   -> after op4: result vol=3315.3 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,2.5]
+16:35:29  [BOOL]   union op5: vol=8540.6 solids=1 valid=True bb=[-1.6,-1.6,0.5 .. 1.6,1.6,999.0]
+16:35:29  [BOOL]   -> after op5: result vol=11838.8 solids=1 valid=True bb=[-499.5,-1.7,-0.5 .. 499.5,1.7,999.0]
+16:35:29  [BOOL]   union op6: vol=2819950325.8 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,0.0]
+16:35:29  [BOOL]   -> after op6: result vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-999.0 .. 999.0,999.0,999.0]
+16:35:29  [BOOL] intersection: 2 operand(s); op0 vol=287067.4 solids=1 valid=True bb=[-12.5,-6.5,-499.5 .. 12.5,6.5,499.5]
+16:35:29  [BOOL]   intersection op1: vol=2819960516.3 solids=1 valid=True bb=[-999.0,-999.0,-974.0 .. 999.0,999.0,1024.0]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-999, -999, -974, 999, 999, 1024.05) -> BoundBox (-999, -999, -504.5, 999, 999, 504.5)
+16:35:29  [BOOL]   -> after op1: result vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:35:29  [HULL] Collected: 3 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:35:29  [Hull] hull_cylinders_and_cube: 3 primitives (1 cyl, 2 cube)
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [HULL] Collected: 3 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 3 primitive(s)
+16:35:29  [HULL] Dispatch types={'cube', 'cylinder'} n=3
+16:35:29  [Hull] hull_cylinders_and_cube: 3 primitives (2 cyl, 1 cube)
+16:35:29  [Hull] hull_cylinders_and_cube: cylinders span different axial extents — skipping (needs sectioning)
+16:35:29  [HULL] Path 1: AST dispatch returned None
+16:35:29  [HULL] Path 2: shape-based with 3 total shape(s)
+16:35:29  [HULL]   classified: spheres=0 polys=3
+16:35:29  [HULL]   trying brep loft (3 shapes)
+16:35:29  [LOFT] cluster+fuse: 3 shapes -> 1 connected end(s) (sizes [3])
+16:35:29  [LOFT]   not a 2-ended hull -> defer to fallback
+16:35:29  [HULL]   saved failed-loft shapes → compact_nut_seat_fn0_loftfail_4_A/B.brep (next to CSG)
+16:35:29  [HULL]   using faceted BRep
+16:35:29  [HULL] Collected: 2 primitives, 0 complex shapes
+16:35:29  [HULL] Path 1: AST dispatch with 2 primitive(s)
+16:35:29  [HULL] Dispatch types={'cylinder'} n=2
+16:35:29  [HULL] Path 1: AST dispatch OK
+16:35:29  [BOOL] intersection: 2 operand(s); op0 vol=253.4 solids=1 valid=True bb=[-5.4,-1.7,0.0 .. 5.4,1.7,6.8]
+16:35:29  [BOOL]   intersection op1: vol=138.3 solids=1 valid=True bb=[-2.3,-2.7,0.0 .. 2.3,2.7,7.3]
+16:35:29  [BOOL]   -> after op1: result vol=106.4 solids=1 valid=True bb=[-2.3,-1.7,0.0 .. 2.3,1.7,6.8]
+16:35:29  [BOOL] difference: 7 operand(s); op0 vol=13682.4 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op1: vol=154794.5 solids=1 valid=True bb=[-999.0,-999.0,-499.5 .. 999.0,999.0,499.5]
+16:35:29  [BOOL]     clamped oversized tool BoundBox (-999, -999, -499.5, 999, 999, 499.5) -> BoundBox (-999, -999, -5, 999, 999, 43.6)
+16:35:29  [BOOL]   -> after op1: result vol=6463.1 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op2: vol=2022.5 solids=1 valid=True bb=[-5.2,-12.1,-12.0 .. 5.2,-4.0,12.0]
+16:35:29  [BOOL]   -> after op2: result vol=6262.5 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op3: vol=21375.2 solids=1 valid=True bb=[-3.5,-3.5,12.5 .. 3.5,999.0,15.8]
+16:35:29  [BOOL]   -> after op3: result vol=6225.9 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op4: vol=152.3 solids=1 valid=True bb=[-3.0,-3.5,12.5 .. 3.0,3.5,16.8]
+16:35:29  [BOOL]   -> after op4: result vol=6225.9 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op5: vol=194.2 solids=1 valid=True bb=[-3.2,-3.2,12.5 .. 3.2,3.2,18.8]
+16:35:29  [BOOL]   -> after op5: result vol=6225.9 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+16:35:29  [BOOL]   difference op6: vol=106.4 solids=1 valid=True bb=[-2.3,-1.7,12.5 .. 2.3,1.7,19.3]
+16:35:29  [BOOL]   -> after op6: result vol=6225.9 solids=3 valid=True bb=[-999.0,-999.0,0.0 .. 999.0,999.0,38.6]
+							group() {
 														multmatrix([[1, 0, 0, 6.03586], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {
 															circle($fn = 0, $fa = 12, $fs = 2, r = 8.06439);
 														}

@@ -578,6 +578,336 @@ def hull_concentric_sections(A, B, axis):
     return result if (result is not None and not result.isNull()) else None
 
 
+# ── Smooth section-loft of the convex hull (oblique bridges) ──────────────────
+# The cap-rim silhouette loft is exact only when the bridge runs along each
+# shape's own axis; for an OBLIQUE bridge (e.g. the compact_nut arm strut: a
+# vertical cylinder lofted to an off-axis dome 62° away) it attaches at the cap
+# rim and underestimates the volume (a thin cap-to-cap frustum).
+#
+# This builds the smooth hull a different way: take the exact convex hull of all
+# the shapes' boundary points, slice it with planes perpendicular to its
+# elongation (PCA) axis, and loft a smooth periodic-BSpline outline through each
+# slice.  The slice outlines capture the full tangent envelope (the bulge the
+# cap-to-cap frustum misses), and because each slice is a single closed convex
+# loop, changing cross-section topology along the axis is handled for free.
+# Validated against the faceted convex-hull volume by the caller.
+
+def _ray_hit_convex(poly2d, cx, cy, dx, dy):
+    """First boundary hit of ray (cx,cy)+t*(dx,dy), t>0, on convex polygon."""
+    m = len(poly2d)
+    best_t = None
+    bx = by = 0.0
+    for i in range(m):
+        ax, ay = poly2d[i][0] - cx, poly2d[i][1] - cy
+        nx, ny = poly2d[(i + 1) % m][0] - cx, poly2d[(i + 1) % m][1] - cy
+        ex, ey = nx - ax, ny - ay
+        det = dx * ey - dy * ex
+        if abs(det) < 1e-12:
+            continue
+        u = (ax * dy - ay * dx) / det      # param along segment, want [0,1]
+        t = (ax * ey - ay * ex) / det      # param along ray, want > 0
+        if -1e-9 <= u <= 1 + 1e-9 and t > 1e-9:
+            if best_t is None or t < best_t:
+                best_t = t
+                bx, by = cx + t * dx, cy + t * dy
+    if best_t is None:
+        return None
+    return bx, by
+
+
+def _smooth_section_wire(poly2d, ux, uy, nrm, s_off, n_out=64):
+    """Periodic-BSpline wire through a convex slice, resampled at uniform angles
+    from its centroid (consistent correspondence between slices → no loft twist).
+    poly2d coords are global projections (X=P·ux, Y=P·uy); 3D = X·ux+Y·uy+s·n."""
+    import numpy as np
+    P = np.asarray(poly2d, dtype=float)
+    if len(P) < 3:
+        return None
+    cx, cy = float(P[:, 0].mean()), float(P[:, 1].mean())
+    pts3 = []
+    for k in range(n_out):
+        th = 2.0 * math.pi * k / n_out
+        hit = _ray_hit_convex(P, cx, cy, math.cos(th), math.sin(th))
+        if hit is None:
+            continue
+        X, Y = hit
+        p = (Vector(ux.x, ux.y, ux.z) * X
+             + Vector(uy.x, uy.y, uy.z) * Y
+             + Vector(nrm.x, nrm.y, nrm.z) * s_off)
+        pts3.append(p)
+    if len(pts3) < 3:
+        return None
+    try:
+        c = Part.BSplineCurve()
+        c.interpolate(pts3, PeriodicFlag=True)
+        return Part.Wire([c.toShape()])
+    except Exception:
+        try:
+            return Part.makePolygon(pts3 + [pts3[0]])
+        except Exception:
+            return None
+
+
+def hull_loft_sections(shapes, n_stations=20, n_out=48):
+    """Smooth hull of convex shapes via cross-sections of their convex hull,
+    perpendicular to the hull's PCA elongation axis.  Returns Part.Solid or None.
+    Robust for oblique bridges where the cap-rim silhouette loft underestimates.
+    """
+    try:
+        import numpy as np
+        from scipy.spatial import ConvexHull as _CH
+        from freecad.OpenSCAD_Ext.parsers.csg_parser.process_hull_brep import (
+            _extract_points
+        )
+    except Exception as ex:
+        _dbg(f"  section-loft deps unavailable: {ex}")
+        return None
+
+    # 1. dense boundary point cloud → exact 3D convex hull
+    try:
+        pts = np.vstack([_extract_points(s) for s in shapes])
+    except Exception as ex:
+        _dbg(f"  section-loft point extract failed: {ex}")
+        return None
+    pr = np.round(pts / 1e-6) * 1e-6
+    _, idx = np.unique(pr, axis=0, return_index=True)
+    pts = pts[np.sort(idx)]
+    if pts.shape[0] < 4:
+        return None
+    try:
+        hull = _CH(pts)
+    except Exception as ex:
+        _dbg(f"  section-loft ConvexHull failed: {ex}")
+        return None
+
+    hv = pts[hull.vertices]               # hull vertices only (for PCA fallback)
+
+    # 2. section axis = hull elongation (first principal component).  Slicing ⊥
+    # the elongation keeps the slice centres monotonic along the strut, so the
+    # loft correspondence stays clean.  (Slicing ⊥ the cylinder's own axis was
+    # tried and regressed: on an oblique strut the slice centres jump sideways
+    # across the bridge and the loft splits into disconnected solids.)
+    mean = hv.mean(axis=0)
+    cov = np.cov((hv - mean).T)
+    try:
+        evals, evecs = np.linalg.eigh(cov)
+        nrm = evecs[:, int(np.argmax(evals))]
+    except Exception as ex:
+        _dbg(f"  section-loft PCA failed: {ex}")
+        return None
+    nrm = nrm / (np.linalg.norm(nrm) or 1.0)
+    nvec = Vector(float(nrm[0]), float(nrm[1]), float(nrm[2]))
+    _dbg(f"  section axis: PCA ({nrm[0]:.3f},{nrm[1]:.3f},{nrm[2]:.3f})")
+
+    basis = _perp_basis(nvec)
+    if basis is None:
+        return None
+    ux, uy = basis
+    uxn = np.array([ux.x, ux.y, ux.z])
+    uyn = np.array([uy.x, uy.y, uy.z])
+
+    # 3. unique hull edges (from triangle simplices), and axial projections
+    edges = set()
+    for tri in hull.simplices:
+        a, b, c = int(tri[0]), int(tri[1]), int(tri[2])
+        edges.add((min(a, b), max(a, b)))
+        edges.add((min(b, c), max(b, c)))
+        edges.add((min(a, c), max(a, c)))
+    edges = list(edges)
+    proj = pts.dot(nrm)
+    smin, smax = float(proj.min()), float(proj.max())
+    span = smax - smin
+    if span < 1e-6:
+        return None
+
+    # 4. slice the hull at interior stations; build a smooth wire per slice
+    wires = []
+    for k in range(n_stations):
+        s = smin + (k + 0.5) / n_stations * span
+        cut = []
+        for (i, j) in edges:
+            di, dj = proj[i] - s, proj[j] - s
+            if (di <= 0.0 < dj) or (dj <= 0.0 < di):
+                t = di / (di - dj)
+                p = pts[i] + t * (pts[j] - pts[i])
+                cut.append(p)
+        if len(cut) < 3:
+            continue
+        cut = np.array(cut)
+        poly2d = np.column_stack([cut.dot(uxn), cut.dot(uyn)])
+        try:
+            ch2 = _CH(poly2d)
+        except Exception:
+            continue
+        ordered = [(float(poly2d[o, 0]), float(poly2d[o, 1])) for o in ch2.vertices]
+        w = _smooth_section_wire(ordered, ux, uy, nvec, s, n_out)
+        if w is not None:
+            wires.append(w)
+
+    if len(wires) < 2:
+        _dbg(f"  section-loft: only {len(wires)} usable slices")
+        return None
+
+    # 5. loft smooth (ruled=False), solid with planar end caps
+    try:
+        solid = Part.makeLoft(wires, True, False)
+        try:
+            solid = solid.removeSplitter()
+        except Exception:
+            pass
+    except Exception as ex:
+        _dbg(f"  section-loft makeLoft failed: {ex}")
+        return None
+    if solid is None or solid.isNull() or not solid.isValid():
+        _dbg("  section-loft produced invalid solid")
+        return None
+
+    # 6. restore true terminal geometry.  makeLoft caps the first/last slices
+    # with a flat plane perpendicular to the PCA axis, a short distance inside
+    # the real extremes — giving a BLUNT end that doesn't match the cylinder it
+    # joins.  Each input shape is part of the hull (hull ⊇ shape), so fusing the
+    # originals back in fills the clipped ends with their real faces (the
+    # cylinder's end cap, the sphere's rounded surface) and the blunt flat cap
+    # becomes interior, removed by removeSplitter.
+    #
+    # Fuse INCREMENTALLY, largest shape first, keeping each fuse only if it stays
+    # a single valid solid.  A combined all-at-once fuse is fragile — a tiny
+    # shape (e.g. the h=0.05 disk) can spawn a sliver and invalidate the whole
+    # result, which previously discarded the good cylinder fuse along with it and
+    # left the blunt cap.  Incremental keep-if-valid restores the cylinder's real
+    # end cap even when the disk fuse must be skipped.
+    def _vol(s):
+        try:
+            return s.Volume
+        except Exception:
+            return 0.0
+
+    fused_n = 0
+    for s in sorted(shapes, key=_vol, reverse=True):
+        try:
+            cand = solid.fuse(s)
+            try:
+                cand = cand.removeSplitter()
+            except Exception:
+                pass
+            if (not cand.isNull()) and cand.isValid() and len(cand.Solids) == 1:
+                solid = cand
+                fused_n += 1
+        except Exception:
+            pass
+    if fused_n < len(shapes):
+        _dbg(f"  section-loft end-fuse: kept {fused_n}/{len(shapes)} originals")
+
+    _dbg(f"  section-loft: {len(wires)} slices vol={solid.Volume:.1f} "
+         f"valid={solid.isValid()} closed={solid.isClosed()}")
+    return solid
+
+
+# ── Cluster + fuse: N-shape hull with co-located ends ─────────────────────────
+# The convex hull of a set of shapes is invariant under unioning any subset:
+#       hull(A, B, C) == hull(A ∪ B, C).
+# So when a hull's N input shapes form exactly TWO connected spatial groups —
+# e.g. the compact_nut strut: a half-sphere + a near-coincident thin disk forming
+# one rounded END, plus the strut cylinder as the other END — we can fuse each
+# group into a single solid and feed the two fused ends to the 2-shape silhouette
+# loft.  This is LOSSLESS (nothing is dropped; the disk is fused in, not discarded)
+# and reaches the smooth B-spline path.  If the shapes form 1 group (all touching)
+# or 3+ groups (a genuine multi-lobe hull), this is not a 2-ended strut: return
+# None and let the caller fall back to faceted / the future N-shape work.
+
+def _shapes_touch(a, b, tol=1e-3):
+    """True if a and b overlap or lie within *tol* (i.e. one connected blob)."""
+    try:
+        return a.distToShape(b)[0] <= tol
+    except Exception:
+        # distToShape can fail on odd compounds — fall back to bbox proximity.
+        try:
+            ba = a.BoundBox
+            ba.enlarge(tol)
+            return ba.intersect(b.BoundBox)
+        except Exception:
+            return False
+
+
+def _cluster_connected(shapes, tol=1e-3):
+    """Single-linkage clustering by actual contact/overlap (union-find)."""
+    n = len(shapes)
+    parent = list(range(n))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    def union(i, j):
+        ri, rj = find(i), find(j)
+        if ri != rj:
+            parent[ri] = rj
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            if _shapes_touch(shapes[i], shapes[j], tol):
+                union(i, j)
+
+    groups = {}
+    for i in range(n):
+        groups.setdefault(find(i), []).append(shapes[i])
+    return list(groups.values())
+
+
+def _fuse_cluster(cluster):
+    """Fuse a connected cluster of shapes into one solid (None on failure)."""
+    if len(cluster) == 1:
+        return cluster[0]
+    try:
+        fused = cluster[0]
+        for s in cluster[1:]:
+            fused = fused.fuse(s)
+        try:
+            fused = fused.removeSplitter()
+        except Exception:
+            pass
+        if fused.isNull() or not fused.isValid():
+            return None
+        return fused
+    except Exception as ex:
+        _dbg(f"  cluster fuse failed: {ex}")
+        return None
+
+
+def hull_brep_loft_multi(shapes):
+    """Smooth hull for N>=2 shapes when they form exactly two connected ends.
+
+    len == 2 -> straight to hull_brep_loft (unchanged behaviour).
+    len  > 2 -> cluster by contact; if exactly 2 clusters, fuse each end and
+                loft.  Otherwise return None (genuine multi-lobe hull or all-
+                connected blob -> caller falls back).
+    """
+    if len(shapes) < 2:
+        return None
+    if len(shapes) == 2:
+        return hull_brep_loft(shapes)
+
+    clusters = _cluster_connected(shapes)
+    _dbg(f"cluster+fuse: {len(shapes)} shapes -> {len(clusters)} connected end(s) "
+         f"(sizes {[len(c) for c in clusters]})")
+    if len(clusters) != 2:
+        _dbg("  not a 2-ended hull -> defer to fallback")
+        return None
+
+    ends = []
+    for cl in clusters:
+        fused = _fuse_cluster(cl)
+        if fused is None:
+            _dbg("  end fuse failed -> defer to fallback")
+            return None
+        ends.append(fused)
+
+    _dbg(f"  fused ends: faces={[len(e.Faces) for e in ends]} -> 2-shape loft")
+    return hull_brep_loft(ends)
+
+
 def hull_brep_loft(shapes):
     """
     General BRep hull of two shapes via silhouette extraction + lofting.
