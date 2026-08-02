@@ -1063,6 +1063,13 @@ def process_AST_node(node):
                 r = 1.0
                 write_log("AST", "Circle missing radius, defaulting to 1")
 
+        # Degenerate circle (zero / negative radius) -> treat as empty, like
+        # OpenSCAD. Part.makeCircle(0) raises and is not caught by the
+        # whole-file mesh fallback, so it would otherwise abort the import.
+        if r <= 0.0:
+            write_log("AST", f"Degenerate circle r={r} - treating as empty")
+            return None
+
         fn = params.get("$fn", 0)
         if _use_brep(fn):
             face = Part.Face(Part.Wire([Part.makeCircle(r)]))
@@ -1091,6 +1098,14 @@ def process_AST_node(node):
         else:
             width = height = 1.0
             write_log("AST", f"Invalid square size {size}, defaulting to 1")
+
+        # Degenerate square (zero / negative area) -> treat as empty, like
+        # OpenSCAD. Part.makePolygon/Part.Face on coincident vertices raises,
+        # and unlike a hull/boolean failure this is NOT caught by the whole-file
+        # mesh fallback, so it would otherwise abort the entire import.
+        if width <= 0.0 or height <= 0.0:
+            write_log("AST", f"Degenerate square size=[{width}, {height}] - treating as empty")
+            return None
 
         center = params.get("center", False)
         if isinstance(center, str):

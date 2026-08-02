@@ -1396,6 +1396,13 @@ def p_square_action(p) :
     size = p[3]['size']
     x = float(size[0])
     y = float(size[1])
+    # Degenerate square (zero area) -> treat as empty, like OpenSCAD does,
+    # otherwise a Part::Plane with Length/Width 0 gives a null shape that
+    # crashes the surrounding difference()/linear_extrude().
+    if x <= 0.0 or y <= 0.0 :
+        if printverbose: write_log("INFO","Skipping degenerate square size=[%s, %s]" % (x, y))
+        p[0] = [placeholder('group',[],'{}')]
+        return
     mysquare = doc.addObject('Part::Plane',p[1])
     mysquare.Length=x
     mysquare.Width=y
