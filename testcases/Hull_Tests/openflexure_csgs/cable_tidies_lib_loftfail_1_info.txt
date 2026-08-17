@@ -1,0 +1,6 @@
+A: cable_tidies_lib_loftfail_1_A.brep  type=Solid solids=1 faces=30 vol=693.362 valid=True closed=True
+   Placement=Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+   BoundBox=BoundBox (12.9377, 53.7201, -2.5785e-16, 37.1936, 62.3798, 15)
+B: cable_tidies_lib_loftfail_1_B.brep  type=Compound solids=1 faces=3 vol=47.572 valid=True closed=True
+   Placement=Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+   BoundBox=BoundBox (-1.73205, -2, 0, 1.73205, 1, 15)

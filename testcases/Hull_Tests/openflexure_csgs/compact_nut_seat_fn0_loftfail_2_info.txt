@@ -1,0 +1,6 @@
+A: compact_nut_seat_fn0_loftfail_2_A.brep  type=Solid solids=1 faces=6 vol=0.900 valid=True closed=True
+   Placement=Placement [Pos=(-3.00025,3.41439,0), Yaw-Pitch-Roll=(0,0,0)]
+   BoundBox=BoundBox (-3.00025, 3.41439, 0, 3.00025, 3.46439, 3)
+B: compact_nut_seat_fn0_loftfail_2_B.brep  type=Solid solids=1 faces=8 vol=93.546 valid=True closed=True
+   Placement=Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]
+   BoundBox=BoundBox (-3.00025, -3.46439, 0, 3.00025, 3.46439, 3)
